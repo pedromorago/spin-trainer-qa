@@ -16,9 +16,9 @@ Pact and database testing (pgTAP).
 
 | Level | Repo | What it covers | Why there |
 |---|---|---|---|
-| Unit (web domain) | web · Vitest | Pure `domain/`: `actionFor`, verdicts, selection, stats series | Pure rules; the 90% coverage threshold is enforced there |
+| Unit (web domain) | web · Vitest + Stryker | Pure `domain/`: `actionFor`, verdicts, selection, stats series | Pure rules; the 90% coverage threshold is enforced there, and mutation testing checks the tests catch changed rules (ADR-0017) |
 | Mock conformance | web · Vitest | The mock validates and responds as the spec says (`contract.test.js`) | The web app and the mock-mode E2E tests depend on it |
-| Unit (API) | api · JUnit | Domain, use cases, ArchUnit | No Spring or Docker; controlled clock |
+| Unit (API) | api · JUnit + PIT | Domain, use cases, ArchUnit; mutation score ≥ 95 % in `check` (ADR-0017) | No Spring or Docker; controlled clock |
 | Integration (API) | api · `*IT` | Full app with Postgres (Testcontainers), real JWTs, DB roles, responses validated against the spec | White-box: pins the clock (day boundaries and DST changes) and queries DB privileges |
 | **API acceptance** | **qa · REST Assured** | The deployed artifact: contract, business rules, security, HTTP | Independent of the code; what a client sees |
 | Executable specification | qa · Cucumber | Business rules in Gherkin, in Spanish | Readable by whoever validates the ranges |
