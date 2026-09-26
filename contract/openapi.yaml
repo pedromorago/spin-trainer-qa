@@ -125,7 +125,9 @@ paths:
       summary: Creates or replaces the custom range (optimistic concurrency by version)
       description: |
         `version` is required: `0` creates (409 if it already exists); `N` replaces version `N` (409 if it changed or was
-        deleted). This way a write never silently overwrites another. Hands with the implicit action are dropped on save.
+        deleted). This way a write never silently overwrites another. Versions keep counting after a delete: a range
+        created again continues after the last version it had, so a stale `version` never matches a different range.
+        Hands with the implicit action are dropped on save.
       requestBody:
         required: true
         content:
@@ -370,7 +372,7 @@ components:
       additionalProperties: false
       properties:
         hands: { $ref: '#/components/schemas/Hands' }
-        version: { type: integer, minimum: 0, description: 0 = create; N = the read version being replaced. }
+        version: { type: integer, minimum: 0, maximum: 2147483647, description: 0 = create; N = the read version being replaced. }
     AttemptWrite:
       type: object
       required: [situation, stack, hand, given]

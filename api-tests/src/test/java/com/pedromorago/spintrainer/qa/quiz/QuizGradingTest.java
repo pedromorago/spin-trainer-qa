@@ -97,11 +97,21 @@ class QuizGradingTest extends ApiTest {
 
     @Test
     void past_attempts_keep_their_grade_when_the_range_changes() {
-        record(BTN_OPEN, 25, "72o", "FOLD");
-        api.ranges().putUser(BTN_OPEN, "25", RangeFactory.write(Map.of("72o", "ALLIN"), 0));
+        Attempt before = record(BTN_OPEN, 25, "72o", "FOLD");
+        Response saved = api.ranges().putUser(BTN_OPEN, "25", RangeFactory.write(Map.of("72o", "ALLIN"), 0));
+        assertThat(saved.statusCode())
+                .as("el rango se guardó: " + saved.asString())
+                .isEqualTo(201);
 
-        Attempt past = api.quiz().list(Map.of()).jsonPath().getObject("items[0]", Attempt.class);
+        // Positive control: the range did change, a new answer is graded against it.
+        Attempt after = record(BTN_OPEN, 25, "72o", "FOLD");
+        assertThat(after.getExpected()).as("esperada con el rango nuevo").isEqualTo(Action.ALLIN);
+        assertThat(after.getRangeSource()).isEqualTo(Attempt.RangeSourceEnum.USER);
 
+        Attempt past = api.quiz().list(Map.of()).jsonPath().getList("items", Attempt.class).stream()
+                .filter(a -> a.getId().equals(before.getId()))
+                .findFirst()
+                .orElseThrow();
         assertThat(past.getExpected()).isEqualTo(Action.FOLD);
         assertThat(past.getCorrect()).isTrue();
         assertThat(past.getRangeSource()).isEqualTo(Attempt.RangeSourceEnum.DEFAULT);
@@ -129,6 +139,8 @@ class QuizGradingTest extends ApiTest {
             acción de otra situación| {"situation":"btn_open","stack":25,"hand":"AA","given":"CHECK"}   | 400 | given
             stack como texto        | {"situation":"btn_open","stack":"25","hand":"AA","given":"FOLD"}  | 400 | stack
             acción por índice       | {"situation":"btn_open","stack":25,"hand":"AA","given":17}        | 400 | given
+            situación como número   | {"situation":5,"stack":25,"hand":"AA","given":"FOLD"}             | 400 | situation
+            situación como booleano | {"situation":true,"stack":25,"hand":"AA","given":"FOLD"}          | 400 | situation
             """)
     void rejects_invalid_attempts(String description, String body, int status, String field) {
         Response response = api.quiz().record(body);

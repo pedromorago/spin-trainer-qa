@@ -27,9 +27,8 @@ public class QuizSteps {
     @Cuando("respondo {string} con {mano} en {string} a {stack} BB")
     public void answer(String given, String hand, String situation, BigDecimal stack) {
         Response response = context.remember(record(situation, stack, hand, given));
-        if (response.statusCode() == 201) {
-            context.rememberAttempt(response.as(Attempt.class));
-        }
+        // A rejected answer is not the last one: the next steps must not read the previous attempt.
+        context.rememberAttempt(response.statusCode() == 201 ? response.as(Attempt.class) : null);
     }
 
     /** Table with the columns {@code mano} and {@code respuesta}, in the order they are answered. */
@@ -73,6 +72,17 @@ public class QuizSteps {
         assertThat(last.getRangeSource()).isEqualTo(Attempt.RangeSourceEnum.DEFAULT);
     }
 
+    /** Positive control of the steps above: a new answer does see the new range. */
+    @Entonces(
+            "si vuelvo a responder {string} con {mano} en {string} a {stack} BB, se corrige con mi rango y la acción {string}")
+    public void answerAgainWithMyRange(String given, String hand, String situation, BigDecimal stack, String expected) {
+        Response response = record(situation, stack, hand, given);
+        assertThat(response.statusCode()).as(response.asString()).isEqualTo(201);
+        Attempt attempt = response.as(Attempt.class);
+        assertThat(attempt.getRangeSource()).isEqualTo(Attempt.RangeSourceEnum.USER);
+        assertThat(attempt.getExpected().getValue()).as("acción esperada").isEqualTo(expected);
+    }
+
     @Entonces("mi/su historial está vacío")
     public void emptyHistory() {
         assertThat(history()).isEmpty();
@@ -82,11 +92,8 @@ public class QuizSteps {
     @Entonces("mi historial contiene:")
     public void historyContains(DataTable attempts) {
         Tuple[] expected = attempts.asMaps().stream()
-                .map(row -> tuple(
-                        row.get("mano"),
-                        row.get("respuesta"),
-                        row.get("esperada"),
-                        row.get("resultado").equals("correcta")))
+                .map(row ->
+                        tuple(row.get("mano"), row.get("respuesta"), row.get("esperada"), result(row.get("resultado"))))
                 .toArray(Tuple[]::new);
 
         assertThat(history())
@@ -102,6 +109,12 @@ public class QuizSteps {
     public void newestFirst() {
         // Two answers in the same millisecond have no defined order: the timestamp is checked, not the position.
         assertThat(history()).extracting(Attempt::getAnsweredAt).isSortedAccordingTo((a, b) -> b.compareTo(a));
+    }
+
+    /** Only the two values of the vocabulary: a typo must not read as "incorrecta". */
+    private static boolean result(String value) {
+        assertThat(value).as("resultado").isIn("correcta", "incorrecta");
+        return value.equals("correcta");
     }
 
     private Response record(String situation, BigDecimal stack, String hand, String given) {

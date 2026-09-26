@@ -4,14 +4,17 @@ import static com.pedromorago.spintrainer.qa.assertion.ProblemAssert.assertThatP
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.pedromorago.spintrainer.qa.assertion.ErrorType;
+import com.pedromorago.spintrainer.qa.model.Attempt;
 import com.pedromorago.spintrainer.qa.model.HandStat;
 import com.pedromorago.spintrainer.qa.model.ProgressDay;
 import com.pedromorago.spintrainer.qa.support.ApiTest;
 import io.qameta.allure.Feature;
+import io.restassured.response.Response;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -23,10 +26,12 @@ import org.junit.jupiter.params.provider.CsvSource;
 @Feature("Estadísticas")
 class StatsTest extends ApiTest {
 
-    void answer(String hand, String given) {
+    Attempt answer(String hand, String given) {
         String body =
                 "{\"situation\":\"btn_open\",\"stack\":25,\"hand\":\"%s\",\"given\":\"%s\"}".formatted(hand, given);
-        assertThat(api.quiz().record(body).statusCode()).isEqualTo(201);
+        Response response = api.quiz().record(body);
+        assertThat(response.statusCode()).isEqualTo(201);
+        return response.as(Attempt.class);
     }
 
     @Test
@@ -44,19 +49,30 @@ class StatsTest extends ApiTest {
                         org.assertj.core.groups.Tuple.tuple("72o", 1, 1));
     }
 
+    /**
+     * Each attempt counts on the UTC day it was answered. The oracle is the attempts' own answeredAt, not the test's
+     * clock: midnight may fall between answering and asking (the window of two days covers it).
+     */
     @Test
-    void todays_progress_counts_todays_attempts() {
-        answer("AA", "MR_4B_C");
-        answer("KK", "FOLD");
+    void progress_counts_each_attempt_on_the_day_it_was_answered() {
+        List<Attempt> attempts = List.of(answer("AA", "MR_4B_C"), answer("KK", "FOLD"));
 
         List<ProgressDay> days =
-                api.stats().progress(Map.of("days", 1, "tz", "UTC")).jsonPath().getList(".", ProgressDay.class);
+                api.stats().progress(Map.of("days", 2, "tz", "UTC")).jsonPath().getList(".", ProgressDay.class);
 
-        assertThat(days).singleElement().satisfies(day -> {
-            assertThat(day.getDate()).isEqualTo(LocalDate.now(ZoneOffset.UTC));
-            assertThat(day.getAttempts()).isEqualTo(2);
-            assertThat(day.getCorrect()).isEqualTo(1);
-        });
+        Map<LocalDate, List<Attempt>> byDay = attempts.stream()
+                .collect(Collectors.groupingBy(
+                        a -> a.getAnsweredAt().atZoneSameInstant(ZoneOffset.UTC).toLocalDate()));
+        assertThat(days)
+                .extracting(ProgressDay::getDate, ProgressDay::getAttempts, ProgressDay::getCorrect)
+                .containsExactlyInAnyOrderElementsOf(byDay.entrySet().stream()
+                        .map(day -> org.assertj.core.groups.Tuple.tuple(
+                                day.getKey(), day.getValue().size(), (int) day.getValue().stream()
+                                        .filter(Attempt::getCorrect)
+                                        .count()))
+                        .toList());
+        assertThat(days.stream().mapToInt(ProgressDay::getAttempts).sum()).isEqualTo(2);
+        assertThat(days.stream().mapToInt(ProgressDay::getCorrect).sum()).isEqualTo(1);
     }
 
     @Test

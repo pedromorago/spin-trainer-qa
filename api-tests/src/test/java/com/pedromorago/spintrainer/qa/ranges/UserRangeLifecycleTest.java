@@ -17,8 +17,15 @@ import com.pedromorago.spintrainer.qa.support.ApiTest;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Link;
 import io.restassured.response.Response;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Tag;
@@ -72,6 +79,31 @@ class UserRangeLifecycleTest extends ApiTest {
                 .is(ErrorType.CONFLICT_DELETED)
                 .hasDetail(ErrorType.CONFLICT_DELETED.detail());
         assertThatProblem(api.ranges().getUser(BTN_OPEN, STACK)).is(ErrorType.NOT_FOUND);
+
+        // no range --PUT v0--> v3 (201): the count goes on after the delete, it does not start over at 1
+        Response again = put(Map.of("QQ", "ALLIN"), 0);
+        assertThat(again.statusCode()).isEqualTo(201);
+        assertThat(again.as(Range.class).getVersion())
+                .as("versión tras borrar y crear")
+                .isEqualTo(3);
+    }
+
+    /**
+     * ABA: a tab still holding version 1 of a range that another tab deleted and created again. Versions restarted at
+     * 1, so its write matched the new range and overwrote it without a conflict.
+     */
+    @Test
+    void a_stale_tab_cannot_overwrite_a_range_deleted_and_created_again() {
+        put(Map.of("AA", "ALLIN"), 0);
+        api.ranges().deleteUser(BTN_OPEN, STACK);
+        Response recreated = put(Map.of("KK", "ALLIN"), 0);
+
+        Response staleTab = put(Map.of("AA", "MR_F_F"), 1);
+
+        assertThat(recreated.as(Range.class).getVersion()).isEqualTo(2);
+        assertThatProblem(staleTab).is(ErrorType.CONFLICT).hasDetail(ErrorType.CONFLICT.detail(2));
+        assertThat(api.ranges().getUser(BTN_OPEN, STACK).jsonPath().getMap("hands"))
+                .isEqualTo(Map.of("KK", "ALLIN"));
     }
 
     @Test
@@ -86,6 +118,39 @@ class UserRangeLifecycleTest extends ApiTest {
         assertThatProblem(secondTab).is(ErrorType.CONFLICT);
         assertThat(api.ranges().getUser(BTN_OPEN, STACK).jsonPath().getString("hands.AA"))
                 .isEqualTo("ALLIN");
+    }
+
+    /**
+     * Concurrency: the same version written at the same time from several clients. Exactly one wins; a
+     * read-check-write without {@code WHERE version = ?} would let several of them through.
+     */
+    @Test
+    void concurrent_writes_on_the_same_version_have_exactly_one_winner() throws Exception {
+        put(Map.of(), 0);
+        int writers = 8;
+        CountDownLatch start = new CountDownLatch(1);
+        ExecutorService pool = Executors.newFixedThreadPool(writers);
+        try {
+            List<Future<Integer>> statuses = new ArrayList<>();
+            for (int i = 0; i < writers; i++) {
+                String action = i % 2 == 0 ? "ALLIN" : "MR_F_F";
+                statuses.add(pool.submit(() -> {
+                    start.await();
+                    return put(Map.of("AA", action), 1).statusCode();
+                }));
+            }
+            start.countDown();
+            List<Integer> results = new ArrayList<>();
+            for (Future<Integer> status : statuses) {
+                results.add(status.get(30, TimeUnit.SECONDS));
+            }
+
+            assertThat(results).as("estados").containsOnly(200, 409).containsOnlyOnce(200);
+            assertThat(api.ranges().getUser(BTN_OPEN, STACK).jsonPath().getInt("version"))
+                    .isEqualTo(2);
+        } finally {
+            pool.shutdownNow();
+        }
     }
 
     @Test

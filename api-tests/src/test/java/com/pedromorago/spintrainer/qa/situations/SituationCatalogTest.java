@@ -17,6 +17,25 @@ import org.junit.jupiter.api.Test;
 @Feature("Catálogo de situaciones")
 class SituationCatalogTest extends ApiTest {
 
+    /** The order of the study PDF: 12 3-max situations, then the 4 HU ones. */
+    static final List<String> PRESENTATION_ORDER = List.of(
+            "btn_open",
+            "sb_open",
+            "sb_vs_btn_mr",
+            "sb_vs_btn_limp",
+            "bb_vs_sb_mr",
+            "bb_vs_sb_limp",
+            "bb_vs_btn_mr_sb_fold",
+            "bb_vs_btn_limp_sb_fold",
+            "bb_vs_btn_mr_sb_3bet",
+            "bb_vs_btn_limp_sb_3bet",
+            "bb_vs_btn_mr_sb_call",
+            "bb_vs_btn_limp_sb_call",
+            "hu_sb_open",
+            "hu_bb_vs_mr",
+            "hu_bb_vs_limp",
+            "hu_bb_vs_os");
+
     @Test
     @Tag("smoke")
     void lists_the_16_spin_and_go_situations_in_presentation_order() {
@@ -24,12 +43,11 @@ class SituationCatalogTest extends ApiTest {
 
         assertThat(response.statusCode()).isEqualTo(200);
         List<Situation> situations = response.jsonPath().getList(".", Situation.class);
-        assertThat(situations).hasSize(16);
-        assertThat(situations.getFirst().getKey()).isEqualTo("btn_open");
-        assertThat(situations.getLast().getKey()).isEqualTo("hu_bb_vs_os");
+        assertThat(situations).extracting(Situation::getKey).containsExactlyElementsOf(PRESENTATION_ORDER);
         assertThat(situations)
                 .filteredOn(s -> s.getFormat() == Situation.FormatEnum.HU)
-                .hasSize(4);
+                .extracting(Situation::getKey)
+                .containsExactlyElementsOf(PRESENTATION_ORDER.subList(12, 16));
     }
 
     @Test

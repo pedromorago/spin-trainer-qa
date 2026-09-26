@@ -3,6 +3,7 @@ package com.pedromorago.spintrainer.qa.bdd;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
+import com.pedromorago.spintrainer.qa.model.AttemptPage;
 import com.pedromorago.spintrainer.qa.model.HandStat;
 import com.pedromorago.spintrainer.qa.model.ProgressDay;
 import io.cucumber.datatable.DataTable;
@@ -12,6 +13,8 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.assertj.core.groups.Tuple;
 
 /** Stats aggregated by the API over the attempts. */
@@ -38,13 +41,26 @@ public class StatsSteps {
                 .containsExactlyInAnyOrder(expected);
     }
 
+    /** A new player: every answer is from today, on the UTC day it was recorded (midnight may fall in between). */
     @Entonces("hoy llevo {int} respuestas y {int} aciertos")
     public void todaysProgress(int attempts, int correct) {
-        assertThat(progress(Map.of("days", 1, "tz", "UTC"))).singleElement().satisfies(day -> {
-            assertThat(day.getDate()).isEqualTo(LocalDate.now(ZoneOffset.UTC));
-            assertThat(day.getAttempts()).as("respuestas").isEqualTo(attempts);
-            assertThat(day.getCorrect()).as("aciertos").isEqualTo(correct);
-        });
+        List<ProgressDay> days = progress(Map.of("days", 2, "tz", "UTC"));
+
+        assertThat(days.stream().mapToInt(ProgressDay::getAttempts).sum())
+                .as("respuestas")
+                .isEqualTo(attempts);
+        assertThat(days.stream().mapToInt(ProgressDay::getCorrect).sum())
+                .as("aciertos")
+                .isEqualTo(correct);
+        assertThat(days).extracting(ProgressDay::getDate).as("días").isSubsetOf(answerDays());
+    }
+
+    private Set<LocalDate> answerDays() {
+        Response response = context.api().quiz().list(Map.of("limit", 200));
+        assertThat(response.statusCode()).as(response.asString()).isEqualTo(200);
+        return response.as(AttemptPage.class).getItems().stream()
+                .map(a -> a.getAnsweredAt().atZoneSameInstant(ZoneOffset.UTC).toLocalDate())
+                .collect(Collectors.toSet());
     }
 
     @Entonces("no tiene estadísticas")

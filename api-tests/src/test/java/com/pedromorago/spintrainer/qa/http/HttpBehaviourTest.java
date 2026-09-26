@@ -11,7 +11,12 @@ import com.pedromorago.spintrainer.qa.support.ApiTest;
 import io.qameta.allure.Feature;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /** Cross-cutting HTTP behaviour: frontend CORS, correlation id and errors outside the contract. */
 @Feature("HTTP")
@@ -67,23 +72,70 @@ class HttpBehaviourTest extends ApiTest {
     }
 
     /**
-     * The web sends {@code Accept: application/json}: it must be able to use every operation and receive the errors
-     * as Problem Details. The DELETE (whose only representation is a Problem) responded 406 (found by the E2E tests).
+     * The web sends {@code Accept: application/json}: it must be able to use every operation of the contract and
+     * receive the errors as Problem Details. The DELETE (whose only representation is a Problem) responded 406 (found
+     * by the E2E tests). Raw requests: the contract of each response is validated by the per-module suites.
      */
     @Test
     void a_client_that_only_accepts_json_can_use_every_operation() {
         String token = TokenProviders.current().accessToken(pedro);
-        RequestSpecification json = raw().auth().oauth2(token).accept("application/json");
+        Supplier<RequestSpecification> json = () -> raw().auth().oauth2(token).accept("application/json");
+        String range = "{\"hands\":{\"AA\":\"ALLIN\"},\"version\":0}";
+        String attempt = "{\"situation\":\"btn_open\",\"stack\":25,\"hand\":\"AA\",\"given\":\"ALLIN\"}";
 
-        Response created = json.contentType("application/json")
-                .body("{\"hands\":{\"AA\":\"ALLIN\"},\"version\":0}")
-                .put("/ranges/user/btn_open/25");
-        Response deleted = raw().auth().oauth2(token).accept("application/json").delete("/ranges/user/btn_open/25");
-        Response unknown = raw().auth().oauth2(token).accept("application/json").delete("/ranges/user/btn_open/12.5");
+        Map<String, Response> operations = new LinkedHashMap<>();
+        operations.put("GET /situations", json.get().get("/situations"));
+        operations.put("GET /ranges/default", json.get().get("/ranges/default"));
+        operations.put("GET /ranges/default/{s}/{st}", json.get().get("/ranges/default/btn_open/25"));
+        operations.put(
+                "PUT /ranges/user/{s}/{st}",
+                json.get().contentType("application/json").body(range).put("/ranges/user/btn_open/25"));
+        operations.put("GET /ranges/user", json.get().get("/ranges/user"));
+        operations.put("GET /ranges/user/{s}/{st}", json.get().get("/ranges/user/btn_open/25"));
+        operations.put(
+                "POST /quiz/attempts",
+                json.get().contentType("application/json").body(attempt).post("/quiz/attempts"));
+        operations.put("GET /quiz/attempts", json.get().get("/quiz/attempts"));
+        operations.put("GET /stats/hands", json.get().get("/stats/hands"));
+        operations.put("GET /stats/progress", json.get().get("/stats/progress"));
+        operations.put("DELETE /ranges/user/{s}/{st}", json.get().delete("/ranges/user/btn_open/25"));
 
-        assertThat(created.statusCode()).isEqualTo(201);
-        assertThat(created.contentType()).startsWith("application/json");
-        assertThat(deleted.statusCode()).as(deleted.asString()).isEqualTo(204);
-        assertThatProblem(unknown).is(ErrorType.NOT_FOUND);
+        assertThat(operations).allSatisfy((operation, response) -> {
+            assertThat(response.statusCode())
+                    .as(operation + " " + response.asString())
+                    .isBetween(200, 204);
+            if (response.statusCode() != 204) {
+                assertThat(response.contentType()).as(operation).startsWith("application/json");
+            }
+        });
+        assertThat(operations).hasSize(11);
+        assertThatProblem(json.get().delete("/ranges/user/btn_open/12.5")).is(ErrorType.NOT_FOUND);
+    }
+
+    /**
+     * URLs Spring Security's firewall rejects never reach a controller: a path parameter got Spring Boot's own error
+     * body (no type, no correlation id), and an encoded slash Tomcat's HTML error page. The API's integration tests
+     * cannot see the second one (MockMvc has no Tomcat). A double slash is not an error: Tomcat merges it.
+     */
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = {"/situations;jsessionid=1", "/ranges/default/btn_open%2F25"})
+    void urls_the_firewall_rejects_are_problems_too(String path) {
+        String token = TokenProviders.current().accessToken(pedro);
+
+        Response response = raw().urlEncodingEnabled(false).auth().oauth2(token).get(path);
+
+        assertThatProblem(response).is(ErrorType.VALIDATION).hasDetail("Ruta no válida");
+    }
+
+    /** The deployed commit is public (the deploy waits for it); nothing else of Actuator is. */
+    @Test
+    void only_health_and_the_revision_are_public() {
+        Response info = given().baseUri(QaConfig.get().apiOrigin().toString()).get("/actuator/info");
+        Response env = given().baseUri(QaConfig.get().apiOrigin().toString()).get("/actuator/env");
+
+        assertThat(info.statusCode()).isEqualTo(200);
+        assertThat(info.jsonPath().getMap("$")).containsOnlyKeys("app");
+        assertThat(info.jsonPath().getMap("app")).containsOnlyKeys("revision");
+        assertThat(env.statusCode()).isEqualTo(401);
     }
 }

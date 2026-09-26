@@ -1,5 +1,6 @@
 package com.pedromorago.spintrainer.qa.client;
 
+import io.restassured.builder.ResponseBuilder;
 import io.restassured.filter.FilterContext;
 import io.restassured.filter.OrderedFilter;
 import io.restassured.response.Response;
@@ -15,13 +16,18 @@ public final class CorrelationIdFilter implements OrderedFilter {
 
     public static final String HEADER = "X-Correlation-Id";
 
+    /** Added to the response by this filter: the id the request carried, for assertions on the response alone. */
+    public static final String SENT = "X-QA-Sent-Correlation-Id";
+
     @Override
     public Response filter(
             FilterableRequestSpecification request, FilterableResponseSpecification response, FilterContext context) {
         if (!request.getHeaders().hasHeaderWithName(HEADER)) {
             request.header(HEADER, "qa-" + UUID.randomUUID());
         }
-        return context.next(request, response);
+        String sent = request.getHeaders().getValue(HEADER);
+        Response received = context.next(request, response);
+        return new ResponseBuilder().clone(received).setHeader(SENT, sent).build();
     }
 
     @Override

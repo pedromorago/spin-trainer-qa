@@ -14,7 +14,11 @@ Característica: Historial y estadísticas del Quiz
     Cuando guardo mi rango de "btn_open" a 25 BB partiendo de la versión 0:
       | mano | acción |
       | 72o  | ALLIN  |
-    Entonces mi última respuesta sigue siendo correcta y corregida con el rango de referencia
+    Entonces mi rango de "btn_open" a 25 BB está en la versión 1 con:
+      | mano | acción |
+      | 72o  | ALLIN  |
+    Y mi última respuesta sigue siendo correcta y corregida con el rango de referencia
+    Y si vuelvo a responder "FOLD" con 72o en "btn_open" a 25 BB, se corrige con mi rango y la acción "ALLIN"
 
   Escenario: el historial guarda cada respuesta con su corrección, de la más reciente a la más antigua
     Dado que respondí en "btn_open" a 25 BB:

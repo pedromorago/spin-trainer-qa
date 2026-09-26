@@ -10,6 +10,7 @@ import com.pedromorago.spintrainer.qa.data.RangeFactory;
 import com.pedromorago.spintrainer.qa.support.ApiTest;
 import io.qameta.allure.Feature;
 import io.restassured.response.Response;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -46,6 +47,7 @@ class UserRangeValidationTest extends ApiTest {
     void reports_every_invalid_entry_at_once() {
         assertThatProblem(put("{\"hands\":{\"AAs\":\"ALLIN\",\"QQ\":\"CHECK\",\"JJ\":\"MR_C_C\"},\"version\":0}"))
                 .is(ErrorType.VALIDATION)
+                .hasFieldErrors("hands.AAs", "hands.QQ") // JJ is valid: it must not be reported
                 .hasFieldError("hands.AAs", "mano no válida")
                 .hasFieldError("hands.QQ", "acción CHECK no permitida en btn_open");
     }
@@ -67,6 +69,8 @@ class UserRangeValidationTest extends ApiTest {
                 Arguments.of("version -1 (límite inferior - 1)", "{\"hands\":{},\"version\":-1}", "version"),
                 Arguments.of("version decimal", "{\"hands\":{},\"version\":0.9}", "version"),
                 Arguments.of("version como texto", "{\"hands\":{},\"version\":\"0\"}", "version"),
+                Arguments.of(
+                        "version 2147483648 (límite superior + 1)", "{\"hands\":{},\"version\":2147483648}", "version"),
                 Arguments.of("acción que no existe", "{\"hands\":{\"AA\":\"RAISE\"},\"version\":0}", "hands.AA"),
                 Arguments.of("acción null", "{\"hands\":{\"AA\":null},\"version\":0}", "hands.AA"),
                 Arguments.of("acción por índice", "{\"hands\":{\"AA\":0},\"version\":0}", "hands.AA"),
@@ -86,13 +90,22 @@ class UserRangeValidationTest extends ApiTest {
         assertThat(put("{\"hands\":{},\"version\":0}").statusCode()).isEqualTo(201);
     }
 
-    @Test
-    void rejects_documents_over_the_size_limit() {
-        String padded = "{\"hands\":{}," + " ".repeat(70_000) + "\"version\":0}";
+    /** Boundary values of the document size: 64 KiB (65,536 bytes) is accepted, one byte more is not. */
+    @ParameterizedTest(name = "{0} bytes → {1}")
+    @CsvSource({"65536, 201", "65537, 400"})
+    void the_document_size_limit_is_64_kib(int bytes, int status) {
+        String head = "{\"hands\":{},";
+        String tail = "\"version\":0}";
+        String body = head + " ".repeat(bytes - head.length() - tail.length()) + tail;
+        assertThat(body.getBytes(StandardCharsets.UTF_8)).hasSize(bytes);
 
-        assertThatProblem(put(padded)).is(ErrorType.VALIDATION);
-        assertThat(put("{\"hands\":{}," + " ".repeat(1_000) + "\"version\":0}").statusCode())
-                .isEqualTo(201);
+        Response response = put(body);
+
+        if (status == 400) {
+            assertThatProblem(response).is(ErrorType.VALIDATION);
+        } else {
+            assertThat(response.statusCode()).as(response.asString()).isEqualTo(status);
+        }
     }
 
     @ParameterizedTest(name = "{0}@{1} → {2}")

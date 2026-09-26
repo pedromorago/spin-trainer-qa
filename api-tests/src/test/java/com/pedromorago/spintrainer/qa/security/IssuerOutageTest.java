@@ -40,6 +40,15 @@ class IssuerOutageTest extends ApiTest {
         } finally {
             outage.end();
         }
+        // The API goes back to the issuer for the unknown key and gets an answer: 401 (the key is not there), no
+        // longer 503. A request with the usual token would pass anyway: its key was already cached.
+        assertThat(Api.withToken(tokenWithNewKey)
+                        .withoutContract()
+                        .situations()
+                        .list()
+                        .statusCode())
+                .as("el emisor vuelve a responder")
+                .isEqualTo(401);
         assertThat(api.situations().list().statusCode())
                 .as("vuelve a funcionar")
                 .isEqualTo(200);

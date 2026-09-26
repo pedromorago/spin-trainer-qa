@@ -84,7 +84,10 @@ class AttemptHistoryTest extends ApiTest {
                 .isEmpty();
     }
 
-    /** Boundary values of limit (1..200) and a cursor the API did not issue. */
+    /**
+     * Boundary values of limit (1..200) and cursors the API did not issue: garbage, and a well-formed position in the
+     * year 300000, beyond what the database stores (it was a 500).
+     */
     @ParameterizedTest(name = "{0}={1} → {2}")
     @CsvSource({
         "limit, 1, 200",
@@ -92,7 +95,8 @@ class AttemptHistoryTest extends ApiTest {
         "limit, 0, 400",
         "limit, 201, 400",
         "limit, x, 400",
-        "cursor, bm9wZQ, 400"
+        "cursor, bm9wZQ, 400",
+        "cursor, KzMwMDAwMC0wMS0wMVQwMDowMDowMFp8MDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAw, 400"
     })
     void validates_paging_parameters(String name, String value, int status) {
         var response = api.quiz().list(Map.of(name, value));
@@ -102,6 +106,15 @@ class AttemptHistoryTest extends ApiTest {
         } else {
             assertThat(response.statusCode()).isEqualTo(200);
         }
+    }
+
+    /** The messages of the spec's constraints are Spanish, like every API error, whatever language the client asks. */
+    @ParameterizedTest(name = "limit={0} → {1}")
+    @CsvSource({"0, debe ser ≥ 1", "201, debe ser ≤ 200"})
+    void constraint_messages_are_spanish(String limit, String message) {
+        var response = api.quiz().list(Map.of("limit", limit));
+
+        assertThatProblem(response).is(ErrorType.VALIDATION).hasFieldError("limit", message);
     }
 
     @Test

@@ -32,10 +32,20 @@ public final class ProblemAssert extends AbstractAssert<ProblemAssert, Response>
         assertThat(body.getString("type")).as("type").isEqualTo(type.type());
         assertThat(body.getString("title")).as("title").isEqualTo(type.title());
         assertThat(body.getInt("status")).as("status del cuerpo").isEqualTo(type.status());
+        // Through Api, the id the request sent (CorrelationIdFilter); a raw request can only compare with the response.
+        String sent = actual.header(CorrelationIdFilter.SENT);
         assertThat(body.getString("correlationId"))
-                .as("correlationId del cuerpo = cabecera de la respuesta")
+                .as(
+                        sent != null
+                                ? "correlationId del cuerpo = el de la petición"
+                                : "correlationId del cuerpo = cabecera")
                 .isNotBlank()
-                .isEqualTo(actual.header(CorrelationIdFilter.HEADER));
+                .isEqualTo(sent != null ? sent : actual.header(CorrelationIdFilter.HEADER));
+        if (sent != null) {
+            assertThat(actual.header(CorrelationIdFilter.HEADER))
+                    .as("cabecera de la respuesta")
+                    .isEqualTo(sent);
+        }
         return this;
     }
 
