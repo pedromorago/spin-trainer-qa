@@ -23,7 +23,7 @@ pruebas de base de datos (pgTAP).
 | **Aceptación de API** | **qa · REST Assured** | El artefacto desplegado: contrato, reglas de negocio, seguridad, HTTP | Independiente del código; lo que ve un cliente |
 | Especificación ejecutable | qa · Cucumber | Reglas de negocio en Gherkin, en español | Legible por quien valida los rangos |
 | Regresión de colección | qa · Newman | El flujo completo de un jugador como colección de Postman | Ejecutable fuera de la JVM y abrible en Postman |
-| E2E | qa · Playwright (pendiente) | Web contra el mock y contra la API real; accesibilidad | Flujos de usuario reales |
+| E2E | qa · Playwright | La web contra el mock y contra la API real, las mismas specs; accesibilidad con axe | Flujos de usuario reales, en un navegador |
 
 Solapamiento con los `*IT` de la API, intencionado: allí se prueba el código con conocimiento interno; aquí, el
 contenedor tal como se desplegará (configuración de producción, imagen, red, emisor externo). Los defectos de empaquetado
@@ -74,6 +74,11 @@ y configuración solo aparecen aquí.
 | Historial paginado sin huecos ni duplicados, filtrable | Contrato | `AttemptHistoryTest`, Newman |
 | Stats agregadas por la API | ADR-0013 | `StatsTest`, `historial_y_estadisticas.feature`, Newman |
 | Cada jugador solo ve sus datos | ADR-0003 | `each_user_only_sees_their_own_*`, `privacidad.feature` |
+| El Explorer muestra el rango efectivo y solo él escribe rangos; el Builder no persiste | ADR-0012 | `explorer.spec.ts`, `builder.spec.ts` |
+| Dos pestañas no se pisan: la segunda recibe el 409 y puede recargar | ADR-0013 | `explorer.spec.ts` (mock y fullstack) |
+| El Quiz corrige con el rango efectivo; el histórico lo agrega el servidor | ADR-0012, ADR-0013 | `quiz.spec.ts`, `stats.spec.ts` |
+| La selección vive en la URL y se normaliza | Arquitectura web | `navigation.spec.ts` |
+| Controles accesibles por teclado y lector (WCAG 2.2 AA) | Contexto (calidad) | `accessibility.spec.ts`, atajos en `quiz.spec.ts` |
 | Solo JWT de sesión del emisor configurado (ES256, emisor, audiencia, rol, `exp`, `sub`) | ADR-0003 | `AuthenticationTest` |
 | Emisor caído → 503, no 401 | ADR-0003 | `IssuerOutageTest` |
 | Errores como Problem Details, también fuera de las rutas del contrato | Contrato | `ProblemAssert` en todas las suites, `HttpBehaviourTest` |
@@ -98,6 +103,14 @@ permisos (`DatabaseRolesIT`).
   explorar la API a mano. Es una dependencia solo de desarrollo: `npm audit` avisa de dependencias de Newman que no se
   usan con entradas externas (solo ejecuta la colección del repo).
 
+## E2E: dos backends, las mismas specs
+
+El proyecto `mock` prueba la web sola (rápido, sin Docker); `fullstack`, la web compilada en modo http contra la API
+del entorno de QA, con la sesión de Supabase inyectada (el JWT de QA). Como los datos de referencia coinciden, las specs
+y los oráculos son los mismos: si algo pasa en `mock` y falla en `fullstack`, el fallo está en la integración (ver
+Hallazgos). Cada test falla también ante errores de consola o respuestas HTTP ≥ 400 no previstas, y cada página se
+analiza con axe (WCAG 2.2 AA).
+
 ## Datos y aislamiento
 
 - Un usuario (UUID) nuevo por test, por escenario de Cucumber y por ejecución de Newman: todo corre en paralelo
@@ -105,6 +118,7 @@ permisos (`DatabaseRolesIT`).
 - Datos que la API no permite escribir (rangos de referencia): seed de QA en `env/flyway`, cargado por Flyway con las
   migraciones de la API. Nunca SQL desde los tests.
 - `@Isolated` solo para lo que cambia algo compartido: `IssuerOutageTest` deja sin JWKS a toda la suite.
+- E2E: un jugador nuevo por test (con el mock, un contexto de navegador nuevo, con su propio almacenamiento).
 
 ## Entorno
 
@@ -125,9 +139,17 @@ empezar la sesión de JUnit y lo borra al terminar; si ya hay uno en marcha, lo 
 | Data factories con Faker | `RangeFactory`, `Hands` | Semilla reproducible; `ThreadLocalRandom` en paralelo |
 | Configuración | `QaConfig` (propiedad `-Pqa.*` → variable `QA_*` → defecto) | Un único registro inmutable |
 | Qase por anotaciones | `@Feature`/`@Link` de Allure | Qase aplazado: sin gestor de casos por ahora |
+| Page Objects con regiones | `e2e/pages` (`#region` localizadores, acciones, consultas) | Componentes compartidos (`HandGrid`) como objetos propios |
 
 ## Hallazgos
 
 - **503 no declarado en la spec** (`IssuerOutageTest`): con el emisor caído la API respondía un 503 correcto que el
   contrato no recogía. Se documentó en la descripción de la spec que cualquier operación puede devolver 500 y 503 (sin
   declararlo por operación, para que el validador siga rechazando otros estados no previstos).
+- **406 en el DELETE de un rango desde la web** (`explorer.spec.ts`, proyecto `fullstack`): el Reset del Explorer
+  fallaba contra la API real y pasaba contra el mock. La web mandaba `Accept: application/json` y el DELETE (204 sin
+  cuerpo; sus errores en `application/problem+json`) no tenía ninguna representación aceptable, así que Spring
+  respondía 406 sin ejecutarlo. Ni los IT de la API ni Newman lo veían: mandan `Accept: */*`. Arreglado en los dos
+  lados: la API trata `application/json` como aceptación de Problem Details y la web acepta los dos tipos. Queda
+  cubierto por `RangesIT.JsonOnlyClients`, `HttpBehaviourTest#a_client_that_only_accepts_json_can_use_every_operation`
+  y el propio E2E.

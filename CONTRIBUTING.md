@@ -21,8 +21,10 @@ Datafaker · Nimbus JOSE · networknt JSON Schema · openapi-generator (modelos)
 ./gradlew specCheck            # contract/openapi.yaml == ../spin-trainer-api/openapi.yaml
 ./gradlew spotlessApply
 npm run env:up && npm run newman   # colección de Newman contra el entorno en marcha
+npm run e2e                        # Playwright: mock + fullstack (este con el entorno en marcha)
+npm run report                     # Allure combinado (API, Newman, E2E)
 ```
-Antes de commitear: `specCheck` y `:api-tests:test` en verde.
+Antes de commitear: `specCheck`, `:api-tests:test`, `npm run e2e:typecheck` y `npm run e2e` en verde.
 
 ## Convenciones
 - Caja negra: los tests solo hablan HTTP con la API. La preparación que la API no permite (datos de referencia) es
@@ -41,3 +43,9 @@ Antes de commitear: `specCheck` y `:api-tests:test` en verde.
 - Newman: la colección se edita en Postman y se exporta a `newman/` (v2.1). Un jugador nuevo por ejecución
   (`scripts/newman.mjs`); comprueba comportamiento, la validación contra la spec la hace la suite de Java.
 - Tokens fuera de la JVM (Newman, Playwright): `scripts/lib/qa-jwt.mjs`, mismos claims que `JwtForge`.
+- E2E: las mismas specs para `mock` y `fullstack`; lo que solo tiene sentido con el mock lleva `@solo-mock`. Page
+  Objects en `e2e/pages` con `#region` (localizadores, acciones, consultas); los tests no usan selectores sueltos.
+  Localizadores por rol y nombre accesible primero; `data-testid` y `data-hand/data-action/data-verdict` después.
+- Fixtures (`e2e/fixtures/test.ts`): jugador nuevo por test, sesión inyectada con backend `api` y guardia de errores de
+  consola/HTTP. Oráculos en `e2e/data/reference.ts` (espejo de `env/flyway` y `QaReferenceData`).
+- Accesibilidad: `expectAccessible` (axe, WCAG 2.2 AA) en cada página nueva.
