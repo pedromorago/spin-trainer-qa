@@ -43,7 +43,8 @@ configuration defects only show up here.
 ## Oracles
 
 - **The spec**, on every response: `ContractValidationFilter` validates the declared status, `Content-Type` and body
-  (schema and formats) of every request. A test that does not inspect the body still checks the contract.
+  (schema and formats) of every response received through `Api`. A test that does not inspect the body still checks
+  the contract.
 - **The seed's reference ranges** (pinned copy, `ReferenceRanges` in Java and `e2e/data/reference.ts`): the API must
   serve them hand by hand, and Quiz grading is compared against the expected action they yield, for random hands and
   answers.
@@ -55,12 +56,12 @@ configuration defects only show up here.
 | Technique | Where |
 |---|---|
 | Equivalence partitioning | `UserRangeValidationTest` (non-canonical hands, bodies outside the contract), `QuizGradingTest#rejects_invalid_attempts`, `AuthenticationTest` (one partition per JWT rejection reason), `SecurityHeadersTest` (one partition per class of response) |
-| Boundary value analysis | `limit` 0/1/200/201 (`AttemptHistoryTest`), `days` 0/1/365/366 (`StatsTest`), `version` 0 and maximum document size (`UserRangeValidationTest`), stacks 12.3/12.5 |
+| Boundary value analysis | `limit` 0/1/200/201 (`AttemptHistoryTest`), `days` 0/1/365/366 (`StatsTest`), `version` 0 and 2,147,483,648, document size 65,536/65,537 bytes (`UserRangeValidationTest`), stacks 12.3/12.5 |
 | Decision table | `QuizGradingTest#grades_against_the_effective_range`: user range? × hand in the range? → expected action and range source |
-| State transition testing | `UserRangeLifecycleTest`: no range → v1 → v2 → deleted, with the 409 for each invalid transition |
+| State transition testing | `UserRangeLifecycleTest`: no range → v1 → v2 → deleted → v3, with the 409 for each invalid transition (a range created again keeps counting versions) |
 | Randomized testing against an oracle | `QuizGradingTest#agrees_with_the_reference_range_for_any_hand_and_answer` (10 repetitions) |
 | Seeded generated data | `UserRangeLifecycleTest#any_valid_range_round_trips`: random ranges with Datafaker; the seed goes in the test case name so it can be reproduced |
-| Concurrency (lost update) | `UserRangeLifecycleTest#two_tabs_editing_the_same_version_cannot_lose_an_update` |
+| Concurrency (lost update) | `UserRangeLifecycleTest#concurrent_writes_on_the_same_version_have_exactly_one_winner` (eight simultaneous writers, one wins); `#two_tabs_editing_the_same_version_cannot_lose_an_update` and `#a_stale_tab_cannot_overwrite_a_range_deleted_and_created_again` (sequential) |
 | Isolation between users | `each_user_only_sees_their_own_*` (ranges and attempts) |
 | Fault injection | `resilience.spec.ts`: Playwright aborts the download of the Quiz chunk (as after a deploy); `server-wake.spec.ts`: a slow answer and 503s while the free API instance wakes up |
 
@@ -70,8 +71,8 @@ configuration defects only show up here.
 |---|---|---|
 | Catalog of 16 situations with implicit action and valid stacks | Context, contract | `SituationCatalogTest` |
 | Reference ranges served from the seed, revalidatable with ETag | ADR-0006, contract | `ReferenceRangesTest` |
-| The ranges served are, hand by hand, the ones in the PDF | ADR-0006 | `ReferenceRangesTest#every_range_served_is_the_seeded_one` |
-| Versioned custom range; a PUT with a stale version gets a 409 and overwrites nothing | ADR-0013 | `UserRangeLifecycleTest`, `rango_personalizado.feature`, Newman |
+| The ranges served are, hand by hand, the seeded ones (the pinned copy of the API's `reference-ranges.json`, extracted from the PDF) | ADR-0006 | `ReferenceRangesTest#every_range_served_is_the_seeded_one` |
+| Versioned custom range; a PUT with a stale version gets a 409 and overwrites nothing, also after a delete | ADR-0013 | `UserRangeLifecycleTest`, `rango_personalizado.feature`, Newman |
 | Nothing invalid is saved; per-field errors | Contract | `UserRangeValidationTest`, `rango_personalizado.feature` |
 | Effective range = custom range if it exists; otherwise, the reference range | ADR-0012 | `QuizGradingTest` (decision table), `correccion_del_quiz.feature`, Newman |
 | The server grades; the client cannot send `correct` | ADR-0013 | `QuizGradingTest`, Newman |
@@ -83,14 +84,17 @@ configuration defects only show up here.
 | Two tabs do not overwrite each other: the second one gets the 409 and can reload | ADR-0013 | `explorer.spec.ts` (mock and fullstack) |
 | The Quiz grades against the effective range; historical stats are aggregated by the server | ADR-0012, ADR-0013 | `quiz.spec.ts`, `stats.spec.ts` |
 | The selection lives in the URL and is normalized | Web architecture | `navigation.spec.ts` |
-| Controls accessible by keyboard and screen reader (WCAG 2.2 AA) | Context (quality) | `accessibility.spec.ts`, shortcuts in `quiz.spec.ts` |
+| Controls accessible by keyboard and screen reader (WCAG 2.2 AA) | Context (quality) | `accessibility.spec.ts`, shortcuts, focus and announcement in `quiz.spec.ts` |
+| Signing out asks about unsaved changes; another player on the same tab starts from their own caches | ADR-0003 | `auth.spec.ts` |
 | A page that cannot be downloaded or rendered shows a recoverable error and keeps the header | Web architecture | `resilience.spec.ts` |
 | Only session JWTs from the configured issuer (ES256, issuer, audience, role, `exp`, `sub`) | ADR-0003 | `AuthenticationTest` |
 | Issuer down → 503, not 401 | ADR-0003 | `IssuerOutageTest` |
 | No response can be sniffed or framed; no cache stores a player's data | Context (security) | `SecurityHeadersTest` |
 | The web app works under its production CSP and security headers | ADR-0016 | `content-security-policy.spec.ts` (and the whole E2E suite) |
 | While the free API wakes up, the app says so and retries by itself; the deployed native image behaves like the JVM one | ADR-0018 | `server-wake.spec.ts`; every suite runs against the native image |
-| Errors as Problem Details, also outside the contract's routes | Contract | `ProblemAssert` in every suite, `HttpBehaviourTest` |
+| Errors as Problem Details, also outside the contract's routes and for URLs the server rejects before any controller | Contract | `ProblemAssert` in every suite, `HttpBehaviourTest` |
+| API error messages in Spanish, whatever the client's language | Workspace rules | `AttemptHistoryTest#constraint_messages_are_spanish`, `ErrorType` templates |
+| Only health and the deployed revision are public in Actuator | ADR-0018 | `HttpBehaviourTest#only_health_and_the_revision_are_public` |
 | CORS only for the web app's origin; correlation id | Contract | `HttpBehaviourTest` |
 
 In Allure: each class carries `@Feature` and the ADRs it tests as `@Link` (in Gherkin, the `@ADR-0012` tag becomes the
@@ -106,7 +110,7 @@ level (`DatabaseRolesIT`).
 - **Cucumber** expresses the business rules in the player's vocabulary (hand, range, answer, version), in Spanish: it
   is the part of the suite that someone who knows poker but not the code can review. Technical details (headers,
   formats, JWT) stay in JUnit. It runs in the same Gradle task, against the same environment and with the same
-  validation against the spec on every request.
+  validation against the spec on every response.
 - **Newman** walks through a new player's full flow, request by request and chaining state (ETag, versions, cursor), as
   a client would. It serves as a deployment smoke test from Node, without the JVM, and can be opened in Postman to
   explore the API by hand. It is a development-only dependency: `npm audit` flags Newman dependencies that are never
@@ -159,6 +163,8 @@ the JUnit session begins and tears it down when it ends; if one is already runni
 
 ## Findings
 
+What the tests found:
+
 - **503 not declared in the spec** (`IssuerOutageTest`): with the issuer down, the API returned a correct 503 that the
   contract did not cover. The spec description now documents that any operation may return 500 and 503 (without
   declaring them per operation, so that the validator keeps rejecting any other unexpected status).
@@ -178,3 +184,29 @@ the JUnit session begins and tears it down when it ends; if one is already runni
   inside the properties map, so every validation error ended as a 500 or as Spring's default body. The unit and
   integration tests run on the JVM and could not see it; running the black-box suite against the deployable image did.
   Fixed with a runtime hint (`ProblemDetailsHints`) that has its own unit test.
+
+What a review of the three repos found (a bug sweep after the suites were green), and the test that covers each one
+now. Each of these tests fails against the previous version:
+
+- **A range deleted and created again started over at version 1**: a tab still holding version 1 of the old range
+  overwrote the new one without a 409 (an ABA), and the same `(user, 1)` was stamped on attempts graded against
+  different contents. Versions now keep counting (API migration V6).
+  `UserRangeLifecycleTest#a_stale_tab_cannot_overwrite_a_range_deleted_and_created_again`.
+- **The suite could be green without running**: `:api-tests:test` was cacheable and its real inputs (the sibling API
+  and web, `QA_API_URL`, the pinned contract read at runtime) were invisible to Gradle, so a changed API gave
+  `UP-TO-DATE` or `FROM-CACHE`. The task now always runs.
+- **Tests that asserted less than they claimed**: the ADR-0007 tests did not check that the range changed (a failed PUT
+  passed them), the lost-update test was sequential, the "document size" boundary was 70,000 bytes against a
+  65,536 limit, the correlation id was compared with the response instead of the request, the issuer-recovery check
+  used a key the API had already cached, and the catalog order checked only its ends. Each one now checks what its
+  name says.
+- **Stricter API edges**: `{"situation": 5}` was looked up as `"5"` (404 instead of 400), a cursor in the year 300000
+  was a 500, validation messages came out in English in the container, and a URL with `;` or `%2F` got Spring Boot's
+  or Tomcat's own error page. `QuizGradingTest`, `AttemptHistoryTest`, `HttpBehaviourTest`.
+- **Web**: HU SB Open's tenth action (FOLD) had no working shortcut, Enter on a tab dealt the next hand, the next
+  player on the same tab inherited the previous one's scoreboard and cache, "Salir" skipped the unsaved-changes
+  guard, the redirect from `/` lost the selection, and choosing the active stack tripped the guard. `quiz.spec.ts`,
+  `auth.spec.ts`, `navigation.spec.ts`, `explorer.spec.ts`.
+- **The E2E guard had blind spots**: it only watched the first tab and could finish before the last request answered.
+  It now watches the whole context, failed requests included, and waits for requests in flight; each fault
+  injection allows exactly the errors it provokes.

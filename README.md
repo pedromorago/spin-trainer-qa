@@ -10,12 +10,12 @@ and the web app as a user and a client see them, independently of their code
 
 | Level | Where | Size |
 |---|---|---|
-| API acceptance (REST Assured + JUnit 5) | this repo | 133 tests, every response validated against the OpenAPI contract |
+| API acceptance (REST Assured + JUnit 5) | this repo | 145 tests, every response validated against the OpenAPI contract |
 | Executable specification (Cucumber, in Spanish) | this repo | 23 scenarios in 4 features |
 | Collection regression (Newman) | this repo | 20 requests, 47 assertions |
-| E2E (Playwright + TypeScript, axe) | this repo | 29 specs against the mock and against the real API, under the production CSP |
-| API unit and integration | spin-trainer-api | 143 unit tests (PIT mutation score 100 %) and 97 integration tests (Testcontainers) |
-| Web unit | spin-trainer-web | 253 Vitest tests (Stryker mutation score 100 % in the domain) |
+| E2E (Playwright + TypeScript, axe) | this repo | 37 specs against the mock and against the real API, under the production CSP |
+| API unit and integration | spin-trainer-api | 152 unit tests (PIT mutation score 100 %) and 106 integration tests (Testcontainers) |
+| Web unit | spin-trainer-web | 295 Vitest tests (Stryker mutation score 100 % in the domain) |
 
 ## What the tests found
 
@@ -28,12 +28,15 @@ Each of these was a real defect or gap, found by a test before it reached anyone
 | A tab whose code failed to download (e.g. after a deploy) showed React Router's debug screen, in English, with no way out | fault injection, `resilience.spec.ts` | web |
 | In the native image, every 400 with field errors became a 500 (a reflection hint Spring AOT could not infer) | this suite, run against the deployable image | API |
 | Missing boundary values, and a test named "exactly full last page" that never filled a page | mutation testing (PIT, Stryker) | tests in API and web |
+| A range deleted and created again restarted at version 1, so a stale tab could overwrite it silently | review, now `UserRangeLifecycleTest` | API (migration V6) |
+| The API suite could pass from Gradle's cache without talking to the current API | review | this suite's build |
+| HU SB Open's tenth action had no working keyboard shortcut; the next player on a tab inherited the previous one's data | review, now `quiz.spec.ts` and `auth.spec.ts` | web |
 
 ## How it is tested
 
 - **Test design, explicit per test**: equivalence partitioning, boundary value analysis, decision tables, state
   transitions, randomized testing against an oracle, seeded generated data and a lost-update concurrency test.
-- **Contract**: every request and response is validated against a pinned copy of `openapi.yaml` (status,
+- **Contract**: every response is validated against a pinned copy of `openapi.yaml` (status,
   Content-Type, schema and formats); errors are Problem Details checked by type, status, title and detail template.
 - **Real system**: the API's production image (a GraalVM native executable), Postgres with the production roles and a
   WireMock issuer for the JWTs; the reference data is the real seed, the 73 ranges extracted from the study PDF.
@@ -74,7 +77,7 @@ flowchart LR
   reference ranges.
 - `api-tests/src/test/java/.../ranges/UserRangeLifecycleTest.java`: state transitions and the lost-update test.
 - `api-tests/src/test/resources/features/rango_personalizado.feature`: the business rules in the player's language.
-- `api-tests/src/main/java/.../contract/`: how every request is validated against the contract.
+- `api-tests/src/main/java/.../contract/`: how every response is validated against the contract.
 - `e2e/tests/resilience.spec.ts` and `e2e/tests/server-wake.spec.ts`: fault injection in the browser.
 
 ## Requirements
