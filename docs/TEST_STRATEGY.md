@@ -54,7 +54,7 @@ configuration defects only show up here.
 
 | Technique | Where |
 |---|---|
-| Equivalence partitioning | `UserRangeValidationTest` (non-canonical hands, bodies outside the contract), `QuizGradingTest#rejects_invalid_attempts`, `AuthenticationTest` (one partition per JWT rejection reason) |
+| Equivalence partitioning | `UserRangeValidationTest` (non-canonical hands, bodies outside the contract), `QuizGradingTest#rejects_invalid_attempts`, `AuthenticationTest` (one partition per JWT rejection reason), `SecurityHeadersTest` (one partition per class of response) |
 | Boundary value analysis | `limit` 0/1/200/201 (`AttemptHistoryTest`), `days` 0/1/365/366 (`StatsTest`), `version` 0 and maximum document size (`UserRangeValidationTest`), stacks 12.3/12.5 |
 | Decision table | `QuizGradingTest#grades_against_the_effective_range`: user range? × hand in the range? → expected action and range source |
 | State transition testing | `UserRangeLifecycleTest`: no range → v1 → v2 → deleted, with the 409 for each invalid transition |
@@ -87,6 +87,7 @@ configuration defects only show up here.
 | A page that cannot be downloaded or rendered shows a recoverable error and keeps the header | Web architecture | `resilience.spec.ts` |
 | Only session JWTs from the configured issuer (ES256, issuer, audience, role, `exp`, `sub`) | ADR-0003 | `AuthenticationTest` |
 | Issuer down → 503, not 401 | ADR-0003 | `IssuerOutageTest` |
+| No response can be sniffed or framed; no cache stores a player's data | Context (security) | `SecurityHeadersTest` |
 | Errors as Problem Details, also outside the contract's routes | Contract | `ProblemAssert` in every suite, `HttpBehaviourTest` |
 | CORS only for the web app's origin; correlation id | Contract | `HttpBehaviourTest` |
 
