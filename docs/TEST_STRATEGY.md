@@ -173,3 +173,8 @@ the JUnit session begins and tears it down when it ends; if one is already runni
   replaces the files, or the connection drops), React Router's default screen took over the whole page: in English,
   with the stack trace, no header and no way out. The web app now has `RouteErrorPage` as `errorElement`: it replaces
   only the page, offers *Recargar* and *Ir al inicio*, and passes axe. The test fails against the previous version.
+- **400s became 500s in the native image** (40 JUnit and Cucumber tests and 2 Newman assertions, only against the
+  native image of ADR-0018): Jackson writes the Problem's `errors` by reflection, and Spring AOT cannot see those records
+  inside the properties map, so every validation error ended as a 500 or as Spring's default body. The unit and
+  integration tests run on the JVM and could not see it; running the black-box suite against the deployable image did.
+  Fixed with a runtime hint (`ProblemDetailsHints`) that has its own unit test.
