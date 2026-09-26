@@ -1,12 +1,81 @@
 # spin-trainer-qa
 
-Black-box tests for Spin Trainer (a preflop range trainer for Spin & Go): functional and contract API testing,
-business flows in Gherkin, regression with Newman and E2E with Playwright. A QA portfolio project: the suite is
-independent of the code it tests ([spin-trainer-api](https://github.com/pedromorago/spin-trainer-api),
-[spin-trainer-web](https://github.com/pedromorago/spin-trainer-web)); decisions and architecture live in
-`spin-trainer-web/docs/`.
+Black-box test suite for **Spin Trainer**, a preflop range trainer for Spin & Go poker (3-max and heads-up) that I use
+to study and that doubles as my QA portfolio. The suite only talks HTTP to the system: it tests the deployable API image
+and the web app as a user and a client see them, independently of their code
+([spin-trainer-api](https://github.com/pedromorago/spin-trainer-api),
+[spin-trainer-web](https://github.com/pedromorago/spin-trainer-web)).
 
-Test strategy (test basis, techniques, traceability): [`docs/TEST_STRATEGY.md`](docs/TEST_STRATEGY.md).
+## At a glance
+
+| Level | Where | Size |
+|---|---|---|
+| API acceptance (REST Assured + JUnit 5) | this repo | 133 tests, every response validated against the OpenAPI contract |
+| Executable specification (Cucumber, in Spanish) | this repo | 23 scenarios in 4 features |
+| Collection regression (Newman) | this repo | 20 requests, 47 assertions |
+| E2E (Playwright + TypeScript, axe) | this repo | 29 specs against the mock and against the real API, under the production CSP |
+| API unit and integration | spin-trainer-api | 143 unit tests (PIT mutation score 100 %) and 97 integration tests (Testcontainers) |
+| Web unit | spin-trainer-web | 253 Vitest tests (Stryker mutation score 100 % in the domain) |
+
+## What the tests found
+
+Each of these was a real defect or gap, found by a test before it reached anyone, and each test stays as a regression.
+
+| Finding | Found by | Fixed in |
+|---|---|---|
+| The Explorer's Reset (a `DELETE`) returned 406 against the real API and passed against the mock | E2E, `fullstack` project | API and web |
+| With the JWT issuer down, the API answered a correct 503 that the contract did not declare | `IssuerOutageTest` | contract |
+| A tab whose code failed to download (e.g. after a deploy) showed React Router's debug screen, in English, with no way out | fault injection, `resilience.spec.ts` | web |
+| In the native image, every 400 with field errors became a 500 (a reflection hint Spring AOT could not infer) | this suite, run against the deployable image | API |
+| Missing boundary values, and a test named "exactly full last page" that never filled a page | mutation testing (PIT, Stryker) | tests in API and web |
+
+## How it is tested
+
+- **Test design, explicit per test**: equivalence partitioning, boundary value analysis, decision tables, state
+  transitions, randomized testing against an oracle, seeded generated data and a lost-update concurrency test.
+- **Contract**: every request and response is validated against a pinned copy of `openapi.yaml` (status,
+  Content-Type, schema and formats); errors are Problem Details checked by type, status, title and detail template.
+- **Real system**: the API's production image (a GraalVM native executable), Postgres with the production roles and a
+  WireMock issuer for the JWTs; the reference data is the real seed, the 73 ranges extracted from the study PDF.
+- **Non-functional, without extra tools**: accessibility with axe (WCAG 2.2 AA) on every page, security headers, the
+  production Content-Security-Policy, and fault injection (a chunk that fails to download, a server waking up).
+- **Traceability** from each rule and decision (ADR) to the tests that check it, and a combined Allure report.
+
+The full picture, with the test basis, oracles and traceability: [`docs/TEST_STRATEGY.md`](docs/TEST_STRATEGY.md).
+The decisions behind the project: [ADRs](https://github.com/pedromorago/spin-trainer-web/tree/main/docs/adr).
+
+## System under test
+
+```mermaid
+flowchart LR
+  subgraph suite[spin-trainer-qa]
+    junit[REST Assured + JUnit 5<br/>Cucumber]
+    newman[Newman]
+    pw[Playwright]
+  end
+  subgraph env[QA environment · docker compose]
+    api[API · native image<br/>prod profile]
+    db[(Postgres 17<br/>production roles, real seed)]
+    jwks[WireMock<br/>JWKS standing in for Supabase]
+  end
+  web[Web build served with<br/>the production headers]
+  junit -- HTTP, validated against the contract --> api
+  newman -- HTTP --> api
+  pw --> web
+  web -- fullstack project --> api
+  api --> db
+  api -- verifies the JWT --> jwks
+```
+
+## Where to start reading
+
+- [`docs/TEST_STRATEGY.md`](docs/TEST_STRATEGY.md): levels, techniques, oracles, traceability and findings.
+- `api-tests/src/test/java/.../quiz/QuizGradingTest.java`: a decision table and randomized testing against the
+  reference ranges.
+- `api-tests/src/test/java/.../ranges/UserRangeLifecycleTest.java`: state transitions and the lost-update test.
+- `api-tests/src/test/resources/features/rango_personalizado.feature`: the business rules in the player's language.
+- `api-tests/src/main/java/.../contract/`: how every request is validated against the contract.
+- `e2e/tests/resilience.spec.ts` and `e2e/tests/server-wake.spec.ts`: fault injection in the browser.
 
 ## Requirements
 
