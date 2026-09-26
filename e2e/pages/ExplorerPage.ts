@@ -2,9 +2,9 @@ import type { Locator, Page } from '@playwright/test';
 import { ACTION_LABELS } from '../data/reference';
 import { HandGrid } from './HandGrid';
 
-/** Explorer: el rango efectivo editable (pincel, Guardar, Reset) y su resumen. */
+/** Explorer: the editable effective range (brush, Save, Reset) and its summary. */
 export class ExplorerPage {
-  // #region Localizadores
+  // #region Locators
   readonly heading: Locator;
   readonly grid: HandGrid;
   readonly brushes: Locator;
@@ -36,12 +36,12 @@ export class ExplorerPage {
     this.reloadAfterConflict = page.getByTestId('explorer-reload');
   }
 
-  // #region Acciones
+  // #region Actions
   async open(situation = 'btn_open', stack: number = 25): Promise<void> {
     await this.page.goto(`/explorer?s=${situation}&stack=${stack}`);
   }
 
-  /** Elige el pincel (acción o "Goma") y pinta las manos. */
+  /** Picks the brush (action or "Goma" eraser) and paints the hands. */
   async paint(action: string, ...hands: string[]): Promise<void> {
     await this.brush(action).click();
     await this.grid.paint(...hands);
@@ -53,7 +53,7 @@ export class ExplorerPage {
   }
   // #endregion
 
-  // #region Consultas
+  // #region Queries
   brush(action: string): Locator {
     return this.brushes.getByRole('button', { name: action === 'ERASE' ? 'Goma' : ACTION_LABELS[action], exact: true });
   }

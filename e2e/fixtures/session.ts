@@ -1,8 +1,8 @@
 import { qaSessionToken } from '../../scripts/lib/qa-jwt.mjs';
 
 /**
- * Sesión de Supabase tal como la guarda supabase-js en localStorage. La web solo la lee para mandar el token a la API
- * (ADR-0003), así que basta con inyectarla: el login real contra Supabase queda fuera de los E2E (se prueba a mano).
+ * Supabase session as supabase-js stores it in localStorage. The web only reads it to send the token to the API
+ * (ADR-0003), so injecting it is enough: the real login against Supabase is out of the E2E scope (tested by hand).
  */
 export interface InjectedSession {
   storageKey: string;
@@ -29,7 +29,7 @@ export function supabaseSession(playerId: string, supabaseUrl: string): Injected
       created_at: new Date().toISOString(),
     },
   };
-  // supabase-js: sb-<primera etiqueta del host>-auth-token (http://localhost:8089 → sb-localhost-auth-token).
+  // supabase-js: sb-<first host label>-auth-token (http://localhost:8089 → sb-localhost-auth-token).
   const storageKey = `sb-${new URL(supabaseUrl).hostname.split('.')[0]}-auth-token`;
   return { storageKey, value: JSON.stringify(session), accessToken };
 }

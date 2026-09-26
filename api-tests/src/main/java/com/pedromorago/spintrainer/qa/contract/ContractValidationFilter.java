@@ -9,9 +9,9 @@ import io.restassured.specification.FilterableResponseSpecification;
 import java.util.List;
 
 /**
- * Valida cada respuesta contra {@code openapi.yaml}, en todos los tests y sin que el test lo pida: un cambio de la API
- * que rompa el contrato hace fallar cualquier test que lo toque. La ruta es la plantilla con la que el servicio llamó
- * ({@code /ranges/user/{situation}/{stack}}), que coincide con la de la spec.
+ * Validates every response against {@code openapi.yaml}, in every test and without the test asking for it: an API
+ * change that breaks the contract fails any test that touches it. The path is the template the service called with
+ * ({@code /ranges/user/{situation}/{stack}}), which matches the spec's one.
  */
 public final class ContractValidationFilter implements OrderedFilter {
 

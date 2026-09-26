@@ -1,6 +1,6 @@
--- Ajustes de QA sobre los datos reales (propios de la suite, no de la API). Flyway los aplica después de las migraciones
--- versionadas, así que el entorno tiene el catálogo y los rangos de referencia del seed de producción (V5) con una
--- excepción documentada: btn_open@8 se queda sin rango de referencia, para probar en caja negra que sin rango no hay
--- corrección (422). Idempotente.
+-- QA adjustments on top of the real data (owned by the suite, not by the API). Flyway applies them after the versioned
+-- migrations, so the environment has the catalog and the reference ranges from the production seed (V5) with one
+-- documented exception: btn_open@8 is left without a reference range, to prove black-box that without a range there
+-- is no grading (422). Idempotent.
 
 DELETE FROM app.default_range WHERE situation = 'btn_open' AND stack = 8;

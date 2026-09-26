@@ -1,5 +1,5 @@
 plugins {
-    // Descarga el JDK 21 si la máquina no lo tiene (toolchains de Gradle).
+    // Downloads JDK 21 if the machine doesn't have it (Gradle toolchains).
     id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
 

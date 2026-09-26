@@ -13,7 +13,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Rangos personalizados. Las tablas de manos tienen las columnas {@code mano} y {@code acción}. */
+/** Custom ranges. Hand tables have the columns {@code mano} and {@code acción}. */
 public class RangeSteps {
 
     private final ScenarioContext context;
@@ -66,7 +66,7 @@ public class RangeSteps {
     }
 
     private Response put(String situation, BigDecimal stack, int version, DataTable hands) {
-        // Mapa y no el modelo generado: las features también mandan manos y acciones que el contrato no admite.
+        // A map, not the generated model: the features also send hands and actions the contract doesn't allow.
         Map<String, Object> body = Map.of("hands", hands(hands), "version", version);
         return context.api().ranges().putUser(situation, stack.toPlainString(), body);
     }

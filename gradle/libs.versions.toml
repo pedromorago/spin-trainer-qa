@@ -1,4 +1,4 @@
-# Versiones en un solo sitio (ADR-0002). Combinaciones probadas: JUnit 5 + Cucumber 7 + Allure 2.
+# Versions in one place (ADR-0002). Tested combinations: JUnit 5 + Cucumber 7 + Allure 2.
 [versions]
 junit = "5.14.4"
 rest-assured = "5.5.7"
@@ -7,7 +7,7 @@ jackson = "2.22.3"
 cucumber = "7.34.9"
 allure-java = "2.35.5"
 allure-gradle = "4.3.0"
-# 1.5.x: API sobre Jackson 2, el mismo que usa REST Assured.
+# 1.5.x: API on top of Jackson 2, the same one REST Assured uses.
 json-schema-validator = "1.5.9"
 nimbus-jose-jwt = "10.10"
 datafaker = "2.7.0"

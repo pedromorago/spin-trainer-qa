@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 import org.assertj.core.groups.Tuple;
 
-/** Respuestas del Quiz, su corrección y el historial. */
+/** Quiz answers, their grading and the history. */
 public class QuizSteps {
 
     private final ScenarioContext context;
@@ -32,7 +32,7 @@ public class QuizSteps {
         }
     }
 
-    /** Tabla con las columnas {@code mano} y {@code respuesta}, en el orden en que se responde. */
+    /** Table with the columns {@code mano} and {@code respuesta}, in the order they are answered. */
     @Dado("que respondí en {string} a {stack} BB:")
     public void answered(String situation, BigDecimal stack, DataTable answers) {
         for (Map<String, String> row : answers.asMaps()) {
@@ -78,7 +78,7 @@ public class QuizSteps {
         assertThat(history()).isEmpty();
     }
 
-    /** Tabla con las columnas {@code mano}, {@code respuesta}, {@code esperada} y {@code resultado}. */
+    /** Table with the columns {@code mano}, {@code respuesta}, {@code esperada} and {@code resultado}. */
     @Entonces("mi historial contiene:")
     public void historyContains(DataTable attempts) {
         Tuple[] expected = attempts.asMaps().stream()
@@ -100,7 +100,7 @@ public class QuizSteps {
 
     @Entonces("está ordenado de la respuesta más reciente a la más antigua")
     public void newestFirst() {
-        // Dos respuestas en el mismo milisegundo no tienen un orden definido: se comprueba la fecha, no la posición.
+        // Two answers in the same millisecond have no defined order: the timestamp is checked, not the position.
         assertThat(history()).extracting(Attempt::getAnsweredAt).isSortedAccordingTo((a, b) -> b.compareTo(a));
     }
 

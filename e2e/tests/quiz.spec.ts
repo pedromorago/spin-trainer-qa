@@ -46,7 +46,7 @@ test.describe('Quiz: corrección contra el rango efectivo (ADR-0012, ADR-0013)',
   });
 
   test('con rango personalizado se corrige con el del jugador', async ({ shell, explorer, quiz }) => {
-    // Todo el rango de referencia pasa a all-in: cualquier mano del rango se corregiría distinto con el de referencia.
+    // The whole reference range becomes all-in: any hand in it would be graded differently with the reference one.
     await explorer.open('btn_open', 25);
     await explorer.paint('ALLIN', ...Object.keys(BTN_OPEN_25));
     await explorer.save.click();

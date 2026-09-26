@@ -8,8 +8,8 @@ import io.restassured.specification.FilterableResponseSpecification;
 import java.util.UUID;
 
 /**
- * Cada petición lleva un {@code X-Correlation-Id} propio ({@code qa-...}): en el informe de Allure y en los logs JSON de
- * la API se puede cruzar una petición con su traza.
+ * Each request carries its own {@code X-Correlation-Id} ({@code qa-...}): in the Allure report and in the API's JSON
+ * logs a request can be matched with its trace.
  */
 public final class CorrelationIdFilter implements OrderedFilter {
 

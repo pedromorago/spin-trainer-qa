@@ -1,7 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 
 export class LoginPage {
-  // #region Localizadores
+  // #region Locators
   readonly form: Locator;
   readonly email: Locator;
   readonly password: Locator;
@@ -15,7 +15,7 @@ export class LoginPage {
     this.submit = page.getByRole('button', { name: 'Entrar' });
   }
 
-  // #region Acciones
+  // #region Actions
   async signIn(email: string, password: string): Promise<void> {
     await this.email.fill(email);
     await this.password.fill(password);

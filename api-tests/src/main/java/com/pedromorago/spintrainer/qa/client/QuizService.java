@@ -3,7 +3,7 @@ package com.pedromorago.spintrainer.qa.client;
 import io.restassured.response.Response;
 import java.util.Map;
 
-/** Tag {@code quiz} del contrato. */
+/** The contract's {@code quiz} tag. */
 public final class QuizService extends ServiceBase {
 
     QuizService(Auth auth, boolean validateContract) {

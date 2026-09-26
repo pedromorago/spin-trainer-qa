@@ -14,7 +14,7 @@ test.describe('Sesión (ADR-0003)', () => {
     await expect(explorer.heading).toBeHidden();
   });
 
-  // Solo con el mock: en fullstack el login es el de Supabase, que en QA no existe (la sesión se inyecta).
+  // Mock only: in fullstack the login is Supabase's, which doesn't exist in QA (the session is injected).
   test('al volver a entrar se recupera la ruta y la selección', { tag: '@solo-mock' }, async ({ page, shell, login }) => {
     await shell.open('/quiz', { situation: 'btn_open', stack: 25 });
 

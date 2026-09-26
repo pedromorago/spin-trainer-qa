@@ -2,7 +2,7 @@ package com.pedromorago.spintrainer.qa.support;
 
 import java.util.Map;
 
-/** Enlaces a las decisiones que prueba cada test (trazabilidad en el informe de Allure). */
+/** Links to the decisions each test verifies (traceability in the Allure report). */
 public final class Adr {
 
     public static final String BASE = "https://github.com/pedromorago/spin-trainer-web/blob/main/docs/adr/";
@@ -21,7 +21,7 @@ public final class Adr {
 
     private Adr() {}
 
-    /** Enlace de un ADR por su número ({@code "0012"}), para las etiquetas {@code @ADR-0012} de las features. */
+    /** Link to an ADR by its number ({@code "0012"}), for the features' {@code @ADR-0012} tags. */
     public static String url(String number) {
         String url = BY_NUMBER.get(number);
         if (url == null) {

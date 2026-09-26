@@ -6,8 +6,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Cadena de tokens: cada usuario obtiene su token una vez y lo reutiliza hasta un minuto antes de que caduque (como
- * hace la web con su sesión). Seguro para tests en paralelo.
+ * Token chain: each user gets their token once and reuses it until one minute before it expires (as the web does
+ * with its session). Safe for parallel tests.
  */
 final class LocalJwtTokenProvider implements TokenProvider {
 

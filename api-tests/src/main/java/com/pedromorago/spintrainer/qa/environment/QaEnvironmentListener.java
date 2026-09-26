@@ -6,8 +6,8 @@ import org.junit.platform.launcher.TestExecutionListener;
 import org.junit.platform.launcher.TestPlan;
 
 /**
- * Levanta el entorno una vez por ejecución (JUnit y Cucumber comparten sesión) y lo para al final. Registrado en
- * {@code META-INF/services}; solo arranca si de verdad se van a ejecutar tests.
+ * Starts the environment once per run (JUnit and Cucumber share the session) and stops it at the end. Registered in
+ * {@code META-INF/services}; it only starts if tests are actually going to run.
  */
 public class QaEnvironmentListener implements LauncherSessionListener {
 

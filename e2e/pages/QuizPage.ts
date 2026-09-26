@@ -1,9 +1,9 @@
 import { expect, type Locator, type Page } from '@playwright/test';
 import { ACTION_LABELS } from '../data/reference';
 
-/** Quiz: la mesa con la mano del héroe, la respuesta (botones o teclas 1..n) y la corrección. */
+/** Quiz: the table with the hero's hand, the answer (buttons or keys 1..n) and the grading. */
 export class QuizPage {
-  // #region Localizadores
+  // #region Locators
   readonly spot: Locator;
   readonly hand: Locator;
   readonly table: Locator;
@@ -27,7 +27,7 @@ export class QuizPage {
     this.customRangeNote = page.getByTestId('quiz-custom-range');
   }
 
-  // #region Acciones
+  // #region Actions
   async open(situation = 'btn_open', stack: number = 25): Promise<void> {
     await this.page.goto(`/quiz?s=${situation}&stack=${stack}`);
     await expect(this.hand).toBeVisible();
@@ -47,13 +47,13 @@ export class QuizPage {
     await expect(this.feedback).toBeVisible();
   }
 
-  /** Pasa a la siguiente mano con Enter (atajo) y espera a que la corrección desaparezca. */
+  /** Moves to the next hand with Enter (shortcut) and waits for the grading to disappear. */
   async nextHand(): Promise<void> {
     await this.page.keyboard.press('Enter');
     await expect(this.feedback).toBeHidden();
   }
 
-  /** Responde la mano actual según el oráculo y devuelve la mano y la respuesta dada. */
+  /** Answers the current hand according to the oracle and returns the hand and the given answer. */
   async answerWith(oracle: (hand: string) => string): Promise<{ hand: string; given: string }> {
     const hand = await this.currentHand();
     const given = oracle(hand);
@@ -62,7 +62,7 @@ export class QuizPage {
   }
   // #endregion
 
-  // #region Consultas
+  // #region Queries
   answerButton(action: string): Locator {
     return this.answers.getByRole('button', { name: ACTION_LABELS[action], exact: true });
   }

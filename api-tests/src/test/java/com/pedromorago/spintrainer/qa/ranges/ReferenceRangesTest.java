@@ -48,7 +48,7 @@ class ReferenceRangesTest extends ApiTest {
                 .containsExactlyElementsOf(QaReferenceData.servedReferenceSpots());
     }
 
-    /** Integridad de los datos: cada rango servido es, mano a mano, el del seed (copia fijada del de la API). */
+    /** Data integrity: every served range is, hand by hand, the seed's one (pinned copy of the API's). */
     @Test
     void every_range_served_is_the_seeded_one() {
         List<Range> ranges = api.ranges().listDefault().jsonPath().getList(".", Range.class);
@@ -63,7 +63,7 @@ class ReferenceRangesTest extends ApiTest {
         });
     }
 
-    /** Partición: formas del mismo stack. Todas son la misma combinación y devuelven la forma canónica. */
+    /** Partition: notations of the same stack. All are the same combination and return the canonical form. */
     @ParameterizedTest(name = "stack {0}")
     @ValueSource(strings = {"25", "25.0", "25.00"})
     void accepts_any_notation_of_the_same_stack(String stack) {
@@ -80,17 +80,17 @@ class ReferenceRangesTest extends ApiTest {
                 .hasDetail("Sin rango de referencia para btn_open@8");
     }
 
-    /** Valores límite y particiones de la combinación (situación, stack). */
+    /** Boundary values and partitions of the combination (situation, stack). */
     @ParameterizedTest(name = "{0}@{1} → {2}")
     @CsvSource({
-        "btn_open,    12.5,  404", // múltiplo de 0,5 que la situación no tiene
-        "btn_open,    1,     404", // límite inferior válido del contrato, fuera del catálogo
-        "btn_open,    100,   404", // límite superior válido del contrato
-        "btn_open,    0.5,   400", // por debajo del mínimo
-        "btn_open,    100.5, 400", // por encima del máximo
-        "btn_open,    12.3,  400", // no es múltiplo de 0,5
-        "mtt_open,    25,    404", // situación inexistente (solo Spin & Go, ADR-0011)
-        "BTN_OPEN,    25,    400", // no cumple el patrón de clave
+        "btn_open,    12.5,  404", // multiple of 0.5 the situation doesn't have
+        "btn_open,    1,     404", // contract's valid lower bound, outside the catalog
+        "btn_open,    100,   404", // contract's valid upper bound
+        "btn_open,    0.5,   400", // below the minimum
+        "btn_open,    100.5, 400", // above the maximum
+        "btn_open,    12.3,  400", // not a multiple of 0.5
+        "mtt_open,    25,    404", // nonexistent situation (Spin & Go only, ADR-0011)
+        "BTN_OPEN,    25,    400", // doesn't match the key pattern
     })
     void validates_the_combination(String situation, String stack, int status) {
         Response response = api.ranges().getDefault(situation, stack);

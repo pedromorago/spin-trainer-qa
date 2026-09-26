@@ -19,7 +19,7 @@ test.describe('Stats: agregados de la API sobre los intentos (ADR-0013)', () => 
     }
     const missed = await quiz.currentHand();
     await quiz.answer(BTN_OPEN_ACTIONS.find((action) => action !== btnOpen25(missed))!);
-    // El Quiz puede repetir una mano de antes: fallos/intentos de la fallada.
+    // The Quiz may repeat an earlier hand: misses/attempts of the missed one.
     const attemptsOfMissed = answered.filter((hand) => hand === missed).length + 1;
 
     await shell.goTo('Stats');

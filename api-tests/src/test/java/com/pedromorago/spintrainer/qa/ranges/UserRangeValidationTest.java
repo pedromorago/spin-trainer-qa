@@ -19,7 +19,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
-/** Particiones de equivalencia y valores límite del cuerpo del PUT: nada inválido se guarda. */
+/** Equivalence partitions and boundary values of the PUT body: nothing invalid is stored. */
 @Feature("Rangos personalizados")
 class UserRangeValidationTest extends ApiTest {
 

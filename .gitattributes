@@ -1,4 +1,4 @@
-# LF en el repo y en el checkout (también en Windows): gradlew y los scripts no se rompen al clonar.
+# LF in the repo and in the checkout (Windows too): gradlew and the scripts don't break when cloning.
 * text=auto eol=lf
 *.bat text eol=crlf
 *.cmd text eol=crlf

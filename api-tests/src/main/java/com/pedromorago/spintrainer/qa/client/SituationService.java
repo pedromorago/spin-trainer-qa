@@ -2,7 +2,7 @@ package com.pedromorago.spintrainer.qa.client;
 
 import io.restassured.response.Response;
 
-/** Tag {@code situation} del contrato. */
+/** The contract's {@code situation} tag. */
 public final class SituationService extends ServiceBase {
 
     SituationService(Auth auth, boolean validateContract) {

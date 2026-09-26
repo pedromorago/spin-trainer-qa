@@ -3,7 +3,7 @@ package com.pedromorago.spintrainer.qa.client;
 import io.restassured.response.Response;
 import java.util.Map;
 
-/** Tag {@code stats} del contrato. */
+/** The contract's {@code stats} tag. */
 public final class StatsService extends ServiceBase {
 
     StatsService(Auth auth, boolean validateContract) {

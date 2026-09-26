@@ -27,8 +27,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 /**
- * Transiciones de estado de un rango personalizado (ADR-0013): sin rango → v1 → v2 … → borrado. Cada escritura dice de
- * qué versión parte; si no es la actual, 409 y no se pisa nada.
+ * State transitions of a custom range (ADR-0013): no range → v1 → v2 … → deleted. Each write states which version it
+ * starts from; if it isn't the current one, 409 and nothing is overwritten.
  */
 @Feature("Rangos personalizados")
 @Link(name = "ADR-0013", url = Adr.CONTRACT_V02)
@@ -44,15 +44,15 @@ class UserRangeLifecycleTest extends ApiTest {
     @Test
     @Tag("smoke")
     void walks_every_transition_of_the_state_machine() {
-        // Sin rango
+        // No range
         assertThatProblem(api.ranges().getUser(BTN_OPEN, STACK)).is(ErrorType.NOT_FOUND);
 
-        // Sin rango --PUT v0--> v1 (201)
+        // No range --PUT v0--> v1 (201)
         Response created = put(Map.of("AA", "ALLIN"), 0);
         assertThat(created.statusCode()).isEqualTo(201);
         assertThat(created.as(Range.class).getVersion()).isEqualTo(1);
 
-        // v1 --PUT v0--> 409 (ya existe)
+        // v1 --PUT v0--> 409 (already exists)
         assertThatProblem(put(Map.of(), 0)).is(ErrorType.CONFLICT).hasDetail(ErrorType.CONFLICT.detail(1));
 
         // v1 --PUT v1--> v2 (200)
@@ -60,14 +60,14 @@ class UserRangeLifecycleTest extends ApiTest {
         assertThat(replaced.statusCode()).isEqualTo(200);
         assertThat(replaced.as(Range.class).getVersion()).isEqualTo(2);
 
-        // v2 --PUT v1--> 409 (versión vieja)
+        // v2 --PUT v1--> 409 (stale version)
         assertThatProblem(put(Map.of(), 1)).is(ErrorType.CONFLICT).hasDetail(ErrorType.CONFLICT.detail(2));
 
-        // v2 --DELETE--> sin rango (204), y DELETE es idempotente
+        // v2 --DELETE--> no range (204), and DELETE is idempotent
         assertThat(api.ranges().deleteUser(BTN_OPEN, STACK).statusCode()).isEqualTo(204);
         assertThat(api.ranges().deleteUser(BTN_OPEN, STACK).statusCode()).isEqualTo(204);
 
-        // sin rango --PUT v2--> 409 (ya no existe)
+        // no range --PUT v2--> 409 (no longer exists)
         assertThatProblem(put(Map.of(), 2))
                 .is(ErrorType.CONFLICT_DELETED)
                 .hasDetail(ErrorType.CONFLICT_DELETED.detail());
@@ -95,7 +95,7 @@ class UserRangeLifecycleTest extends ApiTest {
         assertThat(api.ranges().getUser(BTN_OPEN, STACK).asString()).isEqualTo(written);
     }
 
-    /** La acción implícita no se guarda: FOLD en btn_open, CHECK en bb_vs_sb_limp (la BB no puede foldear un limp). */
+    /** The implicit action is not stored: FOLD in btn_open, CHECK in bb_vs_sb_limp (the BB can't fold to a limp). */
     @Test
     void hands_with_the_implicit_action_are_not_stored() {
         Range btnOpen = put(Map.of("AA", "ALLIN", "72o", "FOLD"), 0).as(Range.class);
@@ -121,7 +121,7 @@ class UserRangeLifecycleTest extends ApiTest {
         return LongStream.generate(RangeFactory::newSeed).limit(5).boxed();
     }
 
-    /** Rangos aleatorios (semilla en el nombre para reproducirlos): lo guardado es lo enviado sin la acción implícita. */
+    /** Random ranges (seed in the name to reproduce them): what's stored is what was sent minus the implicit action. */
     @ParameterizedTest(name = "semilla {0}")
     @MethodSource("seeds")
     void any_valid_range_round_trips(long seed) {

@@ -1,6 +1,6 @@
 package com.pedromorago.spintrainer.qa.auth;
 
-/** Obtiene el JWT de sesión de un usuario (la API solo acepta tokens de su emisor configurado). */
+/** Gets a user's session JWT (the API only accepts tokens from its configured issuer). */
 public interface TokenProvider {
 
     String accessToken(TestUser user);

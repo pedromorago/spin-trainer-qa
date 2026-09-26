@@ -14,8 +14,8 @@ import org.junit.platform.suite.api.SelectClasspathResource;
 import org.junit.platform.suite.api.Suite;
 
 /**
- * Reglas de negocio en Gherkin ({@code src/test/resources/features}, en español). Corren en el mismo {@code test} que
- * los tests de JUnit, contra el mismo entorno, y cada escenario usa jugadores nuevos, así que van en paralelo.
+ * Business rules in Gherkin ({@code src/test/resources/features}, in Spanish). They run in the same {@code test} task
+ * as the JUnit tests, against the same environment, and each scenario uses new players, so they run in parallel.
  */
 @Suite
 @IncludeEngines("cucumber")

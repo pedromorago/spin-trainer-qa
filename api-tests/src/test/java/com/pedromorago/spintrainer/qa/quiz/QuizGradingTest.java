@@ -28,8 +28,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 /**
- * El servidor corrige el Quiz (ADR-0013). Tabla de decisión: ¿hay rango del usuario? × ¿la mano está en el rango? →
- * acción esperada y rango de origen.
+ * The server grades the Quiz (ADR-0013). Decision table: is there a user range? × is the hand in the range? →
+ * expected action and source range.
  */
 @Feature("Quiz: corrección en el servidor")
 @Link(name = "ADR-0013", url = Adr.CONTRACT_V02)
@@ -52,11 +52,11 @@ class QuizGradingTest extends ApiTest {
 
     @ParameterizedTest(name = "rango del usuario={0}, mano {1} → {2} ({3})")
     @CsvSource({
-        // rango del usuario, mano, esperada, origen
-        "false, AA,  MR_4B_C, default", // sin rango propio, mano en el de referencia
-        "false, 72o, FOLD,    default", // sin rango propio, mano fuera: acción implícita
-        "true,  A5s, ALLIN,   user", // con rango propio, mano en él
-        "true,  AA,  FOLD,    user", // con rango propio, mano fuera (aunque esté en el de referencia)
+        // user range, hand, expected, source
+        "false, AA,  MR_4B_C, default", // no own range, hand in the reference one
+        "false, 72o, FOLD,    default", // no own range, hand outside it: implicit action
+        "true,  A5s, ALLIN,   user", // own range, hand in it
+        "true,  AA,  FOLD,    user", // own range, hand outside it (even if it is in the reference one)
     })
     @Tag("smoke")
     void grades_against_the_effective_range(boolean userRange, String hand, String expected, String source) {
@@ -82,7 +82,7 @@ class QuizGradingTest extends ApiTest {
         assertThat(attempt.getCorrect()).isTrue();
     }
 
-    /** Oráculo: el rango de referencia de QA. Mano y respuesta al azar; la corrección tiene que coincidir. */
+    /** Oracle: the QA reference range. Random hand and answer; the grading must match. */
     @RepeatedTest(10)
     void agrees_with_the_reference_range_for_any_hand_and_answer() {
         String hand = Hands.random();

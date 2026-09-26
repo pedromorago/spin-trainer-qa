@@ -17,8 +17,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 /**
- * Agregados sobre los intentos. Los cortes de día por zona horaria (cambios de hora incluidos) se prueban con la hora
- * fijada en la API (StatsIT); aquí, caja negra, se comprueba lo que se puede sin controlar el reloj.
+ * Aggregates over the attempts. Day boundaries per time zone (DST changes included) are tested with a fixed clock in
+ * the API (StatsIT); here, black-box, we check what can be checked without controlling the clock.
  */
 @Feature("Estadísticas")
 class StatsTest extends ApiTest {
@@ -65,7 +65,7 @@ class StatsTest extends ApiTest {
         assertThat(api.stats().progress(Map.of()).asString()).isEqualTo("[]");
     }
 
-    /** Valores límite de days (1..365) y particiones de tz (región IANA sí; desfases y nombres inventados no). */
+    /** Boundary values of days (1..365) and partitions of tz (IANA region yes; offsets and made-up names no). */
     @ParameterizedTest(name = "{0}={1} → {2}")
     @CsvSource({
         "days, 1, 200", "days, 365, 200", "days, 0, 400", "days, 366, 400",

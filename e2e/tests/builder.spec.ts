@@ -6,12 +6,12 @@ test.describe('Builder: autoevaluación sin persistir (ADR-0012)', () => {
     await builder.open('btn_open', 25);
     await expect(builder.question).toHaveText('BTN Open · 25 BB');
 
-    // Precondición del oráculo: AA, KK y QQ son MR/4B/C en el seed y 72o no está en el rango.
+    // Oracle precondition: AA, KK and QQ are MR/4B/C in the seed and 72o is not in the range.
     expect([BTN_OPEN_25.AA, BTN_OPEN_25.KK, BTN_OPEN_25.QQ, BTN_OPEN_25['72o']])
       .toEqual(['MR_4B_C', 'MR_4B_C', 'MR_4B_C', undefined]);
-    await builder.paint('MR_4B_C', 'AA'); // correcta
-    await builder.paint('MR_C_C', 'KK'); // otra acción que la correcta
-    await builder.paint('ALLIN', '72o'); // jugada de más
+    await builder.paint('MR_4B_C', 'AA'); // correct
+    await builder.paint('MR_C_C', 'KK'); // an action other than the correct one
+    await builder.paint('ALLIN', '72o'); // extra played hand
     await builder.verify.click();
 
     await expect(builder.grid.cell('AA')).toHaveAttribute('data-verdict', 'correct');
@@ -19,7 +19,7 @@ test.describe('Builder: autoevaluación sin persistir (ADR-0012)', () => {
     await expect(builder.grid.cell('72o')).toHaveAttribute('data-verdict', 'extra');
     await expect(builder.grid.cell('QQ')).toHaveAttribute('data-verdict', 'missing');
     await expect(builder.grid.cell('KK')).toHaveAccessibleName(/^KK: MR \/ Call 3b \/ Call 4b, .*\(correcta: MR \/ 4bet vs 3b \/ Call AI\)$/);
-    // Manos jugadas: las del rango correcto y 72o; solo AA está bien.
+    // Played hands: those of the correct range plus 72o; only AA is right.
     const played = BTN_OPEN_25_HANDS + 1;
     await expect(builder.score).toHaveText(`1 / ${played} · ${Math.round(100 / played)}%`);
   });

@@ -21,9 +21,9 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Validación contra el contrato (ADR-0008, en lugar de Pact): el estado tiene que estar declarado para la operación, el
- * {@code Content-Type} también, y el cuerpo tiene que cumplir su schema (JSON Schema 2020-12 con {@code format} como
- * aserción). Usa la copia fijada {@code contract/openapi.yaml}.
+ * Validation against the contract (ADR-0008, instead of Pact): the status must be declared for the operation, so must
+ * the {@code Content-Type}, and the body must conform to its schema (JSON Schema 2020-12 with {@code format} as an
+ * assertion). Uses the pinned copy {@code contract/openapi.yaml}.
  */
 public final class OpenApiContract {
 
@@ -63,9 +63,9 @@ public final class OpenApiContract {
     }
 
     /**
-     * Incumplimientos del contrato de una respuesta; vacío si la cumple.
+     * Contract violations of a response; empty if it conforms.
      *
-     * @param path plantilla de la spec, p. ej. {@code /ranges/user/{situation}/{stack}}
+     * @param path spec template, e.g. {@code /ranges/user/{situation}/{stack}}
      */
     public List<String> violations(String method, String path, int status, String contentType, String body) {
         String pointer = "/paths/" + escape(path) + "/" + method.toLowerCase(Locale.ROOT) + "/responses/" + status;

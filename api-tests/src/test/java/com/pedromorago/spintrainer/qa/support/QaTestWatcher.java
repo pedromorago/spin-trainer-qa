@@ -6,7 +6,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestWatcher;
 
-/** Al fallar un test, adjunta a Allure contra qué entorno corría (el resto ya lo adjunta cada petición). */
+/** When a test fails, attaches to Allure which environment it ran against (each request already attaches the rest). */
 public class QaTestWatcher implements TestWatcher {
 
     @Override
@@ -14,7 +14,7 @@ public class QaTestWatcher implements TestWatcher {
         attachEnvironment();
     }
 
-    /** También lo usan los escenarios de Cucumber al fallar. */
+    /** Also used by Cucumber scenarios when they fail. */
     public static void attachEnvironment() {
         QaConfig config = QaConfig.get();
         Allure.addAttachment(

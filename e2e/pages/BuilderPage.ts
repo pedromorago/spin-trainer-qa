@@ -2,9 +2,9 @@ import type { Locator, Page } from '@playwright/test';
 import { ACTION_LABELS } from '../data/reference';
 import { HandGrid } from './HandGrid';
 
-/** Builder: construir de memoria el rango de un spot y verificarlo contra el rango efectivo. No persiste nada. */
+/** Builder: build a spot's range from memory and verify it against the effective range. Persists nothing. */
 export class BuilderPage {
-  // #region Localizadores
+  // #region Locators
   readonly question: Locator;
   readonly grid: HandGrid;
   readonly solution: HandGrid;
@@ -28,7 +28,7 @@ export class BuilderPage {
     this.customTargetNote = page.getByTestId('builder-custom-target');
   }
 
-  // #region Acciones
+  // #region Actions
   async open(situation = 'btn_open', stack: number = 25): Promise<void> {
     await this.page.goto(`/builder?s=${situation}&stack=${stack}`);
   }

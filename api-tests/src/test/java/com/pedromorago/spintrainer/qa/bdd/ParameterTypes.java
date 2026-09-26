@@ -3,7 +3,7 @@ package com.pedromorago.spintrainer.qa.bdd;
 import io.cucumber.java.ParameterType;
 import java.math.BigDecimal;
 
-/** Vocabulario de las features: manos, stacks en BB (con coma o punto decimal) y el resultado de una respuesta. */
+/** Vocabulary of the features: hands, stacks in BB (with decimal comma or point) and the result of an answer. */
 public class ParameterTypes {
 
     @ParameterType("[2-9TJQKA]{2}[so]?")

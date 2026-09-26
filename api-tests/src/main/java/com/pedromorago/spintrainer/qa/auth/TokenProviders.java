@@ -5,9 +5,9 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
- * Registro de proveedores de tokens por entorno ({@code qa.auth}). En QA, {@code local} firma con la clave de QA el
- * mismo token que emitiría Supabase. Otro entorno (staging con Supabase real) se añade registrando su proveedor aquí,
- * sin tocar los tests.
+ * Registry of token providers per environment ({@code qa.auth}). In QA, {@code local} signs with the QA key the same
+ * token Supabase would issue. Another environment (staging with real Supabase) is added by registering its provider
+ * here, without touching the tests.
  */
 public final class TokenProviders {
 

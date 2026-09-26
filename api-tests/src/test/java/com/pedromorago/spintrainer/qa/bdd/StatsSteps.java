@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 import org.assertj.core.groups.Tuple;
 
-/** Estadísticas agregadas por la API sobre los intentos. */
+/** Stats aggregated by the API over the attempts. */
 public class StatsSteps {
 
     private final ScenarioContext context;
@@ -23,7 +23,7 @@ public class StatsSteps {
         this.context = context;
     }
 
-    /** Tabla con las columnas {@code mano}, {@code respuestas} y {@code aciertos}. */
+    /** Table with the columns {@code mano}, {@code respuestas} and {@code aciertos}. */
     @Entonces("mis estadísticas por mano son:")
     public void handStats(DataTable stats) {
         Tuple[] expected = stats.asMaps().stream()

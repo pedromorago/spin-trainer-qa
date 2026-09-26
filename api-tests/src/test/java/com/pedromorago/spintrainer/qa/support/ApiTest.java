@@ -9,8 +9,8 @@ import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
- * Base de los tests de API: un usuario nuevo por test ({@code pedro}) y su cliente ({@code api}). El usuario queda como
- * parámetro en Allure para poder buscar sus peticiones en los logs de la API.
+ * Base of the API tests: a new user per test ({@code pedro}) and their client ({@code api}). The user is recorded as
+ * an Allure parameter so that their requests can be found in the API logs.
  */
 @Epic("API")
 @ExtendWith(QaTestWatcher.class)

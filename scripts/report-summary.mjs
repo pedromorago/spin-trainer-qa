@@ -1,4 +1,4 @@
-// Resumen del informe de Allure en Markdown (el CI lo añade al resumen de la ejecución en GitHub).
+// Allure report summary in Markdown (CI appends it to the GitHub run summary).
 import { readFileSync } from 'node:fs';
 
 const { stats } = JSON.parse(readFileSync(new URL('../build/allure-report/summary.json', import.meta.url), 'utf8'));

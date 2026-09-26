@@ -25,8 +25,8 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 /**
- * La API solo acepta JWT de sesión de su emisor (ADR-0003): firma ES256 contra el JWKS, emisor, audiencia, rol,
- * caducidad y un sub de usuario. Cada variante inválida es un 401 con {@code error="invalid_token"}.
+ * The API only accepts session JWTs from its issuer (ADR-0003): ES256 signature against the JWKS, issuer, audience,
+ * role, expiry and a user sub. Each invalid variant is a 401 with {@code error="invalid_token"}.
  */
 @Feature("Seguridad")
 @Link(name = "ADR-0003", url = Adr.SUPABASE_AUTH)

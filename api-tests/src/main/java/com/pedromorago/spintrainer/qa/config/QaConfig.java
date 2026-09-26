@@ -5,18 +5,19 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 /**
- * Configuración de la suite. Cada valor sale de una propiedad de sistema ({@code -Dqa.x} o {@code -Pqa.x} en Gradle), de
- * una variable de entorno ({@code QA_X}) o del valor por defecto: el entorno local de {@code env/docker-compose.yml}.
+ * Suite configuration. Each value comes from a system property ({@code -Dqa.x} or {@code -Pqa.x} in Gradle), from an
+ * environment variable ({@code QA_X}) or from the default: the local environment of {@code env/docker-compose.yml}.
  *
- * @param apiUrl URL base de la API ({@code .../api/v1})
- * @param managedEnvironment si la suite levanta el entorno (docker compose) o usa uno ya en marcha ({@code QA_API_URL})
- * @param buildApi si al levantarlo reconstruye la imagen de la API desde el repo hermano ({@code QA_BUILD_API=false}
- *     reutiliza la última imagen construida)
- * @param auth proveedor de tokens registrado en {@code TokenProviders} ({@code local} firma con la clave de QA)
- * @param jwtIssuer emisor que espera la API ({@code SUPABASE_URL + /auth/v1})
- * @param signingKey clave ES256 de QA (JWK)
- * @param jwksAdmin API de administración de WireMock, que hace de Supabase en QA
- * @param rootDir raíz del repo spin-trainer-qa
+ * @param apiUrl base URL of the API ({@code .../api/v1})
+ * @param managedEnvironment whether the suite starts the environment (docker compose) or uses one already running
+ *     ({@code QA_API_URL})
+ * @param buildApi whether starting it rebuilds the API image from the sibling repo ({@code QA_BUILD_API=false}
+ *     reuses the last built image)
+ * @param auth token provider registered in {@code TokenProviders} ({@code local} signs with the QA key)
+ * @param jwtIssuer issuer the API expects ({@code SUPABASE_URL + /auth/v1})
+ * @param signingKey QA ES256 key (JWK)
+ * @param jwksAdmin WireMock admin API, which plays Supabase in QA
+ * @param rootDir root of the spin-trainer-qa repo
  */
 public record QaConfig(
         URI apiUrl,
@@ -48,7 +49,7 @@ public record QaConfig(
                 root);
     }
 
-    /** {@code qa.apiUrl} → propiedad de sistema; si no, {@code QA_API_URL}. */
+    /** {@code qa.apiUrl} → system property; otherwise, {@code QA_API_URL}. */
     private static Optional<String> value(String name) {
         String property = System.getProperty("qa." + name);
         if (property != null && !property.isBlank()) {
@@ -59,7 +60,7 @@ public record QaConfig(
         return env == null || env.isBlank() ? Optional.empty() : Optional.of(env);
     }
 
-    /** Origen de la API ({@code http://localhost:8081}), para comprobaciones fuera de {@code /api/v1}. */
+    /** Origin of the API ({@code http://localhost:8081}), for checks outside {@code /api/v1}. */
     public URI apiOrigin() {
         return URI.create(apiUrl.getScheme() + "://" + apiUrl.getAuthority());
     }

@@ -11,8 +11,8 @@ import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 
 /**
- * Base de los servicios (uno por tag del contrato): URL, JSON, correlation id, informe de Allure con cada petición y
- * respuesta, validación contra el contrato y la autenticación elegida. Los servicios solo dicen qué operación llaman.
+ * Base of the services (one per contract tag): URL, JSON, correlation id, Allure report with every request and
+ * response, validation against the contract and the chosen authentication. Services only name the operation they call.
  */
 public abstract class ServiceBase {
 

@@ -3,8 +3,8 @@ package com.pedromorago.spintrainer.qa.client;
 import io.restassured.response.Response;
 
 /**
- * Tag {@code range} del contrato. El stack va tal cual ({@code "12.5"}, {@code "25.0"}) para poder probar formas no
- * canónicas; el cuerpo es un modelo generado o JSON crudo para las peticiones inválidas.
+ * The contract's {@code range} tag. The stack is sent as is ({@code "12.5"}, {@code "25.0"}) so that non-canonical
+ * forms can be tested; the body is a generated model, or raw JSON for invalid requests.
  */
 public final class RangeService extends ServiceBase {
 

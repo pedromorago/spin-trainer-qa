@@ -1,8 +1,8 @@
 import type { Locator, Page } from '@playwright/test';
 
-/** Stats: marcador de la sesión (local) e histórico (agregados de la API sobre los intentos). */
+/** Stats: session scoreboard (local) and history (API aggregates over the attempts). */
 export class StatsPage {
-  // #region Localizadores
+  // #region Locators
   readonly sessionTotal: Locator;
   readonly sessionAccuracy: Locator;
   readonly globalTotal: Locator;

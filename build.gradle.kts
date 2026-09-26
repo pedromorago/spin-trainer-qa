@@ -2,12 +2,12 @@ plugins {
     alias(libs.plugins.spotless)
 }
 
-// Spotless descarga ktlint del repositorio del proyecto raíz.
+// Spotless downloads ktlint from the root project's repository.
 repositories { mavenCentral() }
 
-// Copias fijadas de lo que publica spin-trainer-api (repos hermanos): el contrato (specCheck / specSync) y los rangos
-// de referencia del seed, oráculo de los tests (rangesCheck / rangesSync). Check falla si la API cambió su versión; sync
-// la trae. La copia del contrato lleva una primera línea que dice de dónde viene.
+// Pinned copies of what spin-trainer-api publishes (sibling repos): the contract (specCheck / specSync) and the seed's
+// reference ranges, the tests' oracle (rangesCheck / rangesSync). Check fails if the API changed its version; sync
+// brings it in. The contract copy has a first line that says where it comes from.
 fun pinnedCopy(
     name: String,
     copyPath: String,

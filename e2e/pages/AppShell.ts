@@ -1,8 +1,8 @@
 import type { Locator, Page } from '@playwright/test';
 
-/** Marco común: navegación, selector único de situación y stack, marcador de sesión y cierre de sesión. */
+/** Common frame: navigation, single situation and stack selector, session scoreboard and sign-out. */
 export class AppShell {
-  // #region Localizadores
+  // #region Locators
   readonly nav: Locator;
   readonly situation: Locator;
   readonly stacks: Locator;
@@ -24,7 +24,7 @@ export class AppShell {
     this.signOut = page.getByRole('button', { name: 'Salir' });
   }
 
-  // #region Acciones
+  // #region Actions
   async open(path: string, selection?: { situation: string; stack: number | 'any' }): Promise<void> {
     const query = selection ? `?s=${selection.situation}&stack=${selection.stack}` : '';
     await this.page.goto(`${path}${query}`);
@@ -43,7 +43,7 @@ export class AppShell {
   }
   // #endregion
 
-  // #region Consultas
+  // #region Queries
   tab(section: string): Locator {
     return this.nav.getByRole('link', { name: section });
   }

@@ -3,8 +3,8 @@ package com.pedromorago.spintrainer.qa.auth;
 import java.util.UUID;
 
 /**
- * Usuario de un test. Cada test usa usuarios nuevos: sus rangos, intentos y estadísticas no ven los de nadie más, así
- * que los tests pueden ir en paralelo sin limpiar datos.
+ * A test's user. Each test uses new users: their ranges, attempts and stats don't see anyone else's, so the tests
+ * can run in parallel without cleaning up data.
  */
 public record TestUser(UUID id, String alias) {
 

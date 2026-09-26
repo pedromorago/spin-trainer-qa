@@ -12,20 +12,20 @@ import java.util.concurrent.ThreadLocalRandom;
 import net.datafaker.Faker;
 
 /**
- * Rangos de prueba. Los aleatorios usan una semilla que se registra en el nombre del caso para poder reproducirlo.
+ * Test ranges. Random ones use a seed that is recorded in the case name so the case can be reproduced.
  */
 public final class RangeFactory {
 
     private RangeFactory() {}
 
-    /** Cuerpo de un PUT: las manos dadas con la versión de partida. */
+    /** Body of a PUT: the given hands with the starting version. */
     public static RangeWrite write(Map<String, String> hands, int version) {
         Map<String, Action> typed = new HashMap<>();
         hands.forEach((hand, action) -> typed.put(hand, Action.fromValue(action)));
         return new RangeWrite().hands(typed).version(version);
     }
 
-    /** Rango aleatorio (entre 1 y 40 manos) con acciones de la situación distintas de la implícita. */
+    /** Random range (between 1 and 40 hands) with situation actions other than the implicit one. */
     public static Map<String, String> random(long seed, List<String> actions, String implicitAction) {
         Faker faker = new Faker(new Random(seed));
         List<String> explicit = actions.stream()

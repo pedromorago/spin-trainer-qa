@@ -1,4 +1,4 @@
-// Genera la clave ES256 de QA (env/jwt) y su JWKS público (env/wiremock/__files/jwks.json). Solo para el entorno de QA.
+// Generates the QA ES256 key (env/jwt) and its public JWKS (env/wiremock/__files/jwks.json). QA environment only.
 import { generateKeyPairSync, randomUUID } from 'node:crypto';
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';

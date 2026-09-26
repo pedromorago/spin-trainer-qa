@@ -3,21 +3,21 @@ import { fileURLToPath } from 'node:url';
 import { defineConfig, devices } from '@playwright/test';
 import type { Backend } from './fixtures/test';
 
-// E2E de la web (repo hermano ../spin-trainer-web) con dos backends y las mismas specs:
-//   mock       build:mock, sin backend: rápido y determinista (datos del mock de la web)
-//   fullstack  build en modo http contra la API de env/docker-compose.yml (npm run env:up), sesión inyectada
-// Los datos de referencia son los mismos en los dos (btn_open a 25 BB), así que los oráculos también.
+// E2E of the web app (sibling repo ../spin-trainer-web) with two backends and the same specs:
+//   mock       build:mock, no backend: fast and deterministic (data from the web's mock)
+//   fullstack  build in http mode against the API of env/docker-compose.yml (npm run env:up), injected session
+// The reference data is the same in both (btn_open at 25 BB), so the oracles are too.
 const web = fileURLToPath(new URL('../../spin-trainer-web', import.meta.url));
 const out = (name: string) => fileURLToPath(new URL(`../build/web/${name}`, import.meta.url));
 const apiUrl = process.env.QA_API_URL ?? 'http://localhost:8081/api/v1';
-// El "Supabase" de QA (WireMock): la web solo lo usa para leer la sesión y cerrarla.
+// The QA "Supabase" (WireMock): the web only uses it to read the session and to log out.
 const supabaseUrl = process.env.QA_SUPABASE_URL ?? 'http://localhost:8089';
 
 const allureResults = fileURLToPath(new URL('../build/allure-results/e2e', import.meta.url));
-// Resultados de Allure solo de esta ejecución (los workers también cargan este fichero: solo limpia el proceso principal).
+// Allure results from this run only (workers also load this file: only the main process cleans up).
 if (!process.env.TEST_WORKER_INDEX) rmSync(allureResults, { recursive: true, force: true });
 
-// Compila la web en build/ de este repo (no ensucia el de la web) y la sirve con vite preview.
+// Builds the web app into this repo's build/ (keeps the web repo clean) and serves it with vite preview.
 const serve = (name: string, port: number, buildArgs: string) =>
   `npm run ${buildArgs} -- --outDir "${out(name)}" --emptyOutDir && npx vite preview --outDir "${out(name)}" --port ${port} --strictPort`;
 

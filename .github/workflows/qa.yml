@@ -1,7 +1,7 @@
 name: qa
 
-# Suite completa contra el sistema construido desde los repos hermanos: API (JUnit + Cucumber), Newman y E2E
-# (Playwright contra el mock y contra la API real), con un informe de Allure combinado.
+# Full suite against the system built from the sibling repos: API (JUnit + Cucumber), Newman and E2E
+# (Playwright against the mock and against the real API), with a combined Allure report.
 on:
   push:
     branches: [main]
@@ -15,7 +15,7 @@ on:
         description: Rama, tag o commit de spin-trainer-web (vacío = la misma rama que aquí si existe; si no, main)
         required: false
   schedule:
-    # Lunes 05:17 UTC: detecta cambios en API o web que rompan la suite aunque aquí no se toque nada.
+    # Mondays 05:17 UTC: catches API or web changes that break the suite even if nothing is touched here.
     - cron: "17 5 * * 1"
 
 permissions:
@@ -26,8 +26,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # Los repos son privados: token de solo lectura (Contents: read) sobre spin-trainer-api y spin-trainer-web en el
-  # secreto SPIN_TRAINER_REPOS_TOKEN. Si pasan a ser públicos, basta con el token de Actions.
+  # The repos are private: read-only token (Contents: read) on spin-trainer-api and spin-trainer-web in the
+  # SPIN_TRAINER_REPOS_TOKEN secret. If they become public, the Actions token is enough.
   SIBLINGS_TOKEN: ${{ secrets.SPIN_TRAINER_REPOS_TOKEN || github.token }}
   LANG: C.UTF-8
 
@@ -41,7 +41,7 @@ jobs:
         with:
           path: spin-trainer-qa
 
-      # Cambios coordinados entre repos: la misma rama en los tres si existe; si no, main.
+      # Coordinated changes across repos: the same branch in all three if it exists; otherwise, main.
       - name: Elegir las versiones de API y web
         id: refs
         env:
@@ -106,7 +106,7 @@ jobs:
         working-directory: spin-trainer-qa
         run: npm run env:up
 
-      # Cada suite corre aunque falle la anterior: el informe final las recoge todas.
+      # Each suite runs even if the previous one fails: the final report collects them all.
       - name: API · JUnit y Cucumber
         if: ${{ !cancelled() && steps.env.outcome == 'success' }}
         working-directory: spin-trainer-qa

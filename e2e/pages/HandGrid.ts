@@ -1,6 +1,6 @@
 import type { Locator } from '@playwright/test';
 
-/** Grid 13×13 (componente compartido): cada celda lleva data-hand, data-action (acción efectiva) y data-verdict. */
+/** 13×13 grid (shared component): each cell has data-hand, data-action (effective action) and data-verdict. */
 export class HandGrid {
   constructor(readonly root: Locator) {}
 
@@ -8,7 +8,7 @@ export class HandGrid {
     return this.root.locator(`[data-hand="${hand}"]`);
   }
 
-  /** Pinta con el pincel activo (clic: el grid pinta en pointerdown). */
+  /** Paints with the active brush (click: the grid paints on pointerdown). */
   async paint(...hands: string[]): Promise<void> {
     for (const hand of hands) {
       await this.cell(hand).click();

@@ -11,8 +11,8 @@ java {
 
 repositories { mavenCentral() }
 
-// Modelos de petición y respuesta generados desde el contrato fijado (contract/openapi.yaml): si la spec cambia, los
-// tests dejan de compilar donde toque. Las peticiones inválidas se escriben a mano (JSON crudo) a propósito.
+// Request and response models generated from the pinned contract (contract/openapi.yaml): if the spec changes, the
+// tests stop compiling where they must. Invalid requests are written by hand (raw JSON) on purpose.
 val generatedModels = layout.buildDirectory.dir("generated/openapi")
 
 openApiGenerate {
@@ -49,7 +49,7 @@ dependencies {
     implementation(platform(libs.cucumber.bom))
     implementation(platform(libs.allure.bom))
 
-    // El framework (src/main) es una librería de pruebas: cliente, autenticación, contrato, datos y aserciones.
+    // The framework (src/main) is a test library: client, authentication, contract, data and assertions.
     implementation(libs.rest.assured)
     implementation(libs.assertj)
     implementation(libs.jackson.databind)
@@ -76,15 +76,15 @@ dependencies {
 }
 
 tasks.test {
-    // El informe de Allure solo con los resultados de esta ejecución (val local: la caché de configuración no admite
-    // referencias al script).
+    // The Allure report only with this run's results (local val: the configuration cache doesn't allow
+    // references to the script).
     val allureResults = layout.buildDirectory.dir("allure-results")
     doFirst { allureResults.get().asFile.deleteRecursively() }
     useJUnitPlatform {
-        // -Ptags=smoke: solo los casos de humo (expresión de tags de JUnit).
+        // -Ptags=smoke: only the smoke cases (JUnit tag expression).
         providers.gradleProperty("tags").orNull?.let { includeTags(it) }
     }
-    // Rutas del repo (entorno, clave de QA, contrato) y configuración por -Pqa.* o variables QA_*.
+    // Repo paths (environment, QA key, contract) and configuration via -Pqa.* or QA_* variables.
     systemProperty("qa.rootDir", rootProject.layout.projectDirectory.asFile.absolutePath)
     providers.gradlePropertiesPrefixedBy("qa.").get().forEach { (key, value) -> systemProperty(key, value) }
     testLogging {

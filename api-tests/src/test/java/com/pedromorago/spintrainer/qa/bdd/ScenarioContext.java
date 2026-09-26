@@ -12,8 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Estado de un escenario, compartido por todas sus clases de steps (picocontainer crea uno por escenario): el jugador
- * con el que se habla a la API, la última respuesta de una acción ({@code Cuando}) y la última respuesta del Quiz.
+ * State of a scenario, shared by all its step classes (picocontainer creates one per scenario): the player used to
+ * talk to the API, the last response to an action ({@code Cuando}) and the last Quiz answer.
  */
 public final class ScenarioContext {
 
@@ -21,11 +21,11 @@ public final class ScenarioContext {
     private Response lastResponse;
     private Attempt lastAttempt;
 
-    /** Un jugador nuevo pasa a ser el actual; el anterior sigue existiendo, con sus datos. */
+    /** A new player becomes the current one; the previous one still exists, with its data. */
     void newPlayer(String alias) {
         TestUser player = TestUser.fresh(alias);
         api = Api.as(player);
-        // Allure.parameter no sirve aquí: allure-cucumber7 crea los escenarios sin ejemplos con una lista inmutable.
+        // Allure.parameter doesn't work here: allure-cucumber7 creates example-less scenarios with an immutable list.
         Allure.getLifecycle().updateTestCase(result -> {
             List<Parameter> parameters = new ArrayList<>(result.getParameters());
             parameters.add(new Parameter().setName(alias).setValue(player.id().toString()));

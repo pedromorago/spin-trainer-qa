@@ -4,7 +4,7 @@ import com.pedromorago.spintrainer.qa.auth.TestUser;
 import com.pedromorago.spintrainer.qa.auth.TokenProviders;
 import io.restassured.specification.RequestSpecification;
 
-/** Cómo se autentica una petición: como un usuario (token de su proveedor), con un token dado o sin token. */
+/** How a request authenticates: as a user (token from its provider), with a given token or with no token. */
 public sealed interface Auth {
 
     void apply(RequestSpecification request);

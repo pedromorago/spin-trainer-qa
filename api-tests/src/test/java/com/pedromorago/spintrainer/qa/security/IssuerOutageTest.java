@@ -16,9 +16,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Isolated;
 
 /**
- * Si el emisor (Supabase) no responde, el cliente recibe un 503, no un 401 que la web tomaría por sesión cerrada.
- * WireMock deja de servir el JWKS y el token trae una clave nueva, que la API tiene que ir a buscar. Aislado: cambia el
- * JWKS que usa toda la suite.
+ * If the issuer (Supabase) doesn't respond, the client gets a 503, not a 401 the web would take as a closed session.
+ * WireMock stops serving the JWKS and the token carries a new key, which the API has to go and fetch. Isolated: it
+ * changes the JWKS the whole suite uses.
  */
 @Isolated
 @Feature("Seguridad")
@@ -31,7 +31,7 @@ class IssuerOutageTest extends ApiTest {
 
         JwksOutage outage = JwksOutage.start();
         try {
-            // 503 no se declara por operación (la spec lo documenta en general): se valida la forma del Problem aquí.
+            // 503 isn't declared per operation (the spec documents it globally): the Problem's shape is validated here.
             assertThatProblem(Api.withToken(tokenWithNewKey)
                             .withoutContract()
                             .situations()

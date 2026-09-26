@@ -1,4 +1,4 @@
-# Copia de spin-trainer-api/openapi.yaml (fuente de verdad, ADR-0004). No editar aquí: `gradlew specSync` la actualiza.
+# Copy of spin-trainer-api/openapi.yaml (source of truth, ADR-0004). Do not edit here: `gradlew specSync` updates it.
 openapi: 3.1.0
 info:
   title: Spin Trainer API
@@ -404,7 +404,7 @@ components:
         nextCursor:
           type: [string, 'null']
           description: null en la última página.
-          # Obligatorio aunque sea null: el DTO generado lo serializa siempre (la API omite los demás null).
+          # Required even if null: the generated DTO always serializes it (the API omits the other nulls).
           x-field-extra-annotation: '@com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.ALWAYS)'
     HandStat:
       type: object

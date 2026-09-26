@@ -1,4 +1,4 @@
-// Token de sesión como los de Supabase, firmado con la clave de QA (env/jwt). Lo usan Newman y los E2E contra la API.
+// Session token like Supabase's, signed with the QA key (env/jwt). Used by Newman and the E2E tests against the API.
 import { createPrivateKey, sign } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 
@@ -7,7 +7,7 @@ const key = createPrivateKey({ key: jwk, format: 'jwk' });
 
 const base64url = (value) => Buffer.from(JSON.stringify(value)).toString('base64url');
 
-/** Emisor que espera la API de QA: SUPABASE_URL + /auth/v1 (en el docker-compose, WireMock). */
+/** Issuer the QA API expects: SUPABASE_URL + /auth/v1 (in the docker-compose, WireMock). */
 export const qaIssuer = process.env.QA_JWT_ISSUER ?? 'http://jwks:8080/auth/v1';
 
 export function qaSessionToken(userId, { issuer = qaIssuer, ttlSeconds = 3600 } = {}) {
@@ -23,7 +23,7 @@ export function qaSessionToken(userId, { issuer = qaIssuer, ttlSeconds = 3600 } 
     exp: now + ttlSeconds,
   };
   const signingInput = `${base64url(header)}.${base64url(claims)}`;
-  // JWS pide la firma ECDSA como r || s (IEEE P1363), no en DER.
+  // JWS requires the ECDSA signature as r || s (IEEE P1363), not DER.
   const signature = sign('sha256', Buffer.from(signingInput), { key, dsaEncoding: 'ieee-p1363' });
   return `${signingInput}.${signature.toString('base64url')}`;
 }

@@ -4,7 +4,7 @@ import static io.restassured.RestAssured.given;
 
 import com.pedromorago.spintrainer.qa.config.QaConfig;
 
-/** Simula la caída de Supabase: WireMock responde 500 en el JWKS hasta {@link #end()} (recarga los mappings). */
+/** Simulates a Supabase outage: WireMock responds 500 on the JWKS until {@link #end()} (reloads the mappings). */
 final class JwksOutage {
 
     private static final String STUB = """

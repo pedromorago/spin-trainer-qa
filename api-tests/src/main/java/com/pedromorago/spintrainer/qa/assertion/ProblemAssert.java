@@ -10,7 +10,7 @@ import java.util.Map;
 import org.assertj.core.api.AbstractAssert;
 
 /**
- * Aserciones sobre una respuesta de error (Problem Details):
+ * Assertions on an error response (Problem Details):
  * {@code assertThatProblem(response).is(ErrorType.CONFLICT).hasDetail(ErrorType.CONFLICT.detail(2))}.
  */
 public final class ProblemAssert extends AbstractAssert<ProblemAssert, Response> {
@@ -23,7 +23,7 @@ public final class ProblemAssert extends AbstractAssert<ProblemAssert, Response>
         return new ProblemAssert(response);
     }
 
-    /** Estado, tipo, título y el correlation id de la petición. */
+    /** Status, type, title and the request's correlation id. */
     public ProblemAssert is(ErrorType type) {
         isNotNull();
         JsonPath body = actual.jsonPath();
@@ -44,7 +44,7 @@ public final class ProblemAssert extends AbstractAssert<ProblemAssert, Response>
         return this;
     }
 
-    /** Los campos señalados en {@code errors}, en orden. */
+    /** The fields reported in {@code errors}, in order. */
     public ProblemAssert hasFieldErrors(String... fields) {
         List<Map<String, String>> errors = actual.jsonPath().getList("errors");
         assertThat(errors).as("errors").isNotNull();

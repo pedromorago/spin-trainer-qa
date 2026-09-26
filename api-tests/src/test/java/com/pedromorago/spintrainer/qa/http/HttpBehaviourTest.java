@@ -13,7 +13,7 @@ import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import org.junit.jupiter.api.Test;
 
-/** Comportamiento HTTP transversal: CORS del frontend, correlation id y errores fuera del contrato. */
+/** Cross-cutting HTTP behaviour: frontend CORS, correlation id and errors outside the contract. */
 @Feature("HTTP")
 class HttpBehaviourTest extends ApiTest {
 
@@ -67,8 +67,8 @@ class HttpBehaviourTest extends ApiTest {
     }
 
     /**
-     * La web manda {@code Accept: application/json}: tiene que poder usar todas las operaciones y recibir los errores
-     * como Problem Details. El DELETE (su única representación es un Problem) respondía 406 (hallado por los E2E).
+     * The web sends {@code Accept: application/json}: it must be able to use every operation and receive the errors
+     * as Problem Details. The DELETE (whose only representation is a Problem) responded 406 (found by the E2E tests).
      */
     @Test
     void a_client_that_only_accepts_json_can_use_every_operation() {

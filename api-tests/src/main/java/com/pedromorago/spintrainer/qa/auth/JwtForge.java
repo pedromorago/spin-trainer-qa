@@ -24,8 +24,8 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 /**
- * Fabrica JWT como los de Supabase Auth con la clave de QA (cuya parte pública sirve WireMock como JWKS): tokens
- * válidos y, para las pruebas de seguridad, variantes que la API debe rechazar.
+ * Forges JWTs like Supabase Auth's with the QA key (whose public part WireMock serves as JWKS): valid tokens
+ * and, for the security tests, variants the API must reject.
  */
 public final class JwtForge {
 
@@ -45,17 +45,17 @@ public final class JwtForge {
         }
     }
 
-    /** Token de sesión válido durante {@code ttl}. */
+    /** Session token valid for {@code ttl}. */
     public String session(UUID subject, Duration ttl) {
         return signed(claims(subject, ttl, c -> {}), key);
     }
 
-    /** Token válido con las claims modificadas (caducado, otra audiencia, rol anon...). */
+    /** Valid token with modified claims (expired, another audience, anon role...). */
     public String session(UUID subject, Consumer<JWTClaimsSet.Builder> customizer) {
         return signed(claims(subject, Duration.ofHours(1), customizer), key);
     }
 
-    /** Mismas claims firmadas con una clave que no está en el JWKS. */
+    /** Same claims signed with a key that is not in the JWKS. */
     public String signedByUnknownKey(UUID subject) {
         try {
             ECKey other = new ECKeyGenerator(Curve.P_256)
@@ -68,7 +68,7 @@ public final class JwtForge {
         }
     }
 
-    /** Mismas claims con HS256 (el secreto compartido heredado de Supabase, que la API no acepta). */
+    /** Same claims with HS256 (Supabase's legacy shared secret, which the API does not accept). */
     public String hs256(UUID subject) {
         try {
             byte[] secret = new byte[32];
@@ -82,7 +82,7 @@ public final class JwtForge {
         }
     }
 
-    /** Mismas claims sin firma ({@code alg: none}). */
+    /** Same claims without a signature ({@code alg: none}). */
     public String unsigned(UUID subject) {
         return new PlainJWT(claims(subject, Duration.ofHours(1), c -> {})).serialize();
     }

@@ -12,9 +12,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Rangos de referencia del seed de la API (V5, Tablasmentov3.pdf), leídos de la copia fijada
- * {@code contract/reference-ranges.json} ({@code gradlew rangesCheck} detecta que la API la cambió). Oráculo de los
- * tests: lo que la API debe servir y con lo que debe corregir.
+ * Reference ranges from the API seed (V5, Tablasmentov3.pdf), read from the pinned copy
+ * {@code contract/reference-ranges.json} ({@code gradlew rangesCheck} detects that the API changed it). The tests'
+ * oracle: what the API must serve and grade with.
  */
 public final class ReferenceRanges {
 
@@ -22,7 +22,7 @@ public final class ReferenceRanges {
 
     private ReferenceRanges() {}
 
-    /** Manos con acción explícita de {@code situación@stack}, en el orden del grid. */
+    /** Hands with an explicit action of {@code situation@stack}, in grid order. */
     public static Map<String, String> of(String situation, Object stack) {
         Map<String, String> hands = BY_SPOT.get(spot(situation, stack));
         if (hands == null) {
@@ -31,12 +31,12 @@ public final class ReferenceRanges {
         return hands;
     }
 
-    /** Todas las combinaciones con rango de referencia, en el orden del catálogo. */
+    /** All combinations with a reference range, in catalog order. */
     public static List<String> spots() {
         return List.copyOf(BY_SPOT.keySet());
     }
 
-    /** {@code btn_open@25}, {@code bb_vs_btn_mr_sb_3bet@12.5}: la forma canónica del stack. */
+    /** {@code btn_open@25}, {@code bb_vs_btn_mr_sb_3bet@12.5}: the canonical form of the stack. */
     public static String spot(String situation, Object stack) {
         return situation + "@"
                 + new BigDecimal(stack.toString()).stripTrailingZeros().toPlainString();

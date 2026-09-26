@@ -8,12 +8,12 @@ import { QuizPage } from '../pages/QuizPage';
 import { StatsPage } from '../pages/StatsPage';
 import { supabaseSession } from './session';
 
-/** mock: la web con su adaptador en memoria; api: la web en modo http contra la API de QA. */
+/** mock: the web with its in-memory adapter; api: the web in http mode against the QA API. */
 export type Backend = 'mock' | 'api';
 
 export interface Player {
   id: string;
-  /** Token de la sesión inyectada (solo con backend api). */
+  /** Token of the injected session (api backend only). */
   accessToken: string | null;
 }
 
@@ -31,8 +31,8 @@ interface Fixtures {
 export const test = base.extend<Fixtures, { backend: Backend }>({
   backend: ['mock', { option: true, scope: 'worker' }],
 
-  // Un jugador nuevo por test. Con la API, su sesión se inyecta antes de cargar la página; con el mock, cada test
-  // tiene su propio contexto (y su localStorage), así que ya empieza sin datos.
+  // A new player per test. With the API, their session is injected before the page loads; with the mock, each test
+  // has its own context (and its own localStorage), so it already starts with no data.
   player: [
     async ({ backend, context }, use) => {
       const id = randomUUID();
@@ -47,7 +47,7 @@ export const test = base.extend<Fixtures, { backend: Backend }>({
     { auto: true },
   ],
 
-  // Cualquier error de consola, excepción o respuesta HTTP ≥ 400 no prevista hace fallar el test.
+  // Any unexpected console error, exception or HTTP response ≥ 400 fails the test.
   consoleErrors: [
     async ({ page }, use, testInfo) => {
       const errors: string[] = [];

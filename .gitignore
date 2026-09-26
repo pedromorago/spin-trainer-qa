@@ -10,7 +10,7 @@ node_modules/
 /playwright-report/
 /blob-report/
 
-# Informes
+# Reports
 allure-results/
 allure-report/
 
@@ -20,9 +20,9 @@ allure-report/
 .vscode/
 /out/
 
-# SO
+# OS
 .DS_Store
 Thumbs.db
 
-# Entorno local (secretos de staging)
+# Local environment (staging secrets)
 .env

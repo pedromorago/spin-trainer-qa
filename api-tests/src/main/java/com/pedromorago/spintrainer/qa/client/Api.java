@@ -3,8 +3,8 @@ package com.pedromorago.spintrainer.qa.client;
 import com.pedromorago.spintrainer.qa.auth.TestUser;
 
 /**
- * Punto de entrada de los tests: {@code Api.as(pedro).ranges().putUser(...)}. Todas las llamadas se validan contra el
- * contrato salvo que el test pida lo contrario ({@link #withoutContract()}) para rutas que la spec no declara.
+ * Entry point for the tests: {@code Api.as(pedro).ranges().putUser(...)}. Every call is validated against the
+ * contract unless the test asks otherwise ({@link #withoutContract()}) for routes the spec does not declare.
  */
 public final class Api {
 

@@ -4,13 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-/** Las 169 manos canónicas del grid (misma construcción que la web y la API) y valores de prueba. */
+/** The grid's 169 canonical hands (same construction as the web and the API) and test values. */
 public final class Hands {
 
     private static final String RANKS = "AKQJT98765432";
     private static final List<String> ALL = grid();
 
-    /** Clases de equivalencia de manos no válidas y el motivo. */
+    /** Equivalence classes of invalid hands and the reason. */
     public static final List<String> NOT_CANONICAL = List.of("AAs", "AK", "KAs", "AKx", "1Ks", "aks", "A");
 
     private Hands() {}

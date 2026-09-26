@@ -9,7 +9,7 @@ import io.qameta.allure.Allure;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/** Trazabilidad en Allure: las etiquetas {@code @ADR-0012} se convierten en enlaces al ADR, como {@code @Link} en JUnit. */
+/** Traceability in Allure: {@code @ADR-0012} tags become links to the ADR, like {@code @Link} in JUnit. */
 public class Hooks {
 
     private static final Pattern ADR_TAG = Pattern.compile("@ADR-(\\d{4})");

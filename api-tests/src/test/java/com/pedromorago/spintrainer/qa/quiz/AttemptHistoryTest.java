@@ -84,7 +84,7 @@ class AttemptHistoryTest extends ApiTest {
                 .isEmpty();
     }
 
-    /** Valores límite de limit (1..200) y un cursor que la API no emitió. */
+    /** Boundary values of limit (1..200) and a cursor the API did not issue. */
     @ParameterizedTest(name = "{0}={1} → {2}")
     @CsvSource({
         "limit, 1, 200",

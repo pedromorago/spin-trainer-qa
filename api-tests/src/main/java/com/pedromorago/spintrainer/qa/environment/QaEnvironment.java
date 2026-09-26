@@ -11,9 +11,9 @@ import org.testcontainers.containers.ComposeContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
 /**
- * El sistema bajo prueba. Si no se indica {@code QA_API_URL}, la suite levanta {@code env/docker-compose.yml} con
- * Testcontainers (Postgres, WireMock como Supabase y la API construida desde el repo hermano) y lo para al terminar. Si
- * ya hay un entorno respondiendo en la URL por defecto (p. ej. {@code docker compose up} a mano), lo reutiliza.
+ * The system under test. If {@code QA_API_URL} is not set, the suite starts {@code env/docker-compose.yml} with
+ * Testcontainers (Postgres, WireMock as Supabase and the API built from the sibling repo) and stops it at the end. If
+ * an environment is already responding at the default URL (e.g. {@code docker compose up} by hand), it reuses it.
  */
 public final class QaEnvironment {
 

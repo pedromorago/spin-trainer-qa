@@ -1,5 +1,5 @@
-// Ejecuta la colección de Newman contra la API de QA (QA_API_URL o el docker-compose local) con un jugador nuevo.
-// Informes: consola, JUnit (build/newman) y Allure (build/allure-results/newman).
+// Runs the Newman collection against the QA API (QA_API_URL or the local docker-compose) with a new player.
+// Reports: console, JUnit (build/newman) and Allure (build/allure-results/newman).
 import { randomUUID } from 'node:crypto';
 import { rmSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';

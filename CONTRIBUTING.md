@@ -9,6 +9,7 @@ este repo sea autosuficiente. Fuente de verdad del proyecto: `spin-trainer-web/d
   copia fijada (`contract/openapi.yaml`, `gradlew specCheck` / `specSync`) que no se edita a mano. Igual con los rangos de
   referencia del seed (`contract/reference-ranges.json`, `rangesCheck` / `rangesSync`), que son el oráculo.
 - Gradle (Kotlin DSL), nunca Maven. TypeScript solo en Playwright. Descartados: OWASP ZAP, carga, Pact, pgTAP.
+- Comentarios de código en inglés (Java, JS/TS, SQL, YAML, Gradle, scripts). En español: documentación (README, ADRs, CONTRIBUTING.md), textos de la app, mensajes de error de la API, títulos de tests y features de Gherkin.
 - Commits **siempre a nombre de Pedro** (autor y committer: `Pedro Morago López-Vázquez <pedromoragolv@gmail.com>`;
   verificar `git config user.name/user.email` antes de commitear). Conventional Commits, sin trailer de coautoría ni de atribución.
 - Entorno de Pedro: Windows 10/11 (comandos con `gradlew.bat`; nada que dependa de bash).

@@ -1,8 +1,8 @@
 package com.pedromorago.spintrainer.qa.assertion;
 
 /**
- * Tipos de error del contrato (RFC 9457, {@code urn:spin-trainer:<tipo>}) con su estado, título y la plantilla del
- * {@code detail} cuando la API lo fija. Los tests comparan contra estas plantillas, no contra textos sueltos.
+ * Error types of the contract (RFC 9457, {@code urn:spin-trainer:<type>}) with their status, title and the
+ * {@code detail} template when the API fixes it. Tests compare against these templates, not against loose strings.
  */
 public enum ErrorType {
     VALIDATION("validation", 400, "Validation failed", null),
@@ -37,7 +37,7 @@ public enum ErrorType {
         return title;
     }
 
-    /** El {@code detail} esperado con los valores del caso. */
+    /** The expected {@code detail} with the case's values. */
     public String detail(Object... values) {
         if (detailTemplate == null) {
             throw new IllegalStateException(name() + " no tiene un detail fijo");
