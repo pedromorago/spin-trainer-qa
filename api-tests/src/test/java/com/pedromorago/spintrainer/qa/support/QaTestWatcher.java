@@ -11,6 +11,11 @@ public class QaTestWatcher implements TestWatcher {
 
     @Override
     public void testFailed(ExtensionContext context, Throwable cause) {
+        attachEnvironment();
+    }
+
+    /** También lo usan los escenarios de Cucumber al fallar. */
+    public static void attachEnvironment() {
         QaConfig config = QaConfig.get();
         Allure.addAttachment(
                 "Entorno",
