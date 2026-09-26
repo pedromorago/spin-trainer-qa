@@ -1,0 +1,150 @@
+name: qa
+
+# Suite completa contra el sistema construido desde los repos hermanos: API (JUnit + Cucumber), Newman y E2E
+# (Playwright contra el mock y contra la API real), con un informe de Allure combinado.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      api-ref:
+        description: Rama, tag o commit de spin-trainer-api (vacío = la misma rama que aquí si existe; si no, main)
+        required: false
+      web-ref:
+        description: Rama, tag o commit de spin-trainer-web (vacío = la misma rama que aquí si existe; si no, main)
+        required: false
+  schedule:
+    # Lunes 05:17 UTC: detecta cambios en API o web que rompan la suite aunque aquí no se toque nada.
+    - cron: "17 5 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qa-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Los repos son privados: token de solo lectura (Contents: read) sobre spin-trainer-api y spin-trainer-web en el
+  # secreto SPIN_TRAINER_REPOS_TOKEN. Si pasan a ser públicos, basta con el token de Actions.
+  SIBLINGS_TOKEN: ${{ secrets.SPIN_TRAINER_REPOS_TOKEN || github.token }}
+  LANG: C.UTF-8
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout spin-trainer-qa
+        uses: actions/checkout@v7
+        with:
+          path: spin-trainer-qa
+
+      # Cambios coordinados entre repos: la misma rama en los tres si existe; si no, main.
+      - name: Elegir las versiones de API y web
+        id: refs
+        env:
+          BRANCH: ${{ github.head_ref || github.ref_name }}
+          API_REF: ${{ inputs.api-ref }}
+          WEB_REF: ${{ inputs.web-ref }}
+        run: |
+          pick() {
+            if [ -n "$2" ]; then echo "$2"; return; fi
+            if git ls-remote --exit-code --heads "https://x-access-token:${SIBLINGS_TOKEN}@github.com/pedromorago/$1.git" "$BRANCH" > /dev/null; then
+              echo "$BRANCH"
+            else
+              echo main
+            fi
+          }
+          echo "api=$(pick spin-trainer-api "$API_REF")" >> "$GITHUB_OUTPUT"
+          echo "web=$(pick spin-trainer-web "$WEB_REF")" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout spin-trainer-api (${{ steps.refs.outputs.api }})
+        uses: actions/checkout@v7
+        with:
+          repository: pedromorago/spin-trainer-api
+          ref: ${{ steps.refs.outputs.api }}
+          token: ${{ env.SIBLINGS_TOKEN }}
+          path: spin-trainer-api
+
+      - name: Checkout spin-trainer-web (${{ steps.refs.outputs.web }})
+        uses: actions/checkout@v7
+        with:
+          repository: pedromorago/spin-trainer-web
+          ref: ${{ steps.refs.outputs.web }}
+          token: ${{ env.SIBLINGS_TOKEN }}
+          path: spin-trainer-web
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            spin-trainer-qa/package-lock.json
+            spin-trainer-web/package-lock.json
+
+      - name: Dependencias
+        run: |
+          npm ci --prefix spin-trainer-qa
+          npm ci --prefix spin-trainer-web
+          cd spin-trainer-qa && npx playwright install --with-deps chromium
+
+      - name: El contrato fijado coincide con el de la API
+        working-directory: spin-trainer-qa
+        run: ./gradlew specCheck spotlessCheck
+
+      - name: Levantar el entorno de QA
+        id: env
+        working-directory: spin-trainer-qa
+        run: npm run env:up
+
+      # Cada suite corre aunque falle la anterior: el informe final las recoge todas.
+      - name: API · JUnit y Cucumber
+        if: ${{ !cancelled() && steps.env.outcome == 'success' }}
+        working-directory: spin-trainer-qa
+        run: ./gradlew :api-tests:test
+
+      - name: API · Newman
+        if: ${{ !cancelled() && steps.env.outcome == 'success' }}
+        working-directory: spin-trainer-qa
+        run: npm run newman
+
+      - name: E2E · Playwright (mock y fullstack)
+        if: ${{ !cancelled() && steps.env.outcome == 'success' }}
+        working-directory: spin-trainer-qa
+        run: npm run e2e:typecheck && npm run e2e
+
+      - name: Logs del entorno
+        if: ${{ !cancelled() && steps.env.outcome != 'skipped' }}
+        working-directory: spin-trainer-qa
+        run: |
+          mkdir -p build
+          docker compose -f env/docker-compose.yml logs --no-color > build/env.log 2>&1 || true
+          docker compose -f env/docker-compose.yml down -v || true
+
+      - name: Informe de Allure
+        if: ${{ !cancelled() }}
+        working-directory: spin-trainer-qa
+        run: npm run report && node scripts/report-summary.mjs >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publicar informes
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: qa-reports
+          retention-days: 14
+          path: |
+            spin-trainer-qa/build/allure-report/
+            spin-trainer-qa/build/e2e/report/
+            spin-trainer-qa/build/e2e/test-results/
+            spin-trainer-qa/build/newman/
+            spin-trainer-qa/build/env.log
+            spin-trainer-qa/api-tests/build/reports/tests/
