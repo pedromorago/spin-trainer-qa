@@ -1,0 +1,4 @@
+{
+  "request": { "method": "POST", "urlPath": "/auth/v1/logout" },
+  "response": { "status": 204 }
+}

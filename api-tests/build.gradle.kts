@@ -76,6 +76,10 @@ dependencies {
 }
 
 tasks.test {
+    // El informe de Allure solo con los resultados de esta ejecución (val local: la caché de configuración no admite
+    // referencias al script).
+    val allureResults = layout.buildDirectory.dir("allure-results")
+    doFirst { allureResults.get().asFile.deleteRecursively() }
     useJUnitPlatform {
         // -Ptags=smoke: solo los casos de humo (expresión de tags de JUnit).
         providers.gradleProperty("tags").orNull?.let { includeTags(it) }

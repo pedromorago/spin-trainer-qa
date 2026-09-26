@@ -1,6 +1,6 @@
 # Sistema bajo prueba de spin-trainer-qa, igual para las tres capas (API, Newman, Playwright):
 #   postgres  Postgres 17 preparado como producción (bootstrap.sql de la API: roles spin_migrator/spin_app)
-#   jwks      WireMock en el papel de Supabase Auth: sirve el JWKS de la clave de QA (env/jwt)
+#   jwks      WireMock en el papel de Supabase Auth: sirve el JWKS de la clave de QA (env/jwt) y acepta el logout
 #   api       la API construida desde ../../spin-trainer-api (repos hermanos) con los datos de referencia de QA
 #
 #   docker compose -f env/docker-compose.yml up -d --build --wait
@@ -28,7 +28,8 @@ services:
 
   jwks:
     image: wiremock/wiremock:3.13.1
-    command: ["--disable-banner"]
+    # CORS: el navegador de los E2E (web en modo http) llama a este "Supabase" al cerrar sesión.
+    command: ["--disable-banner", "--enable-stub-cors"]
     volumes:
       - ./wiremock:/home/wiremock
     ports:

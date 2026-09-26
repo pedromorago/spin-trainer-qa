@@ -1,6 +1,7 @@
 // Ejecuta la colección de Newman contra la API de QA (QA_API_URL o el docker-compose local) con un jugador nuevo.
 // Informes: consola, JUnit (build/newman) y Allure (build/allure-results/newman).
 import { randomUUID } from 'node:crypto';
+import { rmSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import newman from 'newman';
 import { qaSessionToken } from './lib/qa-jwt.mjs';
@@ -8,6 +9,8 @@ import { qaSessionToken } from './lib/qa-jwt.mjs';
 const root = fileURLToPath(new URL('..', import.meta.url));
 const apiUrl = process.env.QA_API_URL ?? 'http://localhost:8081/api/v1';
 const player = randomUUID();
+const allureResults = `${root}build/allure-results/newman`;
+rmSync(allureResults, { recursive: true, force: true });
 
 newman.run(
   {
@@ -20,7 +23,7 @@ newman.run(
     reporters: ['cli', 'junit', 'allure'],
     reporter: {
       junit: { export: `${root}build/newman/junit.xml` },
-      allure: { resultsDir: `${root}build/allure-results/newman` },
+      allure: { resultsDir: allureResults },
     },
   },
   (error, summary) => {
