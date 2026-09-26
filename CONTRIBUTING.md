@@ -6,7 +6,8 @@ este repo sea autosuficiente. Fuente de verdad del proyecto: `spin-trainer-web/d
 ## Reglas globales (resumen)
 - Calidad de portfolio > velocidad. ADRs cerrados; solo se reabren con fallo concreto y justificado (ADR nuevo).
 - Validación contra la spec en lugar de Pact (ADR-0008). El contrato es `spin-trainer-api/openapi.yaml`; aquí hay una
-  copia fijada (`contract/openapi.yaml`, `gradlew specCheck` / `specSync`) que no se edita a mano.
+  copia fijada (`contract/openapi.yaml`, `gradlew specCheck` / `specSync`) que no se edita a mano. Igual con los rangos de
+  referencia del seed (`contract/reference-ranges.json`, `rangesCheck` / `rangesSync`), que son el oráculo.
 - Gradle (Kotlin DSL), nunca Maven. TypeScript solo en Playwright. Descartados: OWASP ZAP, carga, Pact, pgTAP.
 - Commits **siempre a nombre de Pedro** (autor y committer: `Pedro Morago López-Vázquez <pedromoragolv@gmail.com>`;
   verificar `git config user.name/user.email` antes de commitear). Conventional Commits, sin trailer de coautoría ni de atribución.
@@ -19,16 +20,18 @@ Datafaker · Nimbus JOSE · networknt JSON Schema · openapi-generator (modelos)
 ```
 ./gradlew :api-tests:test      # levanta env/docker-compose.yml, ejecuta y lo para (Docker necesario)
 ./gradlew specCheck            # contract/openapi.yaml == ../spin-trainer-api/openapi.yaml
+./gradlew rangesCheck          # contract/reference-ranges.json == ../spin-trainer-api/reference-ranges.json
 ./gradlew spotlessApply
 npm run env:up && npm run newman   # colección de Newman contra el entorno en marcha
 npm run e2e                        # Playwright: mock + fullstack (este con el entorno en marcha)
 npm run report                     # Allure combinado (API, Newman, E2E)
 ```
-Antes de commitear: `specCheck`, `:api-tests:test`, `npm run e2e:typecheck` y `npm run e2e` en verde.
+Antes de commitear: `specCheck`, `rangesCheck`, `:api-tests:test`, `npm run e2e:typecheck` y `npm run e2e` en verde.
 
 ## Convenciones
-- Caja negra: los tests solo hablan HTTP con la API. La preparación que la API no permite (datos de referencia) es
-  seed de QA en `env/flyway`, nunca SQL desde los tests.
+- Caja negra: los tests solo hablan HTTP con la API. El entorno tiene los datos reales (seed de la API); los ajustes de
+  QA que la API no permite hacer van en `env/flyway/R__qa_fixtures.sql` (hoy: btn_open@8 sin rango), nunca SQL desde
+  los tests. Oráculos de rangos: `ReferenceRanges` (Java) y `e2e/data/reference.ts`, ambos sobre la copia fijada.
 - Cliente: `Api.as(usuario).ranges().putUser(...)`; `ServiceBase` añade correlation id, Allure y la validación contra el
   contrato en todas las peticiones. `withoutContract()` solo para lo que la spec no declara (rutas inexistentes, 503).
 - Un usuario nuevo por test (`ApiTest`): los tests van en paralelo sin limpiar datos. `@Isolated` solo si un test toca

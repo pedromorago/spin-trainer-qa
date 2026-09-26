@@ -27,6 +27,7 @@ Estrategia de pruebas (bases, técnicas, trazabilidad): [`docs/TEST_STRATEGY.md`
 | `npm run e2e:mock` / `e2e:fullstack` | igual | Uno de los dos proyectos |
 | `npm run report` / `report:open` | igual | Informe de Allure combinado (API, Newman y E2E) en `build/allure-report` / abrirlo |
 | `.\gradlew.bat specCheck` / `specSync` | `./gradlew specCheck` / `specSync` | Comprueba / trae el contrato de `../spin-trainer-api/openapi.yaml` |
+| `.\gradlew.bat rangesCheck` / `rangesSync` | `./gradlew rangesCheck` / `rangesSync` | Comprueba / trae los rangos de referencia de `../spin-trainer-api/reference-ranges.json` |
 
 Entorno a mano (para depurar o para Newman/Playwright): `npm run env:up`. Si ya está en marcha, los tests de Gradle lo
 reutilizan y no lo paran.
@@ -42,8 +43,10 @@ Gradle falla al escribirlos; basta con `LANG=C.UTF-8`. En Windows y en GitHub Ac
 | `postgres` | 55432 | Postgres 17 preparado con el `bootstrap.sql` de la API (roles `spin_migrator` y `spin_app`) |
 | `jwks` | 8089 | WireMock en el papel de Supabase Auth: sirve el JWKS de la clave de QA (`env/jwt`) y acepta el logout |
 
-Datos de referencia de QA: `env/flyway/R__qa_reference_ranges.sql` (el mismo rango de ejemplo que el mock de la web,
-`btn_open@25`), cargado por Flyway al arrancar. Cada test usa usuarios nuevos: no hay que limpiar datos.
+Datos de referencia: los reales, del seed de la API (V5, las 73 tablas del PDF), con un único ajuste de QA en
+`env/flyway/R__qa_fixtures.sql`: btn_open@8 se queda sin rango para poder probar en caja negra que sin rango no hay
+corrección (422). Los oráculos leen la copia fijada `contract/reference-ranges.json`. Cada test usa usuarios nuevos: no
+hay que limpiar datos.
 
 ## Configuración
 
@@ -57,7 +60,7 @@ Datos de referencia de QA: `env/flyway/R__qa_reference_ranges.sql` (el mismo ran
 ## Estructura
 
 ```
-contract/openapi.yaml     copia fijada del contrato (specCheck / specSync)
+contract/                 copias fijadas del contrato y de los rangos de referencia (specCheck/specSync, rangesCheck/rangesSync)
 env/                      sistema bajo prueba: docker-compose, bootstrap de Postgres, WireMock, clave de QA, datos
 api-tests/src/main        framework: config, entorno, tokens, cliente (ServiceBase + un servicio por tag),
                           validación contra el contrato, ErrorType + ProblemAssert, datos de prueba
@@ -79,7 +82,8 @@ Las mismas specs corren contra dos backends:
 | `mock` | `build:mock` servida en 4173 | el adaptador en memoria de la web | la del mock (siempre iniciada) |
 | `fullstack` | build en modo http servida en 4174 | la API del entorno de QA | JWT de QA inyectado como sesión de Supabase |
 
-Los datos de referencia son los mismos en los dos (btn_open a 25 BB), así que los oráculos también. Cada test usa un
+Los datos de referencia son los mismos en los dos (el seed de la API; el mock de la web guarda la misma copia), así que
+los oráculos también. Cada test usa un
 jugador nuevo y falla si hay errores de consola, excepciones o respuestas HTTP ≥ 400 no previstas. La accesibilidad se
 comprueba con axe (WCAG 2.2 AA) en cada página. Informe HTML de Playwright en `build/e2e/report`.
 

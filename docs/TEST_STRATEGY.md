@@ -33,17 +33,20 @@ y configuración solo aparecen aquí.
 
 1. Contrato: `contract/openapi.yaml` (copia fijada de `spin-trainer-api/openapi.yaml`, v0.2; `specCheck` falla si
    diverge).
-2. ADRs: 0003 (Supabase solo emite el JWT), 0007 (intentos inmutables), 0012 (rango efectivo), 0013 (contrato v0.2:
+2. Rangos de referencia: `contract/reference-ranges.json` (copia fijada del seed de la API, las 73 tablas de
+   Tablasmentov3.pdf; `rangesCheck` falla si diverge).
+3. ADRs: 0003 (Supabase solo emite el JWT), 0007 (intentos inmutables), 0012 (rango efectivo), 0013 (contrato v0.2:
    corrección en servidor, versiones, stats agregadas).
-3. Reglas de dominio de `SPIN_TRAINER_PROJECT_CONTEXT.md`: acción implícita (FOLD, o CHECK si FOLD no es posible), 169
+4. Reglas de dominio de `SPIN_TRAINER_PROJECT_CONTEXT.md`: acción implícita (FOLD, o CHECK si FOLD no es posible), 169
    manos canónicas, stacks en múltiplos de 0,5 BB.
 
 ## Oráculos
 
 - **La spec**, en cada respuesta: `ContractValidationFilter` valida estado declarado, `Content-Type` y cuerpo (esquema y
   formatos) de todas las peticiones. Un test que no mira el cuerpo sigue comprobando el contrato.
-- **Los datos de referencia de QA** (`env/flyway`, reflejados en `QaReferenceData`): la corrección del Quiz se compara
-  con la acción esperada calculada desde el seed, para manos y respuestas al azar.
+- **Los rangos de referencia del seed** (copia fijada, `ReferenceRanges` en Java y `e2e/data/reference.ts`): la API
+  tiene que servirlos mano a mano, y la corrección del Quiz se compara con la acción esperada que dan, para manos y
+  respuestas al azar.
 - **`ErrorType`**: tipo, estado, título y plantilla del `detail` de cada Problem (RFC 9457).
 - **Ida y vuelta**: lo que devuelve una escritura es lo que devuelve la lectura posterior.
 
@@ -66,6 +69,7 @@ y configuración solo aparecen aquí.
 |---|---|---|
 | Catálogo de 16 situaciones con acción implícita y stacks válidos | Contexto, contrato | `SituationCatalogTest` |
 | Rangos de referencia servidos desde el seed, revalidables con ETag | ADR-0006, contrato | `ReferenceRangesTest` |
+| Los rangos servidos son, mano a mano, los del PDF | ADR-0006 | `ReferenceRangesTest#every_range_served_is_the_seeded_one` |
 | Rango personalizado versionado; un PUT con versión antigua es 409 y no pisa nada | ADR-0013 | `UserRangeLifecycleTest`, `rango_personalizado.feature`, Newman |
 | Nada inválido se guarda; errores por campo | Contrato | `UserRangeValidationTest`, `rango_personalizado.feature` |
 | Rango efectivo = personalizado si existe; si no, el de referencia | ADR-0012 | `QuizGradingTest` (tabla de decisión), `correccion_del_quiz.feature`, Newman |
@@ -115,8 +119,10 @@ analiza con axe (WCAG 2.2 AA).
 
 - Un usuario (UUID) nuevo por test, por escenario de Cucumber y por ejecución de Newman: todo corre en paralelo
   (4 hilos en JUnit y 4 en Cucumber) sin limpiar nada.
-- Datos que la API no permite escribir (rangos de referencia): seed de QA en `env/flyway`, cargado por Flyway con las
-  migraciones de la API. Nunca SQL desde los tests.
+- Datos de referencia: los reales, del seed de la API. Lo que la suite necesita y la API no permite escribir va en
+  `env/flyway/R__qa_fixtures.sql`, que Flyway aplica después de las migraciones: hoy, btn_open@8 sin rango de
+  referencia, para probar el 422 en caja negra (en producción todas las combinaciones tienen rango). Nunca SQL desde
+  los tests.
 - `@Isolated` solo para lo que cambia algo compartido: `IssuerOutageTest` deja sin JWKS a toda la suite.
 - E2E: un jugador nuevo por test (con el mock, un contexto de navegador nuevo, con su propio almacenamiento).
 
