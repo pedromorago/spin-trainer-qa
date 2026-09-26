@@ -21,8 +21,8 @@ pruebas de base de datos (pgTAP).
 | Unitario (API) | api · JUnit | Dominio, casos de uso, ArchUnit | Sin Spring ni Docker; reloj controlado |
 | Integración (API) | api · `*IT` | App completa con Postgres (Testcontainers), JWT reales, roles de BD, respuestas validadas contra la spec | Caja blanca: fija el reloj (cortes de día y cambios de hora) y consulta privilegios de BD |
 | **Aceptación de API** | **qa · REST Assured** | El artefacto desplegado: contrato, reglas de negocio, seguridad, HTTP | Independiente del código; lo que ve un cliente |
-| Especificación ejecutable | qa · Cucumber (pendiente) | Reglas de negocio en Gherkin, en español | Legible por quien valida los rangos |
-| Regresión de colección | qa · Newman (pendiente) | Flujos principales como colección Postman | Ejecutable fuera de la JVM |
+| Especificación ejecutable | qa · Cucumber | Reglas de negocio en Gherkin, en español | Legible por quien valida los rangos |
+| Regresión de colección | qa · Newman | El flujo completo de un jugador como colección de Postman | Ejecutable fuera de la JVM y abrible en Postman |
 | E2E | qa · Playwright (pendiente) | Web contra el mock y contra la API real; accesibilidad | Flujos de usuario reales |
 
 Solapamiento con los `*IT` de la API, intencionado: allí se prueba el código con conocimiento interno; aquí, el
@@ -66,28 +66,42 @@ y configuración solo aparecen aquí.
 |---|---|---|
 | Catálogo de 16 situaciones con acción implícita y stacks válidos | Contexto, contrato | `SituationCatalogTest` |
 | Rangos de referencia servidos desde el seed, revalidables con ETag | ADR-0006, contrato | `ReferenceRangesTest` |
-| Rango personalizado versionado; un PUT con versión antigua es 409 y no pisa nada | ADR-0013 | `UserRangeLifecycleTest` |
-| Nada inválido se guarda; errores por campo | Contrato | `UserRangeValidationTest` |
-| Rango efectivo = personalizado si existe; si no, el de referencia | ADR-0012 | `QuizGradingTest` (tabla de decisión) |
-| El servidor corrige; el cliente no puede mandar `correct` | ADR-0013 | `QuizGradingTest` |
-| Los intentos no cambian aunque cambie el rango | ADR-0007 | `QuizGradingTest#past_attempts_keep_their_grade_when_the_range_changes` |
-| Historial paginado sin huecos ni duplicados, filtrable | Contrato | `AttemptHistoryTest` |
-| Stats agregadas por la API | ADR-0013 | `StatsTest` |
+| Rango personalizado versionado; un PUT con versión antigua es 409 y no pisa nada | ADR-0013 | `UserRangeLifecycleTest`, `rango_personalizado.feature`, Newman |
+| Nada inválido se guarda; errores por campo | Contrato | `UserRangeValidationTest`, `rango_personalizado.feature` |
+| Rango efectivo = personalizado si existe; si no, el de referencia | ADR-0012 | `QuizGradingTest` (tabla de decisión), `correccion_del_quiz.feature`, Newman |
+| El servidor corrige; el cliente no puede mandar `correct` | ADR-0013 | `QuizGradingTest`, Newman |
+| Los intentos no cambian aunque cambie el rango | ADR-0007 | `QuizGradingTest#past_attempts_keep_their_grade_when_the_range_changes`, `historial_y_estadisticas.feature` |
+| Historial paginado sin huecos ni duplicados, filtrable | Contrato | `AttemptHistoryTest`, Newman |
+| Stats agregadas por la API | ADR-0013 | `StatsTest`, `historial_y_estadisticas.feature`, Newman |
+| Cada jugador solo ve sus datos | ADR-0003 | `each_user_only_sees_their_own_*`, `privacidad.feature` |
 | Solo JWT de sesión del emisor configurado (ES256, emisor, audiencia, rol, `exp`, `sub`) | ADR-0003 | `AuthenticationTest` |
 | Emisor caído → 503, no 401 | ADR-0003 | `IssuerOutageTest` |
 | Errores como Problem Details, también fuera de las rutas del contrato | Contrato | `ProblemAssert` en todas las suites, `HttpBehaviourTest` |
 | CORS solo para el origen de la web; correlation id | Contrato | `HttpBehaviourTest` |
 
-En Allure: cada clase lleva `@Feature` y los ADRs que prueba como `@Link`; el usuario del test va como parámetro para
+En Allure: cada clase lleva `@Feature` y los ADRs que prueba como `@Link` (en Gherkin, la etiqueta `@ADR-0012` se
+convierte en el mismo enlace); el usuario del test va como parámetro para
 buscar sus peticiones en los logs de la API (JSON con `correlationId`).
 
 Lo que se prueba en la API y no aquí, porque exige controlar la aplicación por dentro: cortes de día por zona horaria y
 cambios de hora (`StatsIT`, reloj fijo), privilegios de los roles de BD e inmutabilidad de los intentos a nivel de
 permisos (`DatabaseRolesIT`).
 
+## Cucumber y Newman: qué aporta cada uno
+
+- **Cucumber** expresa las reglas de negocio con el vocabulario del jugador (mano, rango, respuesta, versión), en
+  español: es la parte de la suite que puede revisar alguien que conoce el poker y no el código. Los detalles técnicos
+  (cabeceras, formatos, JWT) se quedan en JUnit. Corre en la misma tarea de Gradle, contra el mismo entorno y con la
+  misma validación contra la spec en cada petición.
+- **Newman** recorre el flujo completo de un jugador nuevo, petición a petición y encadenando estado (ETag, versiones,
+  cursor), como lo haría un cliente. Sirve de humo de despliegue desde Node, sin la JVM, y se abre en Postman para
+  explorar la API a mano. Es una dependencia solo de desarrollo: `npm audit` avisa de dependencias de Newman que no se
+  usan con entradas externas (solo ejecuta la colección del repo).
+
 ## Datos y aislamiento
 
-- Un usuario (UUID) nuevo por test: los tests corren en paralelo (4 hilos) sin limpiar nada.
+- Un usuario (UUID) nuevo por test, por escenario de Cucumber y por ejecución de Newman: todo corre en paralelo
+  (4 hilos en JUnit y 4 en Cucumber) sin limpiar nada.
 - Datos que la API no permite escribir (rangos de referencia): seed de QA en `env/flyway`, cargado por Flyway con las
   migraciones de la API. Nunca SQL desde los tests.
 - `@Isolated` solo para lo que cambia algo compartido: `IssuerOutageTest` deja sin JWKS a toda la suite.

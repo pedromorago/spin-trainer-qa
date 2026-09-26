@@ -10,6 +10,7 @@ Estrategia de pruebas (bases, técnicas, trazabilidad): [`docs/TEST_STRATEGY.md`
 ## Requisitos
 
 - Docker (Docker Desktop con WSL 2 en Windows) y JDK 21 (Gradle lo descarga si falta).
+- Node LTS (22.13+) para Newman y Playwright: `npm install` una vez.
 - Los tres repos como hermanos en la misma carpeta (`spin-trainer-api`, `spin-trainer-qa`, `spin-trainer-web`):
   el entorno construye la API desde su repo.
 
@@ -17,12 +18,18 @@ Estrategia de pruebas (bases, técnicas, trazabilidad): [`docs/TEST_STRATEGY.md`
 
 | Windows | Linux/macOS | Qué hace |
 |---|---|---|
-| `.\gradlew.bat :api-tests:test` | `./gradlew :api-tests:test` | Levanta el entorno (Testcontainers + docker compose), ejecuta los tests de API y lo para |
+| `.\gradlew.bat :api-tests:test` | `./gradlew :api-tests:test` | Levanta el entorno (Testcontainers + docker compose), ejecuta los tests de API (JUnit y Cucumber) y lo para |
+| `.\gradlew.bat :api-tests:test -Ptags=smoke` | `./gradlew :api-tests:test -Ptags=smoke` | Solo los casos de humo |
+| `npm run env:up` / `env:down` | igual | Levanta / borra el entorno a mano |
+| `npm run newman` | igual | Colección de Newman contra el entorno en marcha (`QA_API_URL` para otro) |
 | `.\gradlew.bat :api-tests:allureServe` | `./gradlew :api-tests:allureServe` | Abre el informe de Allure |
 | `.\gradlew.bat specCheck` / `specSync` | `./gradlew specCheck` / `specSync` | Comprueba / trae el contrato de `../spin-trainer-api/openapi.yaml` |
 
-Entorno a mano (para depurar o para Newman/Playwright): `docker compose -f env/docker-compose.yml up -d --build --wait`.
-Si ya está en marcha, los tests lo reutilizan.
+Entorno a mano (para depurar o para Newman/Playwright): `npm run env:up`. Si ya está en marcha, los tests de Gradle lo
+reutilizan y no lo paran.
+
+Los nombres de los escenarios de Cucumber llevan tildes: con un locale POSIX (Linux sin `LANG`), el informe HTML de
+Gradle falla al escribirlos; basta con `LANG=C.UTF-8`. En Windows y en GitHub Actions no hace falta nada.
 
 ## Entorno de QA (`env/`)
 
@@ -51,6 +58,9 @@ contract/openapi.yaml     copia fijada del contrato (specCheck / specSync)
 env/                      sistema bajo prueba: docker-compose, bootstrap de Postgres, WireMock, clave de QA, datos
 api-tests/src/main        framework: config, entorno, tokens, cliente (ServiceBase + un servicio por tag),
                           validación contra el contrato, ErrorType + ProblemAssert, datos de prueba
-api-tests/src/test        suites por módulo (situaciones, rangos, quiz, stats, seguridad, HTTP)
+api-tests/src/test        suites por módulo (situaciones, rangos, quiz, stats, seguridad, HTTP) y steps de Cucumber (bdd)
+api-tests/src/test/resources/features   reglas de negocio en Gherkin, en español
+newman/                   colección de Postman (flujo completo de un jugador) y entorno de QA
+scripts/                  ejecución de Newman, token de QA (lib/qa-jwt.mjs) y generación de la clave
 docs/TEST_STRATEGY.md     estrategia, técnicas y trazabilidad
 ```

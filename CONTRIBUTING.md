@@ -14,12 +14,13 @@ este repo sea autosuficiente. Fuente de verdad del proyecto: `spin-trainer-web/d
 
 ## Stack y comandos
 JUnit 5 · REST Assured · AssertJ · Cucumber 7 · Allure · Testcontainers (docker compose) · WireMock (JWKS) ·
-Datafaker · Nimbus JOSE · networknt JSON Schema · openapi-generator (modelos).
+Datafaker · Nimbus JOSE · networknt JSON Schema · openapi-generator (modelos) · Newman (Node).
 
 ```
 ./gradlew :api-tests:test      # levanta env/docker-compose.yml, ejecuta y lo para (Docker necesario)
 ./gradlew specCheck            # contract/openapi.yaml == ../spin-trainer-api/openapi.yaml
 ./gradlew spotlessApply
+npm run env:up && npm run newman   # colección de Newman contra el entorno en marcha
 ```
 Antes de commitear: `specCheck` y `:api-tests:test` en verde.
 
@@ -34,3 +35,9 @@ Antes de commitear: `specCheck` y `:api-tests:test` en verde.
 - Técnica de diseño explícita en el Javadoc del test (particiones, valores límite, tabla de decisión, transiciones) y
   enlace al ADR con `@Link`; la trazabilidad está en `docs/TEST_STRATEGY.md`.
 - Modelos generados desde el contrato fijado (`com.pedromorago.spintrainer.qa.model`); las peticiones inválidas en JSON crudo.
+- Cucumber: features en español (`# language: es`) con vocabulario de negocio (jugador, mano, rango, respuesta), no de
+  HTTP. Steps en `qa.bdd`, estado del escenario en `ScenarioContext` (picocontainer), etiquetas `@ADR-00xx` (enlaces en
+  Allure) y `@smoke`. Las reglas que solo se pueden expresar con detalle técnico van en JUnit.
+- Newman: la colección se edita en Postman y se exporta a `newman/` (v2.1). Un jugador nuevo por ejecución
+  (`scripts/newman.mjs`); comprueba comportamiento, la validación contra la spec la hace la suite de Java.
+- Tokens fuera de la JVM (Newman, Playwright): `scripts/lib/qa-jwt.mjs`, mismos claims que `JwtForge`.
