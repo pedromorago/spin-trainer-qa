@@ -65,4 +65,25 @@ class HttpBehaviourTest extends ApiTest {
         assertThat(wrongMethod.statusCode()).isEqualTo(405);
         assertThat(wrongMethod.jsonPath().getString("type")).isEqualTo("urn:spin-trainer:unsupported");
     }
+
+    /**
+     * La web manda {@code Accept: application/json}: tiene que poder usar todas las operaciones y recibir los errores
+     * como Problem Details. El DELETE (su única representación es un Problem) respondía 406 (hallado por los E2E).
+     */
+    @Test
+    void a_client_that_only_accepts_json_can_use_every_operation() {
+        String token = TokenProviders.current().accessToken(pedro);
+        RequestSpecification json = raw().auth().oauth2(token).accept("application/json");
+
+        Response created = json.contentType("application/json")
+                .body("{\"hands\":{\"AA\":\"ALLIN\"},\"version\":0}")
+                .put("/ranges/user/btn_open/25");
+        Response deleted = raw().auth().oauth2(token).accept("application/json").delete("/ranges/user/btn_open/25");
+        Response unknown = raw().auth().oauth2(token).accept("application/json").delete("/ranges/user/btn_open/12.5");
+
+        assertThat(created.statusCode()).isEqualTo(201);
+        assertThat(created.contentType()).startsWith("application/json");
+        assertThat(deleted.statusCode()).as(deleted.asString()).isEqualTo(204);
+        assertThatProblem(unknown).is(ErrorType.NOT_FOUND);
+    }
 }
