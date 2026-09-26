@@ -1,0 +1,65 @@
+# Sistema bajo prueba de spin-trainer-qa, igual para las tres capas (API, Newman, Playwright):
+#   postgres  Postgres 17 preparado como producción (bootstrap.sql de la API: roles spin_migrator/spin_app)
+#   jwks      WireMock en el papel de Supabase Auth: sirve el JWKS de la clave de QA (env/jwt)
+#   api       la API construida desde ../../spin-trainer-api (repos hermanos) con los datos de referencia de QA
+#
+#   docker compose -f env/docker-compose.yml up -d --build --wait
+#   docker compose -f env/docker-compose.yml down -v
+name: spin-trainer-qa
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: spintrainer
+      SPIN_MIGRATOR_PASSWORD: migrator-qa
+      SPIN_APP_PASSWORD: app-qa
+    volumes:
+      - ../../spin-trainer-api/src/main/resources/db/bootstrap/bootstrap.sql:/bootstrap/bootstrap.sql:ro
+      - ./postgres/10-bootstrap.sh:/docker-entrypoint-initdb.d/10-bootstrap.sh:ro
+    ports:
+      - "55432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d spintrainer"]
+      interval: 2s
+      retries: 30
+
+  jwks:
+    image: wiremock/wiremock:3.13.1
+    command: ["--disable-banner"]
+    volumes:
+      - ./wiremock:/home/wiremock
+    ports:
+      - "8089:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:8080/__admin/health || exit 1"]
+      interval: 2s
+      retries: 30
+
+  api:
+    build: ../../spin-trainer-api
+    image: spin-trainer-api:local
+    depends_on:
+      postgres: { condition: service_healthy }
+      jwks: { condition: service_healthy }
+    environment:
+      # El emisor de los tokens de QA: la API valida la firma contra el JWKS de WireMock, igual que contra Supabase.
+      SUPABASE_URL: http://jwks:8080
+      DB_URL: jdbc:postgresql://postgres:5432/spintrainer
+      DB_APP_PASSWORD: app-qa
+      DB_MIGRATOR_PASSWORD: migrator-qa
+      # Datos de referencia de QA, cargados por Flyway detrás de las migraciones de la API.
+      SPRING_FLYWAY_LOCATIONS: classpath:db/migration,filesystem:/qa-seed
+      CORS_ALLOWED_ORIGINS: http://localhost:4173,http://localhost:4174
+    volumes:
+      - ./flyway:/qa-seed:ro
+    ports:
+      - "8081:8080"
+    healthcheck:
+      # La imagen no trae curl: petición HTTP con bash a la sonda de readiness.
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080 && printf \"GET /actuator/health/readiness HTTP/1.0\\r\\n\\r\\n\" >&3 && grep -q UP <&3'"]
+      interval: 3s
+      retries: 40
+      start_period: 10s
