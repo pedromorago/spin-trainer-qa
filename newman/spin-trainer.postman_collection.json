@@ -1,0 +1,848 @@
+{
+  "info": {
+    "name": "Spin Trainer API · regresión",
+    "description": "Flujo completo de un jugador nuevo contra la API (contrato v0.2): catálogo, rangos de referencia, rango personalizado con versiones, Quiz corregido en el servidor, historial paginado, estadísticas y borrado. Las peticiones dependen unas de otras: se ejecuta en orden y con un token de un usuario sin datos (`npm run newman` lo genera). La validación de cada respuesta contra la spec la hace la suite de Java; aquí se comprueba el comportamiento.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Comprobaciones comunes a todas las respuestas.",
+          "const correlationId = pm.response.headers.get('X-Correlation-Id');",
+          "pm.test('Devuelve X-Correlation-Id', () => {",
+          "  pm.expect(correlationId).to.be.a('string').that.is.not.empty;",
+          "});",
+          "if (pm.response.code >= 400) {",
+          "  pm.test('El error es un Problem Details (RFC 9457)', () => {",
+          "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json');",
+          "    const problem = pm.response.json();",
+          "    pm.expect(problem.type).to.match(/^urn:spin-trainer:[a-z-]+$/);",
+          "    pm.expect(problem.status).to.eql(pm.response.code);",
+          "    pm.expect(problem.correlationId).to.eql(correlationId);",
+          "  });",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "catalogEtag",
+      "value": ""
+    },
+    {
+      "key": "cursor",
+      "value": ""
+    },
+    {
+      "key": "firstAttemptId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Catálogo",
+      "description": "Las 16 situaciones de Spin & Go; cambian solo con una migración, así que se revalidan con ETag.",
+      "item": [
+        {
+          "name": "Lista las 16 situaciones",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 con las 16 situaciones', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json()).to.have.lengthOf(16);",
+                  "});",
+                  "pm.test('Se revalida con ETag', () => {",
+                  "  pm.expect(pm.response.headers.get('Cache-Control')).to.include('no-cache');",
+                  "  pm.expect(pm.response.headers.get('ETag')).to.be.a('string').that.is.not.empty;",
+                  "});",
+                  "pm.collectionVariables.set('catalogEtag', pm.response.headers.get('ETag'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/situations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "situations"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Sin cambios: 304",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('304 sin cuerpo', () => {",
+                  "  pm.response.to.have.status(304);",
+                  "  pm.expect(pm.response.text()).to.be.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "If-None-Match",
+                "value": "{{catalogEtag}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/situations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "situations"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rangos de referencia",
+      "description": "Seed de QA: btn_open a 25 BB (env/flyway).",
+      "item": [
+        {
+          "name": "btn_open a 25 BB",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const range = pm.response.json();",
+                  "pm.test('200 con el rango de referencia', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(range.source).to.eql('default');",
+                  "});",
+                  "pm.test('Lista las manos jugadas; las demás llevan la acción implícita', () => {",
+                  "  pm.expect(range.hands.AA).to.eql('MR_4B_C');",
+                  "  pm.expect(range.hands).to.not.have.property('72o');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ranges/default/btn_open/25",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ranges",
+                "default",
+                "btn_open",
+                "25"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Combinación desconocida: 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('404 not-found', () => {",
+                  "  pm.response.to.have.status(404);",
+                  "  pm.expect(pm.response.json().type).to.eql('urn:spin-trainer:not-found');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ranges/default/btn_open/12.5",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ranges",
+                "default",
+                "btn_open",
+                "12.5"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rango personalizado",
+      "description": "Cada guardado dice de qué versión parte; si no es la actual, 409 y no se pisa nada (ADR-0013).",
+      "item": [
+        {
+          "name": "Crea la versión 1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const range = pm.response.json();",
+                  "pm.test('201 en la versión 1', () => {",
+                  "  pm.response.to.have.status(201);",
+                  "  pm.expect(range.version).to.eql(1);",
+                  "  pm.expect(range.source).to.eql('user');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ranges/user/btn_open/25",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ranges",
+                "user",
+                "btn_open",
+                "25"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"hands\": {\"A5s\": \"ALLIN\"}, \"version\": 0}"
+            }
+          }
+        },
+        {
+          "name": "Guardar desde una versión antigua: 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('409 con la versión actual', () => {",
+                  "  pm.response.to.have.status(409);",
+                  "  pm.expect(pm.response.json().detail).to.eql('El rango está en la versión 1; recarga');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ranges/user/btn_open/25",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ranges",
+                "user",
+                "btn_open",
+                "25"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"hands\": {\"QQ\": \"ALLIN\"}, \"version\": 0}"
+            }
+          }
+        },
+        {
+          "name": "Reemplaza la versión 1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 en la versión 2', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().version).to.eql(2);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ranges/user/btn_open/25",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ranges",
+                "user",
+                "btn_open",
+                "25"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"hands\": {\"A5s\": \"ALLIN\", \"KK\": \"MR_4B_C\"}, \"version\": 1}"
+            }
+          }
+        },
+        {
+          "name": "Lee el rango guardado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const range = pm.response.json();",
+                  "pm.test('200 con lo último que se guardó', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(range.version).to.eql(2);",
+                  "  pm.expect(range.hands).to.eql({ A5s: 'ALLIN', KK: 'MR_4B_C' });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ranges/user/btn_open/25",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ranges",
+                "user",
+                "btn_open",
+                "25"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Lista mis rangos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Un rango personalizado', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  const ranges = pm.response.json();",
+                  "  pm.expect(ranges).to.have.lengthOf(1);",
+                  "  pm.expect(ranges[0].situation).to.eql('btn_open');",
+                  "  pm.expect(ranges[0].stack).to.eql(25);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ranges/user",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ranges",
+                "user"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Quiz",
+      "description": "El servidor corrige con el rango efectivo (ADR-0012, ADR-0013); los intentos son eventos inmutables (ADR-0007).",
+      "item": [
+        {
+          "name": "Respuesta correcta según mi rango",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const attempt = pm.response.json();",
+                  "pm.test('201 corregida con mi rango en la versión 2', () => {",
+                  "  pm.response.to.have.status(201);",
+                  "  pm.expect(attempt.expected).to.eql('ALLIN');",
+                  "  pm.expect(attempt.correct).to.be.true;",
+                  "  pm.expect(attempt.rangeSource).to.eql('user');",
+                  "  pm.expect(attempt.rangeVersion).to.eql(2);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/quiz/attempts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "quiz",
+                "attempts"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"situation\": \"btn_open\", \"stack\": 25, \"hand\": \"A5s\", \"given\": \"ALLIN\"}"
+            }
+          }
+        },
+        {
+          "name": "Mano fuera de mi rango: FOLD",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const attempt = pm.response.json();",
+                  "pm.test('201 con la acción implícita, aunque AA esté en el rango de referencia', () => {",
+                  "  pm.response.to.have.status(201);",
+                  "  pm.expect(attempt.expected).to.eql('FOLD');",
+                  "  pm.expect(attempt.correct).to.be.false;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/quiz/attempts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "quiz",
+                "attempts"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"situation\": \"btn_open\", \"stack\": 25, \"hand\": \"AA\", \"given\": \"MR_4B_C\"}"
+            }
+          }
+        },
+        {
+          "name": "El cliente no puede corregirse: 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 señalando el campo correct', () => {",
+                  "  pm.response.to.have.status(400);",
+                  "  const fields = pm.response.json().errors.map((error) => error.field);",
+                  "  pm.expect(fields).to.include('correct');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/quiz/attempts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "quiz",
+                "attempts"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"situation\": \"btn_open\", \"stack\": 25, \"hand\": \"72o\", \"given\": \"ALLIN\", \"correct\": true}"
+            }
+          }
+        },
+        {
+          "name": "Historial: primera página",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const page = pm.response.json();",
+                  "pm.test('200 con un intento y cursor a la siguiente página', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(page.items).to.have.lengthOf(1);",
+                  "  pm.expect(page.nextCursor).to.be.a('string').that.is.not.empty;",
+                  "});",
+                  "pm.collectionVariables.set('cursor', page.nextCursor);",
+                  "pm.collectionVariables.set('firstAttemptId', page.items[0].id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/quiz/attempts?limit=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "quiz",
+                "attempts"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Historial: última página",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const page = pm.response.json();",
+                  "pm.test('200 con el otro intento y sin más páginas', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(page.items).to.have.lengthOf(1);",
+                  "  pm.expect(page.items[0].id).to.not.eql(pm.collectionVariables.get('firstAttemptId'));",
+                  "  pm.expect(page).to.have.property('nextCursor', null);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/quiz/attempts?limit=1&cursor={{cursor}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "quiz",
+                "attempts"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "1"
+                },
+                {
+                  "key": "cursor",
+                  "value": "{{cursor}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Estadísticas",
+      "description": "Agregados sobre los intentos, calculados por la API.",
+      "item": [
+        {
+          "name": "Por mano",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Una fila por mano respondida', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  const rows = pm.response.json().map(({ hand, attempts, correct }) => ({ hand, attempts, correct }));",
+                  "  pm.expect(rows).to.have.deep.members([",
+                  "    { hand: 'A5s', attempts: 1, correct: 1 },",
+                  "    { hand: 'AA', attempts: 1, correct: 0 },",
+                  "  ]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/stats/hands",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stats",
+                "hands"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Progreso de la última semana",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Los dos intentos, uno correcto', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  const days = pm.response.json();",
+                  "  const sum = (field) => days.reduce((total, day) => total + day[field], 0);",
+                  "  pm.expect(sum('attempts')).to.eql(2);",
+                  "  pm.expect(sum('correct')).to.eql(1);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/stats/progress?days=7&tz=Europe/Madrid",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stats",
+                "progress"
+              ],
+              "query": [
+                {
+                  "key": "days",
+                  "value": "7"
+                },
+                {
+                  "key": "tz",
+                  "value": "Europe/Madrid"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Borrado y acceso",
+      "description": "Borrar el rango personalizado es idempotente; sin token no hay datos (ADR-0003).",
+      "item": [
+        {
+          "name": "Borra mi rango",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ranges/user/btn_open/25",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ranges",
+                "user",
+                "btn_open",
+                "25"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Borrar de nuevo no falla",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('204 aunque ya no exista', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ranges/user/btn_open/25",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ranges",
+                "user",
+                "btn_open",
+                "25"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Ya no hay rango personalizado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('404 not-found', () => {",
+                  "  pm.response.to.have.status(404);",
+                  "  pm.expect(pm.response.json().type).to.eql('urn:spin-trainer:not-found');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ranges/user/btn_open/25",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ranges",
+                "user",
+                "btn_open",
+                "25"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Sin token: 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 pidiendo un token Bearer', () => {",
+                  "  pm.response.to.have.status(401);",
+                  "  pm.expect(pm.response.headers.get('WWW-Authenticate')).to.eql('Bearer');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/situations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "situations"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

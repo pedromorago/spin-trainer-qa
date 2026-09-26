@@ -46,7 +46,19 @@ spotless {
         ktlint()
     }
     format("misc") {
-        target("*.md", "docs/**/*.md", "env/**/*.yml", "env/**/*.sql", "env/**/*.sh", ".github/**/*.yml", ".gitignore")
+        target(
+            "*.md",
+            "*.json",
+            "docs/**/*.md",
+            "env/**/*.yml",
+            "env/**/*.sql",
+            "env/**/*.sh",
+            "newman/*.json",
+            "scripts/**/*.mjs",
+            "api-tests/src/test/resources/features/**/*.feature",
+            ".github/**/*.yml",
+            ".gitignore",
+        )
         trimTrailingWhitespace()
         endWithNewline()
     }
