@@ -10,7 +10,9 @@ Test strategy (test basis, techniques, traceability): [`docs/TEST_STRATEGY.md`](
 
 ## Requirements
 
-- Docker (Docker Desktop with WSL 2 on Windows) and JDK 21 (Gradle downloads it if missing).
+- Docker (Docker Desktop with WSL 2 on Windows) and JDK 21 (Gradle downloads it if missing). The API image is a native
+  executable (ADR-0018): its first build takes about four minutes and needs Docker Desktop to have at least 8 GB;
+  `QA_BUILD_API=false` reuses the last one.
 - Node LTS (22.13+) for Newman and Playwright: `npm install` once, here and in `spin-trainer-web`, and
   `npx playwright install chromium`.
 - The three repos as siblings in the same folder (`spin-trainer-api`, `spin-trainer-qa`, `spin-trainer-web`):

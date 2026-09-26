@@ -5,9 +5,9 @@ live in the other two repos. Project decisions: `spin-trainer-web/docs/adr/`.
 
 ## Objective and scope
 
-The suite tests **the deployable artifact** (the API's Docker image with the `prod` profile, the database prepared with
-the real `bootstrap.sql`, and JWTs validated against a JWKS over the network) as a black box: it only speaks HTTP. It
-can be pointed at any deployment with `QA_API_URL`.
+The suite tests **the deployable artifact** (the API's Docker image, a GraalVM native executable since ADR-0018, with
+the `prod` profile, the database prepared with the real `bootstrap.sql`, and JWTs validated against a JWKS over the
+network) as a black box: it only speaks HTTP. It can be pointed at any deployment with `QA_API_URL`.
 
 Out of scope, by decision (ADR-0010): dynamic security testing (OWASP ZAP), load and performance testing (k6, JMeter),
 Pact and database testing (pgTAP).
@@ -62,7 +62,7 @@ configuration defects only show up here.
 | Seeded generated data | `UserRangeLifecycleTest#any_valid_range_round_trips`: random ranges with Datafaker; the seed goes in the test case name so it can be reproduced |
 | Concurrency (lost update) | `UserRangeLifecycleTest#two_tabs_editing_the_same_version_cannot_lose_an_update` |
 | Isolation between users | `each_user_only_sees_their_own_*` (ranges and attempts) |
-| Fault injection | `resilience.spec.ts`: Playwright aborts the download of the Quiz chunk (as after a deploy) |
+| Fault injection | `resilience.spec.ts`: Playwright aborts the download of the Quiz chunk (as after a deploy); `server-wake.spec.ts`: a slow answer and 503s while the free API instance wakes up |
 
 ## Traceability
 
@@ -89,6 +89,7 @@ configuration defects only show up here.
 | Issuer down → 503, not 401 | ADR-0003 | `IssuerOutageTest` |
 | No response can be sniffed or framed; no cache stores a player's data | Context (security) | `SecurityHeadersTest` |
 | The web app works under its production CSP and security headers | ADR-0016 | `content-security-policy.spec.ts` (and the whole E2E suite) |
+| While the free API wakes up, the app says so and retries by itself; the deployed native image behaves like the JVM one | ADR-0018 | `server-wake.spec.ts`; every suite runs against the native image |
 | Errors as Problem Details, also outside the contract's routes | Contract | `ProblemAssert` in every suite, `HttpBehaviourTest` |
 | CORS only for the web app's origin; correlation id | Contract | `HttpBehaviourTest` |
 

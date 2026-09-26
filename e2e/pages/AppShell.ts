@@ -11,6 +11,7 @@ export class AppShell {
   readonly sessionAccuracy: Locator;
   readonly sessionStreak: Locator;
   readonly signOut: Locator;
+  readonly serverWaking: Locator;
   // #endregion
 
   constructor(readonly page: Page) {
@@ -22,6 +23,7 @@ export class AppShell {
     this.sessionAccuracy = page.getByTestId('session-accuracy');
     this.sessionStreak = page.getByTestId('session-streak');
     this.signOut = page.getByRole('button', { name: 'Salir' });
+    this.serverWaking = page.getByTestId('server-waking');
   }
 
   // #region Actions
