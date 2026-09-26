@@ -88,6 +88,7 @@ configuration defects only show up here.
 | Only session JWTs from the configured issuer (ES256, issuer, audience, role, `exp`, `sub`) | ADR-0003 | `AuthenticationTest` |
 | Issuer down → 503, not 401 | ADR-0003 | `IssuerOutageTest` |
 | No response can be sniffed or framed; no cache stores a player's data | Context (security) | `SecurityHeadersTest` |
+| The web app works under its production CSP and security headers | ADR-0016 | `content-security-policy.spec.ts` (and the whole E2E suite) |
 | Errors as Problem Details, also outside the contract's routes | Contract | `ProblemAssert` in every suite, `HttpBehaviourTest` |
 | CORS only for the web app's origin; correlation id | Contract | `HttpBehaviourTest` |
 
@@ -117,6 +118,12 @@ against the QA environment's API, with the Supabase session injected (the QA JWT
 the specs and oracles are the same: if something passes in `mock` and fails in `fullstack`, the defect is in the
 integration (see Findings). Each test also fails on console errors or unexpected HTTP responses ≥ 400, and every page
 is scanned with axe (WCAG 2.2 AA).
+
+The build is not served by `vite preview` but by `scripts/serve-web.mjs`, which applies the rewrites and headers of the
+web's `vercel.json` the way Vercel does (ADR-0016). Every test therefore runs under the production
+Content-Security-Policy, and a violation fails it through the console guard; `content-security-policy.spec.ts` makes
+it explicit (the policy is served and the browser reports no violation). Only `connect-src` changes in `fullstack`,
+which adds the QA environment's API and issuer.
 
 ## Data and isolation
 

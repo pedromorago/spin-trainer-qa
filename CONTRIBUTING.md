@@ -48,6 +48,8 @@ Before committing: `specCheck`, `rangesCheck`, `:api-tests:test`, `npm run e2e:t
   (`scripts/newman.mjs`); it checks behavior, while validation against the spec is done by the Java suite.
 - Tokens outside the JVM (Newman, Playwright): `scripts/lib/qa-jwt.mjs`, same claims as `JwtForge`.
 - E2E: the same specs for `mock` and `fullstack`; anything that only makes sense with the mock is tagged `@solo-mock`.
+  The build is served by `scripts/serve-web.mjs` with the rewrites and headers of the web's `vercel.json` (production
+  CSP; `fullstack` adds the QA origins to `connect-src`), so every test runs under the production headers.
   Page Objects in `e2e/pages` with `#region` (locators, actions, queries); tests do not use ad-hoc selectors.
   Locators by role and accessible name first; `data-testid` and `data-hand/data-action/data-verdict` after that.
 - Fixtures (`e2e/fixtures/test.ts`): a new player per test, session injected with the `api` backend and a guard for

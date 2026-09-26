@@ -70,7 +70,7 @@ api-tests/src/test/resources/features   business rules in Gherkin, in Spanish
 newman/                   Postman collection (a player's full flow) and QA environment
 e2e/                      Playwright (TypeScript): fixtures, Page Objects, reference data and specs
 .github/workflows/qa.yml  CI: environment, API, Newman, E2E and combined Allure report
-scripts/                  Newman runner, QA token (lib/qa-jwt.mjs) and key generation
+scripts/                  Newman runner, QA token (lib/qa-jwt.mjs), key generation and the E2E web server (serve-web.mjs)
 docs/TEST_STRATEGY.md     strategy, techniques and traceability
 ```
 

@@ -17,9 +17,11 @@ const allureResults = fileURLToPath(new URL('../build/allure-results/e2e', impor
 // Allure results from this run only (workers also load this file: only the main process cleans up).
 if (!process.env.TEST_WORKER_INDEX) rmSync(allureResults, { recursive: true, force: true });
 
-// Builds the web app into this repo's build/ (keeps the web repo clean) and serves it with vite preview.
-const serve = (name: string, port: number, buildArgs: string) =>
-  `npm run ${buildArgs} -- --outDir "${out(name)}" --emptyOutDir && npx vite preview --outDir "${out(name)}" --port ${port} --strictPort`;
+// Builds the web app into this repo's build/ (keeps the web repo clean) and serves it as Vercel would, with the
+// production headers of its vercel.json (scripts/serve-web.mjs); `origins` are added to the CSP's connect-src.
+const server = fileURLToPath(new URL('../scripts/serve-web.mjs', import.meta.url));
+const serve = (name: string, port: number, buildArgs: string, origins = '') =>
+  `npm run ${buildArgs} -- --outDir "${out(name)}" --emptyOutDir && node "${server}" "${out(name)}" ${port} "${origins}"`;
 
 export default defineConfig<{ backend: Backend }>({
   testDir: './tests',
@@ -53,7 +55,7 @@ export default defineConfig<{ backend: Backend }>({
   webServer: [
     { command: serve('mock', 4173, 'build:mock'), cwd: web, url: 'http://localhost:4173', reuseExistingServer: !process.env.CI },
     {
-      command: serve('http', 4174, 'build'),
+      command: serve('http', 4174, 'build', `${new URL(apiUrl).origin} ${new URL(supabaseUrl).origin}`),
       cwd: web,
       url: 'http://localhost:4174',
       reuseExistingServer: !process.env.CI,
