@@ -1,0 +1,5 @@
+# LF en el repo y en el checkout (también en Windows): gradlew y los scripts no se rompen al clonar.
+* text=auto eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.jar binary

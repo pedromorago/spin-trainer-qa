@@ -1,0 +1,29 @@
+# Gradle
+.gradle/
+/build/
+/api-tests/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Node
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+
+# Informes
+allure-results/
+allure-report/
+/newman/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+/out/
+
+# SO
+.DS_Store
+Thumbs.db
+
+# Entorno local (secretos de staging)
+.env

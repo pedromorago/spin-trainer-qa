@@ -1,0 +1,49 @@
+# Versiones en un solo sitio (ADR-0002). Combinaciones probadas: JUnit 5 + Cucumber 7 + Allure 2.
+[versions]
+junit = "5.14.4"
+rest-assured = "5.5.7"
+assertj = "3.27.7"
+jackson = "2.22.3"
+cucumber = "7.34.9"
+allure-java = "2.35.5"
+allure-gradle = "4.3.0"
+# 1.5.x: API sobre Jackson 2, el mismo que usa REST Assured.
+json-schema-validator = "1.5.9"
+nimbus-jose-jwt = "10.10"
+datafaker = "2.7.0"
+testcontainers = "2.0.5"
+slf4j = "2.0.20"
+openapi-generator = "7.25.0"
+spotless = "8.10.3"
+palantir-java-format = "2.99.0"
+
+[libraries]
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+junit-platform-suite = { module = "org.junit.platform:junit-platform-suite" }
+rest-assured = { module = "io.rest-assured:rest-assured", version.ref = "rest-assured" }
+assertj = { module = "org.assertj:assertj-core", version.ref = "assertj" }
+jackson-bom = { module = "com.fasterxml.jackson:jackson-bom", version.ref = "jackson" }
+jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind" }
+jackson-datatype-jsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310" }
+jackson-dataformat-yaml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml" }
+cucumber-bom = { module = "io.cucumber:cucumber-bom", version.ref = "cucumber" }
+cucumber-java = { module = "io.cucumber:cucumber-java" }
+cucumber-junit-platform-engine = { module = "io.cucumber:cucumber-junit-platform-engine" }
+cucumber-picocontainer = { module = "io.cucumber:cucumber-picocontainer" }
+allure-bom = { module = "io.qameta.allure:allure-bom", version.ref = "allure-java" }
+allure-junit5 = { module = "io.qameta.allure:allure-junit5" }
+allure-rest-assured = { module = "io.qameta.allure:allure-rest-assured" }
+allure-cucumber7-jvm = { module = "io.qameta.allure:allure-cucumber7-jvm" }
+json-schema-validator = { module = "com.networknt:json-schema-validator", version.ref = "json-schema-validator" }
+nimbus-jose-jwt = { module = "com.nimbusds:nimbus-jose-jwt", version.ref = "nimbus-jose-jwt" }
+datafaker = { module = "net.datafaker:datafaker", version.ref = "datafaker" }
+testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
+slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
+jakarta-annotation = { module = "jakarta.annotation:jakarta.annotation-api", version = "3.0.0" }
+
+[plugins]
+openapi-generator = { id = "org.openapi.generator", version.ref = "openapi-generator" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+allure = { id = "io.qameta.allure", version.ref = "allure-gradle" }
