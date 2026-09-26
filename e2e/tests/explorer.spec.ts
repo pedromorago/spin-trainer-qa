@@ -1,3 +1,4 @@
+import { BTN_OPEN_25_HANDS } from '../data/reference';
 import { expect, test } from '../fixtures/test';
 import { ExplorerPage } from '../pages/ExplorerPage';
 
@@ -8,7 +9,7 @@ test.describe('Explorer: rango efectivo (ADR-0012)', () => {
 
   test('sin rango personalizado muestra el de referencia', { tag: '@smoke' }, async ({ explorer }) => {
     await expect(explorer.referenceBadge).toBeVisible();
-    await expect(explorer.handsCount).toHaveText('28');
+    await expect(explorer.handsCount).toHaveText(String(BTN_OPEN_25_HANDS));
     await expect(explorer.grid.cell('AA')).toHaveAttribute('data-action', 'MR_4B_C');
     await expect(explorer.grid.cell('72o')).toHaveAttribute('data-action', 'FOLD');
     await expect(explorer.grid.cell('72o')).toHaveAttribute('data-implicit', 'true');
@@ -27,14 +28,14 @@ test.describe('Explorer: rango efectivo (ADR-0012)', () => {
     await expect(explorer.savedBadge).toBeVisible();
     await expect(explorer.grid.cell('72o')).toHaveAttribute('data-action', 'ALLIN');
     await expect(explorer.grid.cell('AA')).toHaveAttribute('data-action', 'MR_4B_C');
-    await expect(explorer.handsCount).toHaveText('29');
+    await expect(explorer.handsCount).toHaveText(String(BTN_OPEN_25_HANDS + 1));
   });
 
   test('la goma devuelve la mano a la acción implícita', async ({ explorer }) => {
     await explorer.paint('ERASE', 'AA');
 
     await expect(explorer.grid.cell('AA')).toHaveAttribute('data-action', 'FOLD');
-    await expect(explorer.handsCount).toHaveText('27');
+    await expect(explorer.handsCount).toHaveText(String(BTN_OPEN_25_HANDS - 1));
   });
 
   test('Reset borra el rango personalizado y vuelve al de referencia', async ({ explorer }) => {

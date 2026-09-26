@@ -97,8 +97,8 @@ class QuizGradingTest extends ApiTest {
 
     @Test
     void past_attempts_keep_their_grade_when_the_range_changes() {
-        record(BTN_OPEN, 25, "A5s", "FOLD");
-        api.ranges().putUser(BTN_OPEN, "25", RangeFactory.write(Map.of("A5s", "ALLIN"), 0));
+        record(BTN_OPEN, 25, "72o", "FOLD");
+        api.ranges().putUser(BTN_OPEN, "25", RangeFactory.write(Map.of("72o", "ALLIN"), 0));
 
         Attempt past = api.quiz().list(Map.of()).jsonPath().getObject("items[0]", Attempt.class);
 

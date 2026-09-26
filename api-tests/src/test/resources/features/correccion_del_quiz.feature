@@ -20,7 +20,7 @@ Característica: Corrección del Quiz con el rango efectivo
         | mano | respuesta | esperada | resultado  |
         | AA   | MR_4B_C   | MR_4B_C  | correcta   |
         | AA   | FOLD      | MR_4B_C  | incorrecta |
-        | 76s  | L_C_F     | L_C_F    | correcta   |
+        | A5s  | MR_C_F    | MR_C_F   | correcta   |
         | 72o  | FOLD      | FOLD     | correcta   |
         | 72o  | ALLIN     | FOLD     | incorrecta |
 

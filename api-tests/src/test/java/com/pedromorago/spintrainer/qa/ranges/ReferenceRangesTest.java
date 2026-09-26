@@ -6,11 +6,15 @@ import static com.pedromorago.spintrainer.qa.data.QaReferenceData.BTN_OPEN_25;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.pedromorago.spintrainer.qa.assertion.ErrorType;
+import com.pedromorago.spintrainer.qa.data.QaReferenceData;
+import com.pedromorago.spintrainer.qa.data.ReferenceRanges;
 import com.pedromorago.spintrainer.qa.model.Range;
 import com.pedromorago.spintrainer.qa.support.ApiTest;
 import io.qameta.allure.Feature;
 import io.restassured.response.Response;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -36,13 +40,27 @@ class ReferenceRangesTest extends ApiTest {
     }
 
     @Test
-    void the_list_contains_every_seeded_combination() {
+    void the_list_contains_every_seeded_combination_in_catalog_order() {
         List<Range> ranges = api.ranges().listDefault().jsonPath().getList(".", Range.class);
 
         assertThat(ranges)
-                .extracting(r -> r.getSituation() + "@"
-                        + r.getStack().stripTrailingZeros().toPlainString())
-                .containsExactly("btn_open@25");
+                .extracting(r -> ReferenceRanges.spot(r.getSituation(), r.getStack()))
+                .containsExactlyElementsOf(QaReferenceData.servedReferenceSpots());
+    }
+
+    /** Integridad de los datos: cada rango servido es, mano a mano, el del seed (copia fijada del de la API). */
+    @Test
+    void every_range_served_is_the_seeded_one() {
+        List<Range> ranges = api.ranges().listDefault().jsonPath().getList(".", Range.class);
+
+        assertThat(ranges).isNotEmpty().allSatisfy(range -> {
+            Map<String, String> served = new HashMap<>();
+            range.getHands().forEach((hand, action) -> served.put(hand, action.getValue()));
+            assertThat(served)
+                    .as(ReferenceRanges.spot(range.getSituation(), range.getStack()))
+                    .isEqualTo(ReferenceRanges.of(range.getSituation(), range.getStack()));
+            assertThat(range.getVersion()).isEqualTo(1);
+        });
     }
 
     /** Partición: formas del mismo stack. Todas son la misma combinación y devuelven la forma canónica. */

@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import type { Page, TestInfo } from '@playwright/test';
-import { btnOpen25 } from '../data/reference';
+import { BTN_OPEN_25_HANDS, btnOpen25 } from '../data/reference';
 import { expect, test } from '../fixtures/test';
 
 const WCAG = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
@@ -16,7 +16,7 @@ async function expectAccessible(page: Page, testInfo: TestInfo, name: string): P
 test.describe('Accesibilidad (WCAG 2.2 AA con axe)', () => {
   test('Explorer', async ({ page, explorer }, testInfo) => {
     await explorer.open('btn_open', 25);
-    await expect(explorer.handsCount).toHaveText('28');
+    await expect(explorer.handsCount).toHaveText(String(BTN_OPEN_25_HANDS));
     await explorer.paint('ALLIN', '72o');
     await expectAccessible(page, testInfo, 'explorer');
   });

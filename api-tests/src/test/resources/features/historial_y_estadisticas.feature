@@ -10,10 +10,10 @@ Característica: Historial y estadísticas del Quiz
   Escenario: cambiar el rango no vuelve a corregir las respuestas pasadas
     Dado que respondí en "btn_open" a 25 BB:
       | mano | respuesta |
-      | A5s  | FOLD      |
+      | 72o  | FOLD      |
     Cuando guardo mi rango de "btn_open" a 25 BB partiendo de la versión 0:
       | mano | acción |
-      | A5s  | ALLIN  |
+      | 72o  | ALLIN  |
     Entonces mi última respuesta sigue siendo correcta y corregida con el rango de referencia
 
   Escenario: el historial guarda cada respuesta con su corrección, de la más reciente a la más antigua

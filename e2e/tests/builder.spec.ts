@@ -1,3 +1,4 @@
+import { BTN_OPEN_25, BTN_OPEN_25_HANDS } from '../data/reference';
 import { expect, test } from '../fixtures/test';
 
 test.describe('Builder: autoevaluación sin persistir (ADR-0012)', () => {
@@ -5,6 +6,9 @@ test.describe('Builder: autoevaluación sin persistir (ADR-0012)', () => {
     await builder.open('btn_open', 25);
     await expect(builder.question).toHaveText('BTN Open · 25 BB');
 
+    // Precondición del oráculo: AA, KK y QQ son MR/4B/C en el seed y 72o no está en el rango.
+    expect([BTN_OPEN_25.AA, BTN_OPEN_25.KK, BTN_OPEN_25.QQ, BTN_OPEN_25['72o']])
+      .toEqual(['MR_4B_C', 'MR_4B_C', 'MR_4B_C', undefined]);
     await builder.paint('MR_4B_C', 'AA'); // correcta
     await builder.paint('MR_C_C', 'KK'); // otra acción que la correcta
     await builder.paint('ALLIN', '72o'); // jugada de más
@@ -15,8 +19,9 @@ test.describe('Builder: autoevaluación sin persistir (ADR-0012)', () => {
     await expect(builder.grid.cell('72o')).toHaveAttribute('data-verdict', 'extra');
     await expect(builder.grid.cell('QQ')).toHaveAttribute('data-verdict', 'missing');
     await expect(builder.grid.cell('KK')).toHaveAccessibleName(/^KK: MR \/ Call 3b \/ Call 4b, .*\(correcta: MR \/ 4bet vs 3b \/ Call AI\)$/);
-    // Manos jugadas: las 28 del rango correcto y 72o; solo AA está bien.
-    await expect(builder.score).toHaveText('1 / 29 · 3%');
+    // Manos jugadas: las del rango correcto y 72o; solo AA está bien.
+    const played = BTN_OPEN_25_HANDS + 1;
+    await expect(builder.score).toHaveText(`1 / ${played} · ${Math.round(100 / played)}%`);
   });
 
   test('"Ver solución" enseña el rango de referencia', async ({ builder }) => {
@@ -26,7 +31,7 @@ test.describe('Builder: autoevaluación sin persistir (ADR-0012)', () => {
     await builder.toggleSolution.click();
 
     await expect(builder.solution.cell('AA')).toHaveAttribute('data-action', 'MR_4B_C');
-    await expect(builder.solution.cell('76s')).toHaveAttribute('data-action', 'L_C_F');
+    await expect(builder.solution.cell('76s')).toHaveAttribute('data-action', BTN_OPEN_25['76s']);
     await expect(builder.toggleSolution).toHaveAttribute('aria-pressed', 'true');
   });
 

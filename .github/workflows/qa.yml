@@ -97,9 +97,9 @@ jobs:
           npm ci --prefix spin-trainer-web
           cd spin-trainer-qa && npx playwright install --with-deps chromium
 
-      - name: El contrato fijado coincide con el de la API
+      - name: Las copias fijadas (contrato y rangos de referencia) coinciden con las de la API
         working-directory: spin-trainer-qa
-        run: ./gradlew specCheck spotlessCheck
+        run: ./gradlew specCheck rangesCheck spotlessCheck
 
       - name: Levantar el entorno de QA
         id: env

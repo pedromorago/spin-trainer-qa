@@ -1,17 +1,29 @@
+import { readFileSync } from 'node:fs';
+
 /**
- * Datos de referencia de los E2E: btn_open a 25 BB, el único rango de referencia tanto en el mock de la web como en
- * el seed de QA (env/flyway/R__qa_reference_ranges.sql; en Java, QaReferenceData). Es el oráculo del Quiz y el Builder.
+ * Datos de referencia de los E2E: los rangos del seed de la API (Tablasmentov3.pdf), leídos de la copia fijada
+ * contract/reference-ranges.json (gradlew rangesCheck), la misma que usan el mock de la web y los tests de Java
+ * (ReferenceRanges). Es el oráculo del Explorer, el Quiz y el Builder; se usa btn_open a 25 BB.
  */
 export const BTN_OPEN = { key: 'btn_open', label: 'BTN Open', stack: 25 } as const;
 
-export const BTN_OPEN_25: Readonly<Record<string, string>> = {
-  AA: 'MR_4B_C', KK: 'MR_4B_C', QQ: 'MR_4B_C', AKs: 'MR_4B_C', AKo: 'MR_4B_C',
-  JJ: 'MR_C_C', TT: 'MR_C_C', AQs: 'MR_C_C', AQo: 'MR_C_C',
-  '99': 'MR_C_F', '88': 'MR_C_F', AJs: 'MR_C_F', KQs: 'MR_C_F',
-  '77': 'MR_F_F', '66': 'MR_F_F', ATs: 'MR_F_F', KJs: 'MR_F_F', QJs: 'MR_F_F', AJo: 'MR_F_F', KQo: 'MR_F_F',
-  '55': 'L_C_C', '44': 'L_C_C', '33': 'L_C_C', '22': 'L_C_C',
-  T9s: 'L_C_F', '98s': 'L_C_F', '87s': 'L_C_F', '76s': 'L_C_F',
-};
+interface ReferenceFile {
+  ranges: { situation: string; stack: number; hands: Record<string, string> }[];
+}
+const reference: ReferenceFile = JSON.parse(
+  readFileSync(new URL('../../contract/reference-ranges.json', import.meta.url), 'utf8'),
+);
+
+/** Manos con acción explícita de una combinación del seed. */
+export function referenceRange(situation: string, stack: number): Readonly<Record<string, string>> {
+  const range = reference.ranges.find((r) => r.situation === situation && r.stack === stack);
+  if (!range) throw new Error(`Sin rango de referencia en el seed: ${situation}@${stack}`);
+  return range.hands;
+}
+
+export const BTN_OPEN_25 = referenceRange(BTN_OPEN.key, BTN_OPEN.stack);
+/** Manos jugadas (acción explícita) de btn_open a 25 BB. */
+export const BTN_OPEN_25_HANDS = Object.keys(BTN_OPEN_25).length;
 
 /** Acciones de btn_open en el orden de la paleta (el atajo de teclado es la posición + 1). */
 export const BTN_OPEN_ACTIONS = ['MR_4B_C', 'MR_C_C', 'MR_C_F', 'MR_F_F', 'L_C_C', 'L_C_F', 'ALLIN', 'FOLD'] as const;
