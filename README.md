@@ -165,5 +165,8 @@ same branch if it exists, otherwise `main`), starts the environment, runs the AP
 them fails, and publishes the combined Allure report, the Playwright report, the Newman reports and the environment logs
 as the `qa-reports` artifact.
 
+From `main`, the Allure report can also be published on GitHub Pages: make the repo public, set **Settings → Pages →
+Source** to GitHub Actions and create the `PUBLISH_REPORTS` repository variable with the value `true`.
+
 The repos are private: the workflow needs the `SPIN_TRAINER_REPOS_TOKEN` secret, a read-only *fine-grained* token
 (Contents: read) on `spin-trainer-api` and `spin-trainer-web`. If the repos become public, it is no longer needed.

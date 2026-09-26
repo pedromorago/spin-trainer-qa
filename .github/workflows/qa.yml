@@ -148,3 +148,26 @@ jobs:
             spin-trainer-qa/build/newman/
             spin-trainer-qa/build/env.log
             spin-trainer-qa/api-tests/build/reports/tests/
+
+      # Public report (GitHub Pages) from main, once the repo is public and Pages uses GitHub Actions: set the
+      # PUBLISH_REPORTS repository variable to true. Until then nothing is published.
+      - name: Report for GitHub Pages
+        if: ${{ !cancelled() && vars.PUBLISH_REPORTS == 'true' && github.ref == 'refs/heads/main' }}
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: spin-trainer-qa/build/allure-report/
+
+  pages:
+    needs: qa
+    if: ${{ !cancelled() && vars.PUBLISH_REPORTS == 'true' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v5
