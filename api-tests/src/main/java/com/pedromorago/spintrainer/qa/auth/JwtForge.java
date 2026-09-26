@@ -41,7 +41,7 @@ public final class JwtForge {
         try {
             return new JwtForge(ECKey.parse(Files.readString(config.signingKey())), config.jwtIssuer());
         } catch (IOException | ParseException e) {
-            throw new IllegalStateException("No se pudo leer la clave de QA: " + config.signingKey(), e);
+            throw new IllegalStateException("Could not read the QA key: " + config.signingKey(), e);
         }
     }
 

@@ -17,7 +17,7 @@ const reference: ReferenceFile = JSON.parse(
 /** Hands with an explicit action for one seed combination. */
 export function referenceRange(situation: string, stack: number): Readonly<Record<string, string>> {
   const range = reference.ranges.find((r) => r.situation === situation && r.stack === stack);
-  if (!range) throw new Error(`Sin rango de referencia en el seed: ${situation}@${stack}`);
+  if (!range) throw new Error(`No reference range in the seed: ${situation}@${stack}`);
   return range.hands;
 }
 

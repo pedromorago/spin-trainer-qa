@@ -10,7 +10,7 @@ self-contained. Project source of truth: `spin-trainer-web/docs/` (context, arch
   goes for the seed's reference ranges (`contract/reference-ranges.json`, `rangesCheck` / `rangesSync`), which are the
   oracle.
 - Gradle (Kotlin DSL), never Maven. TypeScript only in Playwright. Discarded: OWASP ZAP, load testing, Pact, pgTAP.
-- Code comments and documentation in English (README, ADRs, CONTRIBUTING.md, docs/, OpenAPI descriptions). In Spanish: app UI text, API error messages, test titles and Gherkin features.
+- In English: code comments, documentation (README, ADRs, CONTRIBUTING.md, docs/, OpenAPI descriptions) and developer-facing messages (logs, internal exceptions, tooling output). In Spanish: app UI text, API error messages, the test report (test titles, Allure names, assertion descriptions) and Gherkin features.
 - Commits **always in Pedro's name** (author and committer: `Pedro Morago López-Vázquez <pedromoragolv@gmail.com>`; check `git config user.name/user.email` before committing). Conventional Commits, no co-author or attribution trailer.
 - Pedro's environment: Windows 10/11 (commands with `gradlew.bat`; nothing that depends on bash).
 

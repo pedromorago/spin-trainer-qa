@@ -26,7 +26,7 @@ public final class ReferenceRanges {
     public static Map<String, String> of(String situation, Object stack) {
         Map<String, String> hands = BY_SPOT.get(spot(situation, stack));
         if (hands == null) {
-            throw new IllegalArgumentException("Sin rango de referencia en el seed: " + spot(situation, stack));
+            throw new IllegalArgumentException("No reference range in the seed: " + spot(situation, stack));
         }
         return hands;
     }
@@ -59,7 +59,7 @@ public final class ReferenceRanges {
             }
             return Collections.unmodifiableMap(bySpot);
         } catch (IOException e) {
-            throw new IllegalStateException("No se pudo leer " + file, e);
+            throw new IllegalStateException("Could not read " + file, e);
         }
     }
 }

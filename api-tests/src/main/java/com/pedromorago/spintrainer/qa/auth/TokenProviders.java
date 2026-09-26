@@ -22,7 +22,7 @@ public final class TokenProviders {
         Function<QaConfig, TokenProvider> factory = REGISTRY.get(config.auth());
         if (factory == null) {
             throw new IllegalStateException(
-                    "Proveedor de tokens desconocido: " + config.auth() + " (registrados: " + REGISTRY.keySet() + ")");
+                    "Unknown token provider: " + config.auth() + " (registered: " + REGISTRY.keySet() + ")");
         }
         return factory.apply(config);
     }
