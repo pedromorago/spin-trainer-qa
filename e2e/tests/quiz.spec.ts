@@ -1,15 +1,26 @@
 import { ACTION_LABELS, BTN_OPEN_25, BTN_OPEN_ACTIONS, btnOpen25 } from '../data/reference';
 import { expect, test } from '../fixtures/test';
 
+// HU SB Open: the only situation with ten actions; the tenth (FOLD) answers with 0.
+const HU_SB_OPEN_ACTIONS = ['MR_4B_C', 'MR_C_C', 'MR_C_F', 'MR_F_F', 'L_PUSH', 'L_C_C', 'L_C_F', 'L_F', 'ALLIN', 'FOLD'];
+
 test.describe('Quiz: corrección contra el rango efectivo (ADR-0012, ADR-0013)', () => {
-  test('corrige cada respuesta con el rango de referencia', { tag: '@smoke' }, async ({ shell, quiz }) => {
+  test('corrige cada respuesta con el rango de referencia', { tag: '@smoke' }, async ({ page, backend, shell, quiz }) => {
     await quiz.open('btn_open', 25);
     await expect(quiz.spot).toHaveText('BTN Open · 25 BB');
 
     for (let i = 0; i < 5; i++) {
+      // Against the API, the server's grade too (ADR-0013): the verdict on screen is computed by the client.
+      const recorded = backend === 'api'
+        ? page.waitForResponse((r) => r.url().endsWith('/api/v1/quiz/attempts') && r.request().method() === 'POST')
+        : null;
       const { hand, given } = await quiz.answerWith(btnOpen25);
       await expect(quiz.feedback, hand).toContainText('Correcto');
       await expect(quiz.expected).toHaveText(ACTION_LABELS[given]);
+      if (recorded) {
+        const attempt = await (await recorded).json();
+        expect(attempt, `${hand}: corrección del servidor`).toMatchObject({ hand, given, expected: given, correct: true, rangeSource: 'default' });
+      }
       await quiz.nextHand();
     }
 
@@ -40,9 +51,34 @@ test.describe('Quiz: corrección contra el rango efectivo (ADR-0012, ADR-0013)',
 
     await quiz.answerWithKey(key);
     await expect(quiz.feedback).toContainText('Correcto');
+    await expect(quiz.announcement).toHaveText(`Correcto. ${hand}: ${ACTION_LABELS[btnOpen25(hand)]}.`);
+    await expect(quiz.next).toHaveAttribute('aria-keyshortcuts', 'Enter ArrowRight');
     await quiz.nextHand();
 
     await expect(quiz.round).toContainText('Ronda: 1 / 1 (100%)');
+    // The focus goes back to the answers, not to the page body.
+    await expect(quiz.answers.getByRole('button').first()).toBeFocused();
+  });
+
+  test('la décima acción se responde con la tecla 0', async ({ quiz }) => {
+    await quiz.open('hu_sb_open', 25);
+    const tenth = quiz.answerButton(HU_SB_OPEN_ACTIONS[9]);
+    await expect(tenth).toHaveAttribute('aria-keyshortcuts', '0');
+    await expect(quiz.answerButton(HU_SB_OPEN_ACTIONS[8])).toHaveAttribute('aria-keyshortcuts', '9');
+
+    await quiz.answerWithKey('0');
+
+    await expect(quiz.givenAnswer()).toHaveAccessibleName(ACTION_LABELS.FOLD);
+  });
+
+  test('Enter sobre una pestaña navega en lugar de pasar de mano', async ({ page, shell, quiz }) => {
+    await quiz.open('btn_open', 25);
+    await quiz.answer(btnOpen25(await quiz.currentHand()));
+
+    await shell.tab('Stats').focus();
+    await page.keyboard.press('Enter');
+
+    await expect(page).toHaveURL(/\/stats\?s=btn_open&stack=25$/);
   });
 
   test('con rango personalizado se corrige con el del jugador', async ({ shell, explorer, quiz }) => {

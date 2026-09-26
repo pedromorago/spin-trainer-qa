@@ -1,5 +1,5 @@
 import { BTN_OPEN_25_HANDS } from '../data/reference';
-import { expect, test } from '../fixtures/test';
+import { allowErrors, expect, test } from '../fixtures/test';
 import { ExplorerPage } from '../pages/ExplorerPage';
 
 test.describe('Explorer: rango efectivo (ADR-0012)', () => {
@@ -64,7 +64,41 @@ test.describe('Explorer: rango efectivo (ADR-0012)', () => {
     await expect(page).toHaveURL(/\/quiz/);
   });
 
-  test('dos pestañas guardando a la vez: la segunda recibe un conflicto y no pisa a la primera', async ({ page, context, explorer }) => {
+  test('elegir la situación y el stack ya activos no dispara el aviso', async ({ page, shell, explorer }) => {
+    // Without ?s=&stack= (the defaults): choosing them wrote them into the URL, a navigation the guard blocked.
+    await page.goto('/explorer');
+    await explorer.paint('ALLIN', '72o');
+
+    await shell.chooseStack(25);
+    await shell.chooseSituation('BTN Open');
+
+    await expect(explorer.unsavedChanges).toBeHidden();
+    await expect(explorer.modifiedBadge).toBeVisible();
+    await expect(page).toHaveURL(/\/explorer$/);
+  });
+
+  test('si los rangos personalizados no cargan, lo dice en vez de enseñar el del PDF', async ({ page, backend, explorer, consoleErrors }) => {
+    test.skip(backend !== 'api', 'fallo de red inyectado sobre la API real');
+    const USER_RANGES = /\/api\/v1\/ranges\/user$/;
+    await page.route(USER_RANGES, (route) => route.fulfill({
+      status: 500,
+      contentType: 'application/problem+json',
+      headers: { 'Access-Control-Allow-Origin': 'http://localhost:4174' },
+      body: JSON.stringify({ type: 'urn:spin-trainer:internal', title: 'Internal error', status: 500, detail: 'Fallo inyectado' }),
+    }));
+
+    await page.reload();
+
+    await expect(explorer.error).toContainText('Fallo inyectado');
+    await expect(explorer.referenceBadge).toBeHidden();
+    await page.unroute(USER_RANGES);
+    await explorer.error.getByRole('button', { name: 'Reintentar' }).click();
+    await expect(explorer.referenceBadge).toBeVisible();
+    expect(allowErrors(consoleErrors, /^HTTP 500 GET \S+\/api\/v1\/ranges\/user$/)).toBe(1);
+    expect(allowErrors(consoleErrors, /^console: Failed to load resource: the server responded with a status of 500\b/)).toBe(1);
+  });
+
+  test('dos pestañas guardando a la vez: la segunda recibe un conflicto y no pisa a la primera', async ({ page, backend, context, explorer, consoleErrors }) => {
     const otherTab = await context.newPage();
     const other = new ExplorerPage(otherTab);
     await other.open('btn_open', 25);
@@ -83,5 +117,8 @@ test.describe('Explorer: rango efectivo (ADR-0012)', () => {
     await expect(other.grid.cell('32o')).toHaveAttribute('data-action', 'FOLD');
     await page.reload();
     await expect(explorer.grid.cell('32o')).toHaveAttribute('data-action', 'FOLD');
+    // The second tab's 409 is the conflict this test provokes (with the mock there is no HTTP).
+    const conflicts = allowErrors(consoleErrors, /^HTTP 409 PUT \S+\/api\/v1\/ranges\/user\/btn_open\/25$|^console: Failed to load resource: the server responded with a status of 409\b/);
+    expect(conflicts).toBe(backend === 'api' ? 2 : 0);
   });
 });

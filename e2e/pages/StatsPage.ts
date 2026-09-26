@@ -11,6 +11,7 @@ export class StatsPage {
   readonly chartAsTable: Locator;
   readonly progressTable: Locator;
   readonly weakest: Locator;
+  readonly situationMeters: Locator;
   // #endregion
 
   constructor(readonly page: Page) {
@@ -22,5 +23,6 @@ export class StatsPage {
     this.chartAsTable = page.getByRole('button', { name: 'Ver tabla' });
     this.progressTable = page.getByTestId('progress-table');
     this.weakest = page.getByTestId('stats-weakest');
+    this.situationMeters = page.getByRole('list', { name: 'Precisión por situación' }).getByRole('meter');
   }
 }

@@ -10,6 +10,14 @@ test.describe('Navegación y selección', () => {
     await expect(shell.stack(25)).toHaveAttribute('aria-pressed', 'true');
   });
 
+  test('la raíz conserva la selección de la URL al redirigir', async ({ page, shell }) => {
+    await page.goto('/?s=sb_open&stack=20');
+
+    await expect(page).toHaveURL(/\/explorer\?s=sb_open&stack=20$/);
+    await expect(shell.situation).toHaveValue('sb_open');
+    await expect(shell.stack(20)).toHaveAttribute('aria-pressed', 'true');
+  });
+
   test('la selección viaja en la URL al cambiar de pestaña', async ({ page, shell }) => {
     await shell.open('/explorer', { situation: 'btn_open', stack: 25 });
 

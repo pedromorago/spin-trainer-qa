@@ -28,7 +28,10 @@ test.describe('Resiliencia: una pantalla que no se puede descargar', () => {
     await expect(quiz.hand).toBeVisible();
     await expect(routeError.heading).toBeHidden();
     await expect(page).toHaveURL(/\/quiz\?s=btn_open&stack=25$/);
-    // Expected: the aborted download and the error the screen logs for developers.
-    expect(allowErrors(consoleErrors, /Failed to load resource|dynamically imported module/)).toBeGreaterThan(0);
+    // Expected: the aborted download of the Quiz chunk (the request and its console line) and the error the screen logs
+    // for developers. A failed API request would not match: it has its own URL.
+    expect(allowErrors(consoleErrors, /^requestfailed GET \S+\/assets\/QuizPage-[\w-]+\.js net::ERR_FAILED$/)).toBe(1);
+    expect(allowErrors(consoleErrors, /^console: Failed to load resource: net::ERR_FAILED$/)).toBe(1);
+    expect(allowErrors(consoleErrors, /dynamically imported module: \S+\/assets\/QuizPage-/)).toBeGreaterThan(0);
   });
 });

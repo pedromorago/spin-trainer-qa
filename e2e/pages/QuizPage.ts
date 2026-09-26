@@ -1,7 +1,7 @@
 import { expect, type Locator, type Page } from '@playwright/test';
 import { ACTION_LABELS } from '../data/reference';
 
-/** Quiz: the table with the hero's hand, the answer (buttons or keys 1..n) and the grading. */
+/** Quiz: the table with the hero's hand, the answer (buttons or keys 1..9, 0) and the grading. */
 export class QuizPage {
   // #region Locators
   readonly spot: Locator;
@@ -13,6 +13,7 @@ export class QuizPage {
   readonly next: Locator;
   readonly round: Locator;
   readonly customRangeNote: Locator;
+  readonly announcement: Locator;
   // #endregion
 
   constructor(readonly page: Page) {
@@ -25,6 +26,8 @@ export class QuizPage {
     this.next = page.getByRole('button', { name: 'Siguiente mano' });
     this.round = page.getByTestId('quiz-stats');
     this.customRangeNote = page.getByTestId('quiz-custom-range');
+    // What a screen reader hears after answering (a status region, not the grading box with its grid).
+    this.announcement = page.getByRole('status').filter({ hasText: /^(Correcto|Incorrecto)\./ });
   }
 
   // #region Actions
@@ -42,7 +45,7 @@ export class QuizPage {
     await expect(this.feedback).toBeVisible();
   }
 
-  async answerWithKey(key: number): Promise<void> {
+  async answerWithKey(key: number | string): Promise<void> {
     await this.page.keyboard.press(String(key));
     await expect(this.feedback).toBeVisible();
   }
@@ -65,6 +68,11 @@ export class QuizPage {
   // #region Queries
   answerButton(action: string): Locator {
     return this.answers.getByRole('button', { name: ACTION_LABELS[action], exact: true });
+  }
+
+  /** The answer given to the current hand (pressed while the grading is shown). */
+  givenAnswer(): Locator {
+    return this.answers.getByRole('button', { pressed: true });
   }
   // #endregion
 }

@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { test as base, expect } from '@playwright/test';
+import { test as base, expect, type Request } from '@playwright/test';
 import { AppShell } from '../pages/AppShell';
 import { BuilderPage } from '../pages/BuilderPage';
 import { ExplorerPage } from '../pages/ExplorerPage';
@@ -42,27 +42,43 @@ export const test = base.extend<Fixtures, { backend: Backend }>({
       if (backend === 'api') {
         const session = supabaseSession(id, process.env.QA_SUPABASE_URL ?? 'http://localhost:8089');
         accessToken = session.accessToken;
-        await context.addInitScript(([key, value]) => localStorage.setItem(key, value), [session.storageKey, session.value]);
+        // Only in the web's documents: a blank page (a new tab, axe's) has no storage and would throw.
+        await context.addInitScript(([key, value]) => {
+          if (location.protocol.startsWith('http')) localStorage.setItem(key, value);
+        }, [session.storageKey, session.value]);
       }
       await use({ id, accessToken });
     },
     { auto: true },
   ],
 
-  // Any unexpected console error, exception or HTTP response ≥ 400 fails the test.
+  // Any unexpected console error, exception, failed request or HTTP response ≥ 400 fails the test. On the whole
+  // context, so a second tab is watched too; and after waiting for the requests still in flight (the Quiz records the
+  // last answer in the background: its response may arrive after the test's last step).
   consoleErrors: [
-    async ({ page }, use, testInfo) => {
+    async ({ page, context }, use, testInfo) => {
       const errors: string[] = [];
-      page.on('pageerror', (error) => errors.push(`pageerror: ${error.message}`));
-      page.on('console', (message) => {
+      const inFlight = new Set<Request>();
+      context.on('weberror', (error) => errors.push(`pageerror: ${error.error().message}`));
+      context.on('console', (message) => {
         if (message.type() === 'error') errors.push(`console: ${message.text()}`);
       });
-      page.on('response', (response) => {
+      context.on('request', (request) => inFlight.add(request));
+      context.on('requestfinished', (request) => inFlight.delete(request));
+      context.on('requestfailed', (request) => {
+        inFlight.delete(request);
+        // Aborted by a navigation (the browser's own cancellation) is not a failure of the system under test.
+        const reason = request.failure()?.errorText ?? '';
+        if (reason !== 'net::ERR_ABORTED') errors.push(`requestfailed ${request.method()} ${request.url()} ${reason}`);
+      });
+      context.on('response', (response) => {
         if (response.status() >= 400) errors.push(`HTTP ${response.status()} ${response.request().method()} ${response.url()}`);
       });
       await use(errors);
+      const deadline = Date.now() + 5_000;
+      while (inFlight.size > 0 && !page.isClosed() && Date.now() < deadline) await page.waitForTimeout(50);
       if (testInfo.status === testInfo.expectedStatus) {
-        expect(errors, 'errores de consola, excepciones o HTTP ≥ 400').toEqual([]);
+        expect(errors, 'errores de consola, excepciones, peticiones fallidas o HTTP ≥ 400').toEqual([]);
       }
     },
     { auto: true },

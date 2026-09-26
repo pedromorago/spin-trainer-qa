@@ -35,7 +35,8 @@ test.describe('Servidor gratuito despertando', () => {
 
     await expect(explorer.heading).toBeVisible({ timeout: 15_000 });
     await expect(page.getByTestId('error')).toHaveCount(0);
-    // Expected: the two 503s (the response and the browser's console line for each).
-    expect(allowErrors(consoleErrors, /503/)).toBeGreaterThanOrEqual(2);
+    // Expected: exactly the two injected 503s of /situations, and the browser's console line for each.
+    expect(allowErrors(consoleErrors, /^HTTP 503 GET \S+\/api\/v1\/situations$/)).toBe(2);
+    expect(allowErrors(consoleErrors, /^console: Failed to load resource: the server responded with a status of 503\b/)).toBe(2);
   });
 });
