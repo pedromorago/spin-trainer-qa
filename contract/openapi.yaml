@@ -4,38 +4,38 @@ info:
   title: Spin Trainer API
   version: 0.2.0
   description: |
-    API de Spin Trainer: catálogo de situaciones de Spin & Go (3-max y HU), rangos de referencia y personalizados,
-    intentos del Quiz (eventos inmutables) y estadísticas agregadas.
+    Spin Trainer API: catalog of Spin & Go situations (3-max and HU), reference and custom ranges,
+    Quiz attempts (immutable events) and aggregated statistics.
 
-    - Autenticación: JWT emitido por Supabase Auth (`Authorization: Bearer`), validado contra su JWKS.
-    - Errores: Problem Details (RFC 9457, antes RFC 7807) con `type` URN `urn:spin-trainer:<tipo>`. Además de los
-      estados declarados en cada operación, cualquiera puede responder 500 (`internal`) o 503 (`unavailable`: el
-      emisor de los JWT no responde; reintentable) con el mismo formato. No se declaran operación a operación para que
-      la validación contra la spec siga rechazando cualquier otro estado no previsto.
-    - Trazabilidad: la cabecera opcional `X-Correlation-Id` se propaga a logs y se devuelve en la respuesta
-      (se genera si no llega) y en `Problem.correlationId`.
-    - Caché: `/situations` y `/ranges/default*` cambian solo con una migración de seed; responden con `ETag` y
-      `Cache-Control: no-cache, private`, y con 304 si el `If-None-Match` coincide.
+    - Authentication: JWT issued by Supabase Auth (`Authorization: Bearer`), verified against its JWKS.
+    - Errors: Problem Details (RFC 9457, formerly RFC 7807) with a URN `type` `urn:spin-trainer:<type>`. Besides the
+      statuses declared for each operation, any operation may respond 500 (`internal`) or 503 (`unavailable`: the
+      JWT issuer is not responding; retryable) in the same format. They are not declared per operation so that
+      validation against the spec keeps rejecting any other unexpected status.
+    - Traceability: the optional `X-Correlation-Id` header is propagated to the logs and returned in the response
+      (generated if absent) and in `Problem.correlationId`.
+    - Caching: `/situations` and `/ranges/default*` change only with a seed migration; they respond with `ETag` and
+      `Cache-Control: no-cache, private`, and with 304 if `If-None-Match` matches.
 servers:
   - url: /api/v1
 security:
   - bearerAuth: []
 tags:
   - name: situation
-    description: Catálogo de las 16 situaciones (módulo situation).
+    description: Catalog of the 16 situations (situation module).
   - name: range
-    description: Rangos de referencia (PDF, seed Flyway) y personalizados del usuario (módulo range).
+    description: Reference ranges (PDF, Flyway seed) and the user's custom ranges (range module).
   - name: quiz
-    description: Intentos del Quiz como eventos inmutables (módulo quiz).
+    description: Quiz attempts as immutable events (quiz module).
   - name: stats
-    description: Consultas agregadas sobre los intentos (módulo stats).
+    description: Aggregate queries over the attempts (stats module).
 
 paths:
   /situations:
     get:
       tags: [situation]
       operationId: listSituations
-      summary: Catálogo de situaciones, en orden de presentación
+      summary: Situation catalog, in display order
       responses:
         '200':
           description: OK
@@ -51,8 +51,8 @@ paths:
     get:
       tags: [range]
       operationId: listDefaultRanges
-      summary: Todos los rangos de referencia cargados (una entrada por situación y stack con seed)
-      description: Permite al cliente conocer qué combinaciones tienen rango y entrenar en modo aleatorio sin N peticiones.
+      summary: All loaded reference ranges (one entry per seeded situation and stack)
+      description: Lets the client know which combinations have a range and train in random mode without N requests.
       responses:
         '200':
           description: OK
@@ -71,7 +71,7 @@ paths:
     get:
       tags: [range]
       operationId: getDefaultRange
-      summary: Rango de referencia de una situación y stack
+      summary: Reference range for a situation and stack
       responses:
         '200':
           description: OK
@@ -89,7 +89,7 @@ paths:
     get:
       tags: [range]
       operationId: listUserRanges
-      summary: Todos los rangos personalizados del usuario
+      summary: All of the user's custom ranges
       responses:
         '200':
           description: OK
@@ -105,7 +105,7 @@ paths:
     get:
       tags: [range]
       operationId: getUserRange
-      summary: Rango personalizado del usuario
+      summary: The user's custom range
       responses:
         '200':
           description: OK
@@ -115,17 +115,17 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404':
-          description: Situación/stack desconocido o sin rango personalizado.
+          description: Unknown situation/stack or no custom range.
           content:
             application/problem+json:
               schema: { $ref: '#/components/schemas/Problem' }
     put:
       tags: [range]
       operationId: putUserRange
-      summary: Crea o reemplaza el rango personalizado (concurrencia optimista por versión)
+      summary: Creates or replaces the custom range (optimistic concurrency by version)
       description: |
-        `version` es obligatoria: `0` crea (409 si ya existe); `N` reemplaza la versión `N` (409 si cambió o se borró).
-        Así una escritura nunca pisa otra sin saberlo. Las manos con la acción implícita se descartan al guardar.
+        `version` is required: `0` creates (409 if it already exists); `N` replaces version `N` (409 if it changed or was
+        deleted). This way a write never silently overwrites another. Hands with the implicit action are dropped on save.
       requestBody:
         required: true
         content:
@@ -134,12 +134,12 @@ paths:
             example: { hands: { AA: MR_4B_C, KK: MR_4B_C, '72o': FOLD }, version: 0 }
       responses:
         '200':
-          description: Reemplazado
+          description: Replaced
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Range' }
         '201':
-          description: Creado
+          description: Created
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Range' }
@@ -150,9 +150,9 @@ paths:
     delete:
       tags: [range]
       operationId: deleteUserRange
-      summary: Borra el rango personalizado (vuelve a aplicar el de referencia). Idempotente.
+      summary: Deletes the custom range (the reference range applies again). Idempotent.
       responses:
-        '204': { description: Borrado o inexistente }
+        '204': { description: Deleted or did not exist }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
@@ -161,11 +161,11 @@ paths:
     post:
       tags: [quiz]
       operationId: recordAttempt
-      summary: Registra la respuesta a una mano del Quiz
+      summary: Records the answer to a Quiz hand
       description: |
-        El cliente envía solo lo que el usuario hizo. El servidor calcula `expected` contra el rango efectivo del usuario
-        en ese momento (personalizado si existe, si no el de referencia; ADR-0012) y `correct`, y guarda de qué rango
-        y versión salió (ADR-0006/0007). 422 si la situación/stack no tiene rango.
+        The client sends only what the user did. The server computes `expected` against the user's effective range at
+        that moment (custom if it exists, otherwise the reference one; ADR-0012) and `correct`, and stores which range
+        and version it came from (ADR-0006/0007). 422 if the situation/stack has no range.
       requestBody:
         required: true
         content:
@@ -174,7 +174,7 @@ paths:
             example: { situation: btn_open, stack: 25, hand: A5s, given: MR_F_F }
       responses:
         '201':
-          description: Registrado
+          description: Recorded
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Attempt' }
@@ -185,10 +185,10 @@ paths:
     get:
       tags: [quiz]
       operationId: listAttempts
-      summary: Intentos del usuario, del más reciente al más antiguo (paginación por cursor)
+      summary: The user's attempts, newest first (cursor pagination)
       parameters:
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
-        - { name: cursor, in: query, description: Valor opaco `nextCursor` de la página anterior., schema: { type: string } }
+        - { name: cursor, in: query, description: Opaque `nextCursor` value from the previous page., schema: { type: string } }
         - { name: situation, in: query, schema: { $ref: '#/components/schemas/SituationKey' } }
         - { name: stack, in: query, schema: { $ref: '#/components/schemas/Stack' } }
       responses:
@@ -204,10 +204,10 @@ paths:
     get:
       tags: [stats]
       operationId: getHandStats
-      summary: Intentos y aciertos agregados por situación, stack y mano
+      summary: Attempts and correct answers aggregated by situation, stack and hand
       description: |
-        Agregación (GROUP BY) sobre los intentos. La política de estudio (manos difíciles, pesos, rankings)
-        se aplica en el cliente sobre estas filas (ADR-0013).
+        Aggregation (GROUP BY) over the attempts. The study policy (hard hands, weights, rankings)
+        is applied on the client over these rows (ADR-0013).
       parameters:
         - { name: situation, in: query, schema: { $ref: '#/components/schemas/SituationKey' } }
         - { name: stack, in: query, schema: { $ref: '#/components/schemas/Stack' } }
@@ -224,10 +224,10 @@ paths:
     get:
       tags: [stats]
       operationId: getProgress
-      summary: Intentos y aciertos por día (solo días con actividad)
+      summary: Attempts and correct answers per day (only days with activity)
       parameters:
         - { name: days, in: query, schema: { type: integer, minimum: 1, maximum: 365, default: 30 } }
-        - { name: tz, in: query, description: Zona horaria IANA para cortar los días., schema: { type: string, default: UTC, example: Europe/Madrid } }
+        - { name: tz, in: query, description: IANA time zone for the day boundaries., schema: { type: string, default: UTC, example: Europe/Madrid } }
       responses:
         '200':
           description: OK
@@ -243,7 +243,7 @@ components:
 
   headers:
     ETag:
-      description: Versión de la representación. Reenviarla en `If-None-Match` para recibir 304 si no cambió.
+      description: Representation version. Send it back in `If-None-Match` to get 304 if it has not changed.
       schema: { type: string }
 
   parameters:
@@ -256,34 +256,34 @@ components:
       name: stack
       in: path
       required: true
-      description: Stack efectivo en BB, forma canónica sin ceros finales (`25`, `12.5`).
+      description: Effective stack in BB, canonical form without trailing zeros (`25`, `12.5`).
       schema: { $ref: '#/components/schemas/Stack' }
 
   responses:
     NotModified:
-      description: Sin cambios respecto al `ETag` enviado en `If-None-Match`; el cliente reutiliza su copia.
+      description: No changes since the `ETag` sent in `If-None-Match`; the client reuses its copy.
     BadRequest:
-      description: Petición inválida (urn:spin-trainer:validation), con detalle por campo en `errors`.
+      description: Invalid request (urn:spin-trainer:validation), with per-field details in `errors`.
       content:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problem' }
     Unauthorized:
-      description: Falta el JWT o no es válido (urn:spin-trainer:unauthorized).
+      description: Missing or invalid JWT (urn:spin-trainer:unauthorized).
       content:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problem' }
     NotFound:
-      description: Situación/stack desconocido o recurso inexistente (urn:spin-trainer:not-found).
+      description: Unknown situation/stack or nonexistent resource (urn:spin-trainer:not-found).
       content:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problem' }
     Conflict:
-      description: La versión enviada no es la actual (urn:spin-trainer:conflict).
+      description: The version sent is not the current one (urn:spin-trainer:conflict).
       content:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problem' }
     NoRange:
-      description: La situación/stack no tiene rango con el que corregir (urn:spin-trainer:no-range).
+      description: The situation/stack has no range to grade against (urn:spin-trainer:no-range).
       content:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problem' }
@@ -302,20 +302,20 @@ components:
       example: 12.5
     Hand:
       description: |
-        Mano canónica del grid 13×13: pareja (`AA`) o rango alto + rango bajo + `s`/`o` (`AKs`, `T9o`).
-        El patrón rechaza `AAs` o `AK`; el orden alto→bajo (`KAs` no es válido) lo valida el servidor (400).
+        Canonical hand of the 13×13 grid: a pair (`AA`) or high rank + low rank + `s`/`o` (`AKs`, `T9o`).
+        The pattern rejects `AAs` or `AK`; the server validates the high→low order (`KAs` is not valid) (400).
       type: string
       pattern: '^(?:([AKQJT2-9])\1|([AKQJT2-9])(?!\2)[AKQJT2-9][so])$'
       example: AKs
     Action:
       type: string
-      description: Acción compuesta. Una por mano y (situación, stack).
+      description: Compound action. One per hand and (situation, stack).
       enum: [MR_4B_C, MR_C_C, MR_C_F, MR_F_F, L_C_C, L_C_F, L_PUSH, L_F, ALLIN, 3BET, 3BET_C, CALL, CALL_VS_X2, ISO_C, ISO_F, LIMP, CHECK, FOLD]
       x-enum-varnames: [MR_4B_C, MR_C_C, MR_C_F, MR_F_F, L_C_C, L_C_F, L_PUSH, L_F, ALLIN, THREE_BET, THREE_BET_C, CALL, CALL_VS_X2, ISO_C, ISO_F, LIMP, CHECK, FOLD]
     Position:
       type: string
       enum: [BTN, SB, BB]
-      description: En HU el botón es la SB.
+      description: In HU the button is the SB.
     PriorAction:
       type: object
       required: [position, action]
@@ -330,23 +330,23 @@ components:
       properties:
         key: { $ref: '#/components/schemas/SituationKey' }
         label: { type: string }
-        format: { type: string, enum: [3max, hu], description: Solo Spin & Go (ADR-0011). }
+        format: { type: string, enum: [3max, hu], description: Spin & Go only (ADR-0011). }
         hero: { $ref: '#/components/schemas/Position' }
         priorActions:
           type: array
-          description: Acciones anteriores a la decisión del héroe, en orden. Vacía si abre el héroe.
+          description: Actions before the hero's decision, in order. Empty if the hero opens.
           items: { $ref: '#/components/schemas/PriorAction' }
         stacks: { type: array, minItems: 1, uniqueItems: true, items: { $ref: '#/components/schemas/Stack' } }
         actions:
           type: array
           minItems: 2
           uniqueItems: true
-          description: Acciones posibles. La implícita (manos no listadas) es FOLD, o CHECK si FOLD no está.
+          description: Possible actions. The implicit one (unlisted hands) is FOLD, or CHECK if FOLD is not among them.
           items: { $ref: '#/components/schemas/Action' }
         notes: { type: string }
     Hands:
       type: object
-      description: Mano → acción. Las manos ausentes tienen la acción implícita.
+      description: Hand → action. Absent hands have the implicit action.
       propertyNames: { $ref: '#/components/schemas/Hand' }
       additionalProperties: { $ref: '#/components/schemas/Action' }
       maxProperties: 169
@@ -362,7 +362,7 @@ components:
         version:
           type: integer
           minimum: 1
-          description: En `default`, versión del seed; en `user`, versión para concurrencia optimista.
+          description: In `default`, the seed version; in `user`, the version for optimistic concurrency.
         updatedAt: { type: string, format: date-time }
     RangeWrite:
       type: object
@@ -370,7 +370,7 @@ components:
       additionalProperties: false
       properties:
         hands: { $ref: '#/components/schemas/Hands' }
-        version: { type: integer, minimum: 0, description: 0 = crear; N = versión leída que se reemplaza. }
+        version: { type: integer, minimum: 0, description: 0 = create; N = the read version being replaced. }
     AttemptWrite:
       type: object
       required: [situation, stack, hand, given]
@@ -403,7 +403,7 @@ components:
         items: { type: array, items: { $ref: '#/components/schemas/Attempt' } }
         nextCursor:
           type: [string, 'null']
-          description: null en la última página.
+          description: null on the last page.
           # Required even if null: the generated DTO always serializes it (the API omits the other nulls).
           x-field-extra-annotation: '@com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.ALWAYS)'
     HandStat:
@@ -438,7 +438,7 @@ components:
         correlationId: { type: string }
         errors:
           type: array
-          description: Solo en 400. Un elemento por campo inválido.
+          description: Only on 400. One item per invalid field.
           items:
             type: object
             required: [field, message]
