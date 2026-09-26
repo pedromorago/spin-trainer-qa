@@ -1,0 +1,119 @@
+# Estrategia de pruebas
+
+Qué se prueba en `spin-trainer-qa`, con qué técnicas y contra qué oráculos, y cómo encaja con las pruebas que viven en
+los otros dos repos. Decisiones de proyecto: `spin-trainer-web/docs/adr/`.
+
+## Objetivo y alcance
+
+La suite prueba **el artefacto desplegable** (la imagen Docker de la API con el perfil `prod`, la base de datos preparada
+con el `bootstrap.sql` real y los JWT validados contra un JWKS por red) como caja negra: solo habla HTTP. Puede
+apuntarse a cualquier despliegue con `QA_API_URL`.
+
+Fuera de alcance, por decisión (ADR-0010): seguridad dinámica (OWASP ZAP), carga y rendimiento (k6, JMeter), Pact y
+pruebas de base de datos (pgTAP).
+
+## Niveles y dónde vive cada uno
+
+| Nivel | Repo | Qué cubre | Por qué ahí |
+|---|---|---|---|
+| Unitario (dominio web) | web · Vitest | `domain/` puro: `actionFor`, veredictos, selección, series de stats | Reglas puras; el 90 % de cobertura se exige ahí |
+| Conformidad del mock | web · Vitest | El mock valida y responde como la spec (`contract.test.js`) | La web y los E2E en modo mock dependen de él |
+| Unitario (API) | api · JUnit | Dominio, casos de uso, ArchUnit | Sin Spring ni Docker; reloj controlado |
+| Integración (API) | api · `*IT` | App completa con Postgres (Testcontainers), JWT reales, roles de BD, respuestas validadas contra la spec | Caja blanca: fija el reloj (cortes de día y cambios de hora) y consulta privilegios de BD |
+| **Aceptación de API** | **qa · REST Assured** | El artefacto desplegado: contrato, reglas de negocio, seguridad, HTTP | Independiente del código; lo que ve un cliente |
+| Especificación ejecutable | qa · Cucumber (pendiente) | Reglas de negocio en Gherkin, en español | Legible por quien valida los rangos |
+| Regresión de colección | qa · Newman (pendiente) | Flujos principales como colección Postman | Ejecutable fuera de la JVM |
+| E2E | qa · Playwright (pendiente) | Web contra el mock y contra la API real; accesibilidad | Flujos de usuario reales |
+
+Solapamiento con los `*IT` de la API, intencionado: allí se prueba el código con conocimiento interno; aquí, el
+contenedor tal como se desplegará (configuración de producción, imagen, red, emisor externo). Los defectos de empaquetado
+y configuración solo aparecen aquí.
+
+## Bases de prueba
+
+1. Contrato: `contract/openapi.yaml` (copia fijada de `spin-trainer-api/openapi.yaml`, v0.2; `specCheck` falla si
+   diverge).
+2. ADRs: 0003 (Supabase solo emite el JWT), 0007 (intentos inmutables), 0012 (rango efectivo), 0013 (contrato v0.2:
+   corrección en servidor, versiones, stats agregadas).
+3. Reglas de dominio de `SPIN_TRAINER_PROJECT_CONTEXT.md`: acción implícita (FOLD, o CHECK si FOLD no es posible), 169
+   manos canónicas, stacks en múltiplos de 0,5 BB.
+
+## Oráculos
+
+- **La spec**, en cada respuesta: `ContractValidationFilter` valida estado declarado, `Content-Type` y cuerpo (esquema y
+  formatos) de todas las peticiones. Un test que no mira el cuerpo sigue comprobando el contrato.
+- **Los datos de referencia de QA** (`env/flyway`, reflejados en `QaReferenceData`): la corrección del Quiz se compara
+  con la acción esperada calculada desde el seed, para manos y respuestas al azar.
+- **`ErrorType`**: tipo, estado, título y plantilla del `detail` de cada Problem (RFC 9457).
+- **Ida y vuelta**: lo que devuelve una escritura es lo que devuelve la lectura posterior.
+
+## Técnicas de diseño
+
+| Técnica | Dónde |
+|---|---|
+| Particiones de equivalencia | `UserRangeValidationTest` (manos no canónicas, cuerpos fuera del contrato), `QuizGradingTest#rejects_invalid_attempts`, `AuthenticationTest` (una partición por motivo de rechazo del JWT) |
+| Valores límite | `limit` 0/1/200/201 (`AttemptHistoryTest`), `days` 0/1/365/366 (`StatsTest`), `version` 0 y tamaño máximo del documento (`UserRangeValidationTest`), stacks 12.3/12.5 |
+| Tabla de decisión | `QuizGradingTest#grades_against_the_effective_range`: ¿rango del usuario? × ¿mano en el rango? → acción esperada y origen |
+| Transición de estados | `UserRangeLifecycleTest`: sin rango → v1 → v2 → borrado, con los 409 de cada transición no válida |
+| Pruebas con oráculo aleatorias | `QuizGradingTest#agrees_with_the_reference_range_for_any_hand_and_answer` (10 repeticiones) |
+| Datos generados con semilla | `UserRangeLifecycleTest#any_valid_range_round_trips`: rangos aleatorios con Datafaker; la semilla va en el nombre del caso para reproducirlo |
+| Concurrencia (actualización perdida) | `UserRangeLifecycleTest#two_tabs_editing_the_same_version_cannot_lose_an_update` |
+| Aislamiento entre usuarios | `each_user_only_sees_their_own_*` (rangos e intentos) |
+
+## Trazabilidad
+
+| Requisito | Base | Tests |
+|---|---|---|
+| Catálogo de 16 situaciones con acción implícita y stacks válidos | Contexto, contrato | `SituationCatalogTest` |
+| Rangos de referencia servidos desde el seed, revalidables con ETag | ADR-0006, contrato | `ReferenceRangesTest` |
+| Rango personalizado versionado; un PUT con versión antigua es 409 y no pisa nada | ADR-0013 | `UserRangeLifecycleTest` |
+| Nada inválido se guarda; errores por campo | Contrato | `UserRangeValidationTest` |
+| Rango efectivo = personalizado si existe; si no, el de referencia | ADR-0012 | `QuizGradingTest` (tabla de decisión) |
+| El servidor corrige; el cliente no puede mandar `correct` | ADR-0013 | `QuizGradingTest` |
+| Los intentos no cambian aunque cambie el rango | ADR-0007 | `QuizGradingTest#past_attempts_keep_their_grade_when_the_range_changes` |
+| Historial paginado sin huecos ni duplicados, filtrable | Contrato | `AttemptHistoryTest` |
+| Stats agregadas por la API | ADR-0013 | `StatsTest` |
+| Solo JWT de sesión del emisor configurado (ES256, emisor, audiencia, rol, `exp`, `sub`) | ADR-0003 | `AuthenticationTest` |
+| Emisor caído → 503, no 401 | ADR-0003 | `IssuerOutageTest` |
+| Errores como Problem Details, también fuera de las rutas del contrato | Contrato | `ProblemAssert` en todas las suites, `HttpBehaviourTest` |
+| CORS solo para el origen de la web; correlation id | Contrato | `HttpBehaviourTest` |
+
+En Allure: cada clase lleva `@Feature` y los ADRs que prueba como `@Link`; el usuario del test va como parámetro para
+buscar sus peticiones en los logs de la API (JSON con `correlationId`).
+
+Lo que se prueba en la API y no aquí, porque exige controlar la aplicación por dentro: cortes de día por zona horaria y
+cambios de hora (`StatsIT`, reloj fijo), privilegios de los roles de BD e inmutabilidad de los intentos a nivel de
+permisos (`DatabaseRolesIT`).
+
+## Datos y aislamiento
+
+- Un usuario (UUID) nuevo por test: los tests corren en paralelo (4 hilos) sin limpiar nada.
+- Datos que la API no permite escribir (rangos de referencia): seed de QA en `env/flyway`, cargado por Flyway con las
+  migraciones de la API. Nunca SQL desde los tests.
+- `@Isolated` solo para lo que cambia algo compartido: `IssuerOutageTest` deja sin JWKS a toda la suite.
+
+## Entorno
+
+`env/docker-compose.yml`: Postgres con el `bootstrap.sql` de la API, WireMock sirviendo el JWKS de una clave ES256 de QA
+(el papel de Supabase) y la API construida desde su repo. `QaEnvironmentListener` lo levanta con Testcontainers al
+empezar la sesión de JUnit y lo borra al terminar; si ya hay uno en marcha, lo reutiliza y no lo toca.
+
+## Patrones del framework profesional
+
+| Patrón | Aquí | Mejora |
+|---|---|---|
+| ServiceBase | `ServiceBase` + un servicio por tag de la spec, fachada `Api` | Sin god-object: cada servicio conoce solo sus rutas |
+| TestBase + TestWatcherBase | `ApiTest` + `QaTestWatcher` | Usuario y cliente nuevos por test; el watcher adjunta el entorno al fallar |
+| DTOs con builder | Modelos generados desde la spec (setters fluidos) | Sin Lombok: si la spec cambia, no compila |
+| ErrorType con plantillas | `ErrorType` + `ProblemAssert` | Aserción fluida sobre el Problem completo |
+| Validación JSON Schema | Validación contra la spec en cada respuesta | Sin esquemas copiados a mano (ADR-0008) |
+| Token chain | `LocalJwtTokenProvider` (caché por usuario) | Registro de proveedores (`TokenProviders`) en lugar de un login fijo |
+| Data factories con Faker | `RangeFactory`, `Hands` | Semilla reproducible; `ThreadLocalRandom` en paralelo |
+| Configuración | `QaConfig` (propiedad `-Pqa.*` → variable `QA_*` → defecto) | Un único registro inmutable |
+| Qase por anotaciones | `@Feature`/`@Link` de Allure | Qase aplazado: sin gestor de casos por ahora |
+
+## Hallazgos
+
+- **503 no declarado en la spec** (`IssuerOutageTest`): con el emisor caído la API respondía un 503 correcto que el
+  contrato no recogía. Se documentó en la descripción de la spec que cualquier operación puede devolver 500 y 503 (sin
+  declararlo por operación, para que el validador siga rechazando otros estados no previstos).
