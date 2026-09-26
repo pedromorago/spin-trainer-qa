@@ -47,7 +47,14 @@ async function fileFor(path) {
 }
 
 createServer(async (req, res) => {
-  const path = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+  let path;
+  try {
+    path = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+  } catch {
+    // A malformed escape (%E0%A4%A) threw out of the handler and took the whole server down; Vercel answers 400.
+    res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' }).end('Bad request');
+    return;
+  }
   // Like Vercel: an existing file first, then the rewrites (the SPA fallback leaves /assets/ out, so a missing chunk is a 404).
   let file = await fileFor(path);
   const rewrite = file ? null : vercel.rewrites.find((r) => matches(r.source, path));

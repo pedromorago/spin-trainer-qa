@@ -26,46 +26,58 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # The repos are private: read-only token (Contents: read) on spin-trainer-api and spin-trainer-web in the
-  # SPIN_TRAINER_REPOS_TOKEN secret. If they become public, the Actions token is enough.
-  SIBLINGS_TOKEN: ${{ secrets.SPIN_TRAINER_REPOS_TOKEN || github.token }}
   LANG: C.UTF-8
 
 jobs:
   qa:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    outputs:
+      pages-artifact: ${{ steps.pages-artifact.outcome }}
     steps:
       - name: Checkout spin-trainer-qa
         uses: actions/checkout@v7
         with:
           path: spin-trainer-qa
+          persist-credentials: false
 
       # Coordinated changes across repos: the same branch in all three if it exists; otherwise, main.
+      # The repos are private: read-only token (Contents: read) on spin-trainer-api and spin-trainer-web in the
+      # SPIN_TRAINER_REPOS_TOKEN secret (if they become public, the Actions token is enough). Only this step and the
+      # two checkouts see it, and it is not left in .git/config: the dependency installs and builds that follow
+      # cannot read it.
       - name: Choose the API and web versions
         id: refs
         env:
+          SIBLINGS_TOKEN: ${{ secrets.SPIN_TRAINER_REPOS_TOKEN || github.token }}
           BRANCH: ${{ github.head_ref || github.ref_name }}
           API_REF: ${{ inputs.api-ref }}
           WEB_REF: ${{ inputs.web-ref }}
         run: |
           pick() {
             if [ -n "$2" ]; then echo "$2"; return; fi
-            if git ls-remote --exit-code --heads "https://x-access-token:${SIBLINGS_TOKEN}@github.com/pedromorago/$1.git" "$BRANCH" > /dev/null; then
-              echo "$BRANCH"
-            else
-              echo main
-            fi
+            # --exit-code: 2 means the branch does not exist; anything else (auth, network) must not fall back to main.
+            status=0
+            git ls-remote --exit-code --heads "https://x-access-token:${SIBLINGS_TOKEN}@github.com/pedromorago/$1.git" "$BRANCH" > /dev/null || status=$?
+            case $status in
+              0) echo "$BRANCH" ;;
+              2) echo main ;;
+              *) echo "::error::Could not read pedromorago/$1 (git ls-remote exit $status): check SPIN_TRAINER_REPOS_TOKEN." >&2; return 1 ;;
+            esac
           }
-          echo "api=$(pick spin-trainer-api "$API_REF")" >> "$GITHUB_OUTPUT"
-          echo "web=$(pick spin-trainer-web "$WEB_REF")" >> "$GITHUB_OUTPUT"
+          set -e
+          api=$(pick spin-trainer-api "$API_REF")
+          web=$(pick spin-trainer-web "$WEB_REF")
+          echo "api=$api" >> "$GITHUB_OUTPUT"
+          echo "web=$web" >> "$GITHUB_OUTPUT"
 
       - name: Checkout spin-trainer-api (${{ steps.refs.outputs.api }})
         uses: actions/checkout@v7
         with:
           repository: pedromorago/spin-trainer-api
           ref: ${{ steps.refs.outputs.api }}
-          token: ${{ env.SIBLINGS_TOKEN }}
+          token: ${{ secrets.SPIN_TRAINER_REPOS_TOKEN || github.token }}
+          persist-credentials: false
           path: spin-trainer-api
 
       - name: Checkout spin-trainer-web (${{ steps.refs.outputs.web }})
@@ -73,7 +85,8 @@ jobs:
         with:
           repository: pedromorago/spin-trainer-web
           ref: ${{ steps.refs.outputs.web }}
-          token: ${{ env.SIBLINGS_TOKEN }}
+          token: ${{ secrets.SPIN_TRAINER_REPOS_TOKEN || github.token }}
+          persist-credentials: false
           path: spin-trainer-web
 
       - uses: actions/setup-java@v6
@@ -152,14 +165,16 @@ jobs:
       # Public report (GitHub Pages) from main, once the repo is public and Pages uses GitHub Actions: set the
       # PUBLISH_REPORTS repository variable to true. Until then nothing is published.
       - name: Report for GitHub Pages
+        id: pages-artifact
         if: ${{ !cancelled() && vars.PUBLISH_REPORTS == 'true' && github.ref == 'refs/heads/main' }}
         uses: actions/upload-pages-artifact@v5
         with:
           path: spin-trainer-qa/build/allure-report/
 
+  # Also when a suite failed (the report says what), but only if the qa job got as far as the report.
   pages:
     needs: qa
-    if: ${{ !cancelled() && vars.PUBLISH_REPORTS == 'true' && github.ref == 'refs/heads/main' }}
+    if: ${{ !cancelled() && needs.qa.outputs.pages-artifact == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:

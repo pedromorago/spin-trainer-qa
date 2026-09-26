@@ -76,6 +76,11 @@ dependencies {
 }
 
 tasks.test {
+    // The system under test lives outside Gradle's inputs (the sibling API and web, QA_API_URL, the environment,
+    // the pinned contract read at runtime): a cached or up-to-date result could be green without having talked to
+    // the current system. Always run.
+    outputs.upToDateWhen { false }
+    outputs.cacheIf { false }
     // The Allure report only with this run's results (local val: the configuration cache doesn't allow
     // references to the script).
     val allureResults = layout.buildDirectory.dir("allure-results")
