@@ -9,10 +9,10 @@ on:
   workflow_dispatch:
     inputs:
       api-ref:
-        description: Rama, tag o commit de spin-trainer-api (vacío = la misma rama que aquí si existe; si no, main)
+        description: Branch, tag or commit of spin-trainer-api (empty = the same branch as here if it exists; otherwise main)
         required: false
       web-ref:
-        description: Rama, tag o commit de spin-trainer-web (vacío = la misma rama que aquí si existe; si no, main)
+        description: Branch, tag or commit of spin-trainer-web (empty = the same branch as here if it exists; otherwise main)
         required: false
   schedule:
     # Mondays 05:17 UTC: catches API or web changes that break the suite even if nothing is touched here.
@@ -42,7 +42,7 @@ jobs:
           path: spin-trainer-qa
 
       # Coordinated changes across repos: the same branch in all three if it exists; otherwise, main.
-      - name: Elegir las versiones de API y web
+      - name: Choose the API and web versions
         id: refs
         env:
           BRANCH: ${{ github.head_ref || github.ref_name }}
@@ -91,23 +91,23 @@ jobs:
             spin-trainer-qa/package-lock.json
             spin-trainer-web/package-lock.json
 
-      - name: Dependencias
+      - name: Dependencies
         run: |
           npm ci --prefix spin-trainer-qa
           npm ci --prefix spin-trainer-web
           cd spin-trainer-qa && npx playwright install --with-deps chromium
 
-      - name: Las copias fijadas (contrato y rangos de referencia) coinciden con las de la API
+      - name: Pinned copies (contract and reference ranges) match the API
         working-directory: spin-trainer-qa
         run: ./gradlew specCheck rangesCheck spotlessCheck
 
-      - name: Levantar el entorno de QA
+      - name: Start the QA environment
         id: env
         working-directory: spin-trainer-qa
         run: npm run env:up
 
       # Each suite runs even if the previous one fails: the final report collects them all.
-      - name: API · JUnit y Cucumber
+      - name: API · JUnit and Cucumber
         if: ${{ !cancelled() && steps.env.outcome == 'success' }}
         working-directory: spin-trainer-qa
         run: ./gradlew :api-tests:test
@@ -117,12 +117,12 @@ jobs:
         working-directory: spin-trainer-qa
         run: npm run newman
 
-      - name: E2E · Playwright (mock y fullstack)
+      - name: E2E · Playwright (mock and fullstack)
         if: ${{ !cancelled() && steps.env.outcome == 'success' }}
         working-directory: spin-trainer-qa
         run: npm run e2e:typecheck && npm run e2e
 
-      - name: Logs del entorno
+      - name: Environment logs
         if: ${{ !cancelled() && steps.env.outcome != 'skipped' }}
         working-directory: spin-trainer-qa
         run: |
@@ -130,12 +130,12 @@ jobs:
           docker compose -f env/docker-compose.yml logs --no-color > build/env.log 2>&1 || true
           docker compose -f env/docker-compose.yml down -v || true
 
-      - name: Informe de Allure
+      - name: Allure report
         if: ${{ !cancelled() }}
         working-directory: spin-trainer-qa
         run: npm run report && node scripts/report-summary.mjs >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Publicar informes
+      - name: Publish reports
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:

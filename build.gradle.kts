@@ -18,26 +18,26 @@ fun pinnedCopy(
     val source = layout.projectDirectory.file("../spin-trainer-api/$sourcePath").asFile
     tasks.register("${name}Check") {
         group = "verification"
-        description = "Falla si $copyPath difiere de ../spin-trainer-api/$sourcePath."
+        description = "Fails if $copyPath differs from ../spin-trainer-api/$sourcePath."
         doLast {
             fun body(text: String) = text.replace("\r\n", "\n").let { if (header) it.substringAfter('\n') else it }
             if (!source.exists()) {
-                logger.lifecycle("${name}Check: no existe {}; nada que comparar.", source)
+                logger.lifecycle("${name}Check: {} does not exist; nothing to compare.", source)
             } else if (body(source.readText()) != body(copy.readText())) {
-                throw GradleException("$copyPath difiere de spin-trainer-api/$sourcePath: ejecuta gradlew ${name}Sync")
+                throw GradleException("$copyPath differs from spin-trainer-api/$sourcePath: run gradlew ${name}Sync")
             } else {
-                logger.lifecycle("${name}Check: $copyPath está al día.")
+                logger.lifecycle("${name}Check: $copyPath is up to date.")
             }
         }
     }
     tasks.register("${name}Sync") {
         group = "contract"
-        description = "Copia ../spin-trainer-api/$sourcePath en $copyPath."
+        description = "Copies ../spin-trainer-api/$sourcePath to $copyPath."
         doLast {
             fun body(text: String) = text.replace("\r\n", "\n").let { if (header) it.substringAfter('\n') else it }
             val firstLine = if (header) copy.readText().substringBefore('\n') + "\n" else ""
             copy.writeText(firstLine + body(source.readText()))
-            logger.lifecycle("${name}Sync: $copyPath actualizado.")
+            logger.lifecycle("${name}Sync: $copyPath updated.")
         }
     }
 }

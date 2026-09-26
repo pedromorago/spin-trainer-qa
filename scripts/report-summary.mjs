@@ -6,7 +6,7 @@ const count = (key) => stats[key] ?? 0;
 const failed = count('failed') + count('broken');
 
 console.log(`## ${failed === 0 ? '✅' : '❌'} Spin Trainer · QA\n`);
-console.log('| Total | Correctos | Fallidos | Rotos | Omitidos |');
+console.log('| Total | Passed | Failed | Broken | Skipped |');
 console.log('|---:|---:|---:|---:|---:|');
 console.log(`| ${count('total')} | ${count('passed')} | ${count('failed')} | ${count('broken')} | ${count('skipped')} |`);
-console.log('\nInforme completo (Allure, Playwright, Newman, logs del entorno): artefacto `qa-reports`.');
+console.log('\nFull report (Allure, Playwright, Newman, environment logs): `qa-reports` artifact.');

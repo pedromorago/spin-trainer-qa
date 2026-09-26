@@ -10,4 +10,4 @@ const { d, ...publicKey } = key;
 
 writeFileSync(`${root}env/jwt/qa-signing-key.jwk.json`, `${JSON.stringify(key, null, 2)}\n`);
 writeFileSync(`${root}env/wiremock/__files/jwks.json`, `${JSON.stringify({ keys: [publicKey] }, null, 2)}\n`);
-console.log(`Clave de QA generada: ${key.kid}`);
+console.log(`QA key generated: ${key.kid}`);

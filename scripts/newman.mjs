@@ -32,7 +32,7 @@ newman.run(
       process.exitCode = 1;
       return;
     }
-    console.log(`Jugador: ${player}`);
+    console.log(`Player: ${player}`);
     if (summary.run.failures.length > 0 || summary.run.error) {
       process.exitCode = 1;
     }

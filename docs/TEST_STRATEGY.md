@@ -1,161 +1,160 @@
-# Estrategia de pruebas
+# Test strategy
 
-Qué se prueba en `spin-trainer-qa`, con qué técnicas y contra qué oráculos, y cómo encaja con las pruebas que viven en
-los otros dos repos. Decisiones de proyecto: `spin-trainer-web/docs/adr/`.
+What `spin-trainer-qa` tests, with which techniques and against which oracles, and how it fits in with the tests that
+live in the other two repos. Project decisions: `spin-trainer-web/docs/adr/`.
 
-## Objetivo y alcance
+## Objective and scope
 
-La suite prueba **el artefacto desplegable** (la imagen Docker de la API con el perfil `prod`, la base de datos preparada
-con el `bootstrap.sql` real y los JWT validados contra un JWKS por red) como caja negra: solo habla HTTP. Puede
-apuntarse a cualquier despliegue con `QA_API_URL`.
+The suite tests **the deployable artifact** (the API's Docker image with the `prod` profile, the database prepared with
+the real `bootstrap.sql`, and JWTs validated against a JWKS over the network) as a black box: it only speaks HTTP. It
+can be pointed at any deployment with `QA_API_URL`.
 
-Fuera de alcance, por decisión (ADR-0010): seguridad dinámica (OWASP ZAP), carga y rendimiento (k6, JMeter), Pact y
-pruebas de base de datos (pgTAP).
+Out of scope, by decision (ADR-0010): dynamic security testing (OWASP ZAP), load and performance testing (k6, JMeter),
+Pact and database testing (pgTAP).
 
-## Niveles y dónde vive cada uno
+## Test levels and where each one lives
 
-| Nivel | Repo | Qué cubre | Por qué ahí |
+| Level | Repo | What it covers | Why there |
 |---|---|---|---|
-| Unitario (dominio web) | web · Vitest | `domain/` puro: `actionFor`, veredictos, selección, series de stats | Reglas puras; el 90 % de cobertura se exige ahí |
-| Conformidad del mock | web · Vitest | El mock valida y responde como la spec (`contract.test.js`) | La web y los E2E en modo mock dependen de él |
-| Unitario (API) | api · JUnit | Dominio, casos de uso, ArchUnit | Sin Spring ni Docker; reloj controlado |
-| Integración (API) | api · `*IT` | App completa con Postgres (Testcontainers), JWT reales, roles de BD, respuestas validadas contra la spec | Caja blanca: fija el reloj (cortes de día y cambios de hora) y consulta privilegios de BD |
-| **Aceptación de API** | **qa · REST Assured** | El artefacto desplegado: contrato, reglas de negocio, seguridad, HTTP | Independiente del código; lo que ve un cliente |
-| Especificación ejecutable | qa · Cucumber | Reglas de negocio en Gherkin, en español | Legible por quien valida los rangos |
-| Regresión de colección | qa · Newman | El flujo completo de un jugador como colección de Postman | Ejecutable fuera de la JVM y abrible en Postman |
-| E2E | qa · Playwright | La web contra el mock y contra la API real, las mismas specs; accesibilidad con axe | Flujos de usuario reales, en un navegador |
+| Unit (web domain) | web · Vitest | Pure `domain/`: `actionFor`, verdicts, selection, stats series | Pure rules; the 90% coverage threshold is enforced there |
+| Mock conformance | web · Vitest | The mock validates and responds as the spec says (`contract.test.js`) | The web app and the mock-mode E2E tests depend on it |
+| Unit (API) | api · JUnit | Domain, use cases, ArchUnit | No Spring or Docker; controlled clock |
+| Integration (API) | api · `*IT` | Full app with Postgres (Testcontainers), real JWTs, DB roles, responses validated against the spec | White-box: pins the clock (day boundaries and DST changes) and queries DB privileges |
+| **API acceptance** | **qa · REST Assured** | The deployed artifact: contract, business rules, security, HTTP | Independent of the code; what a client sees |
+| Executable specification | qa · Cucumber | Business rules in Gherkin, in Spanish | Readable by whoever validates the ranges |
+| Collection regression | qa · Newman | A player's full flow as a Postman collection | Runs outside the JVM and can be opened in Postman |
+| E2E | qa · Playwright | The web app against the mock and against the real API, with the same specs; accessibility with axe | Real user flows, in a browser |
 
-Solapamiento con los `*IT` de la API, intencionado: allí se prueba el código con conocimiento interno; aquí, el
-contenedor tal como se desplegará (configuración de producción, imagen, red, emisor externo). Los defectos de empaquetado
-y configuración solo aparecen aquí.
+The overlap with the API's `*IT` tests is intentional: there, the code is tested with knowledge of its internals; here,
+the container as it will be deployed (production configuration, image, network, external issuer). Packaging and
+configuration defects only show up here.
 
-## Bases de prueba
+## Test basis
 
-1. Contrato: `contract/openapi.yaml` (copia fijada de `spin-trainer-api/openapi.yaml`, v0.2; `specCheck` falla si
-   diverge).
-2. Rangos de referencia: `contract/reference-ranges.json` (copia fijada del seed de la API, las 73 tablas de
-   Tablasmentov3.pdf; `rangesCheck` falla si diverge).
-3. ADRs: 0003 (Supabase solo emite el JWT), 0007 (intentos inmutables), 0012 (rango efectivo), 0013 (contrato v0.2:
-   corrección en servidor, versiones, stats agregadas).
-4. Reglas de dominio de `SPIN_TRAINER_PROJECT_CONTEXT.md`: acción implícita (FOLD, o CHECK si FOLD no es posible), 169
-   manos canónicas, stacks en múltiplos de 0,5 BB.
+1. Contract: `contract/openapi.yaml` (pinned copy of `spin-trainer-api/openapi.yaml`, v0.2; `specCheck` fails if it
+   diverges).
+2. Reference ranges: `contract/reference-ranges.json` (pinned copy of the API seed, the 73 tables from
+   Tablasmentov3.pdf; `rangesCheck` fails if it diverges).
+3. ADRs: 0003 (Supabase only issues the JWT), 0007 (immutable attempts), 0012 (effective range), 0013 (contract v0.2:
+   server-side grading, versions, aggregated stats).
+4. Domain rules from `SPIN_TRAINER_PROJECT_CONTEXT.md`: implicit action (FOLD, or CHECK if FOLD is not possible), 169
+   canonical hands, stacks in multiples of 0.5 BB.
 
-## Oráculos
+## Oracles
 
-- **La spec**, en cada respuesta: `ContractValidationFilter` valida estado declarado, `Content-Type` y cuerpo (esquema y
-  formatos) de todas las peticiones. Un test que no mira el cuerpo sigue comprobando el contrato.
-- **Los rangos de referencia del seed** (copia fijada, `ReferenceRanges` en Java y `e2e/data/reference.ts`): la API
-  tiene que servirlos mano a mano, y la corrección del Quiz se compara con la acción esperada que dan, para manos y
-  respuestas al azar.
-- **`ErrorType`**: tipo, estado, título y plantilla del `detail` de cada Problem (RFC 9457).
-- **Ida y vuelta**: lo que devuelve una escritura es lo que devuelve la lectura posterior.
+- **The spec**, on every response: `ContractValidationFilter` validates the declared status, `Content-Type` and body
+  (schema and formats) of every request. A test that does not inspect the body still checks the contract.
+- **The seed's reference ranges** (pinned copy, `ReferenceRanges` in Java and `e2e/data/reference.ts`): the API must
+  serve them hand by hand, and Quiz grading is compared against the expected action they yield, for random hands and
+  answers.
+- **`ErrorType`**: type, status, title and `detail` template of each Problem (RFC 9457).
+- **Round trip**: what a write returns is what the subsequent read returns.
 
-## Técnicas de diseño
+## Test design techniques
 
-| Técnica | Dónde |
+| Technique | Where |
 |---|---|
-| Particiones de equivalencia | `UserRangeValidationTest` (manos no canónicas, cuerpos fuera del contrato), `QuizGradingTest#rejects_invalid_attempts`, `AuthenticationTest` (una partición por motivo de rechazo del JWT) |
-| Valores límite | `limit` 0/1/200/201 (`AttemptHistoryTest`), `days` 0/1/365/366 (`StatsTest`), `version` 0 y tamaño máximo del documento (`UserRangeValidationTest`), stacks 12.3/12.5 |
-| Tabla de decisión | `QuizGradingTest#grades_against_the_effective_range`: ¿rango del usuario? × ¿mano en el rango? → acción esperada y origen |
-| Transición de estados | `UserRangeLifecycleTest`: sin rango → v1 → v2 → borrado, con los 409 de cada transición no válida |
-| Pruebas con oráculo aleatorias | `QuizGradingTest#agrees_with_the_reference_range_for_any_hand_and_answer` (10 repeticiones) |
-| Datos generados con semilla | `UserRangeLifecycleTest#any_valid_range_round_trips`: rangos aleatorios con Datafaker; la semilla va en el nombre del caso para reproducirlo |
-| Concurrencia (actualización perdida) | `UserRangeLifecycleTest#two_tabs_editing_the_same_version_cannot_lose_an_update` |
-| Aislamiento entre usuarios | `each_user_only_sees_their_own_*` (rangos e intentos) |
+| Equivalence partitioning | `UserRangeValidationTest` (non-canonical hands, bodies outside the contract), `QuizGradingTest#rejects_invalid_attempts`, `AuthenticationTest` (one partition per JWT rejection reason) |
+| Boundary value analysis | `limit` 0/1/200/201 (`AttemptHistoryTest`), `days` 0/1/365/366 (`StatsTest`), `version` 0 and maximum document size (`UserRangeValidationTest`), stacks 12.3/12.5 |
+| Decision table | `QuizGradingTest#grades_against_the_effective_range`: user range? × hand in the range? → expected action and range source |
+| State transition testing | `UserRangeLifecycleTest`: no range → v1 → v2 → deleted, with the 409 for each invalid transition |
+| Randomized testing against an oracle | `QuizGradingTest#agrees_with_the_reference_range_for_any_hand_and_answer` (10 repetitions) |
+| Seeded generated data | `UserRangeLifecycleTest#any_valid_range_round_trips`: random ranges with Datafaker; the seed goes in the test case name so it can be reproduced |
+| Concurrency (lost update) | `UserRangeLifecycleTest#two_tabs_editing_the_same_version_cannot_lose_an_update` |
+| Isolation between users | `each_user_only_sees_their_own_*` (ranges and attempts) |
 
-## Trazabilidad
+## Traceability
 
-| Requisito | Base | Tests |
+| Requirement | Basis | Tests |
 |---|---|---|
-| Catálogo de 16 situaciones con acción implícita y stacks válidos | Contexto, contrato | `SituationCatalogTest` |
-| Rangos de referencia servidos desde el seed, revalidables con ETag | ADR-0006, contrato | `ReferenceRangesTest` |
-| Los rangos servidos son, mano a mano, los del PDF | ADR-0006 | `ReferenceRangesTest#every_range_served_is_the_seeded_one` |
-| Rango personalizado versionado; un PUT con versión antigua es 409 y no pisa nada | ADR-0013 | `UserRangeLifecycleTest`, `rango_personalizado.feature`, Newman |
-| Nada inválido se guarda; errores por campo | Contrato | `UserRangeValidationTest`, `rango_personalizado.feature` |
-| Rango efectivo = personalizado si existe; si no, el de referencia | ADR-0012 | `QuizGradingTest` (tabla de decisión), `correccion_del_quiz.feature`, Newman |
-| El servidor corrige; el cliente no puede mandar `correct` | ADR-0013 | `QuizGradingTest`, Newman |
-| Los intentos no cambian aunque cambie el rango | ADR-0007 | `QuizGradingTest#past_attempts_keep_their_grade_when_the_range_changes`, `historial_y_estadisticas.feature` |
-| Historial paginado sin huecos ni duplicados, filtrable | Contrato | `AttemptHistoryTest`, Newman |
-| Stats agregadas por la API | ADR-0013 | `StatsTest`, `historial_y_estadisticas.feature`, Newman |
-| Cada jugador solo ve sus datos | ADR-0003 | `each_user_only_sees_their_own_*`, `privacidad.feature` |
-| El Explorer muestra el rango efectivo y solo él escribe rangos; el Builder no persiste | ADR-0012 | `explorer.spec.ts`, `builder.spec.ts` |
-| Dos pestañas no se pisan: la segunda recibe el 409 y puede recargar | ADR-0013 | `explorer.spec.ts` (mock y fullstack) |
-| El Quiz corrige con el rango efectivo; el histórico lo agrega el servidor | ADR-0012, ADR-0013 | `quiz.spec.ts`, `stats.spec.ts` |
-| La selección vive en la URL y se normaliza | Arquitectura web | `navigation.spec.ts` |
-| Controles accesibles por teclado y lector (WCAG 2.2 AA) | Contexto (calidad) | `accessibility.spec.ts`, atajos en `quiz.spec.ts` |
-| Solo JWT de sesión del emisor configurado (ES256, emisor, audiencia, rol, `exp`, `sub`) | ADR-0003 | `AuthenticationTest` |
-| Emisor caído → 503, no 401 | ADR-0003 | `IssuerOutageTest` |
-| Errores como Problem Details, también fuera de las rutas del contrato | Contrato | `ProblemAssert` en todas las suites, `HttpBehaviourTest` |
-| CORS solo para el origen de la web; correlation id | Contrato | `HttpBehaviourTest` |
+| Catalog of 16 situations with implicit action and valid stacks | Context, contract | `SituationCatalogTest` |
+| Reference ranges served from the seed, revalidatable with ETag | ADR-0006, contract | `ReferenceRangesTest` |
+| The ranges served are, hand by hand, the ones in the PDF | ADR-0006 | `ReferenceRangesTest#every_range_served_is_the_seeded_one` |
+| Versioned custom range; a PUT with a stale version gets a 409 and overwrites nothing | ADR-0013 | `UserRangeLifecycleTest`, `rango_personalizado.feature`, Newman |
+| Nothing invalid is saved; per-field errors | Contract | `UserRangeValidationTest`, `rango_personalizado.feature` |
+| Effective range = custom range if it exists; otherwise, the reference range | ADR-0012 | `QuizGradingTest` (decision table), `correccion_del_quiz.feature`, Newman |
+| The server grades; the client cannot send `correct` | ADR-0013 | `QuizGradingTest`, Newman |
+| Attempts do not change even if the range changes | ADR-0007 | `QuizGradingTest#past_attempts_keep_their_grade_when_the_range_changes`, `historial_y_estadisticas.feature` |
+| Paginated history with no gaps or duplicates, filterable | Contract | `AttemptHistoryTest`, Newman |
+| Stats aggregated by the API | ADR-0013 | `StatsTest`, `historial_y_estadisticas.feature`, Newman |
+| Each player only sees their own data | ADR-0003 | `each_user_only_sees_their_own_*`, `privacidad.feature` |
+| The Explorer shows the effective range and is the only one that writes ranges; the Builder does not persist | ADR-0012 | `explorer.spec.ts`, `builder.spec.ts` |
+| Two tabs do not overwrite each other: the second one gets the 409 and can reload | ADR-0013 | `explorer.spec.ts` (mock and fullstack) |
+| The Quiz grades against the effective range; historical stats are aggregated by the server | ADR-0012, ADR-0013 | `quiz.spec.ts`, `stats.spec.ts` |
+| The selection lives in the URL and is normalized | Web architecture | `navigation.spec.ts` |
+| Controls accessible by keyboard and screen reader (WCAG 2.2 AA) | Context (quality) | `accessibility.spec.ts`, shortcuts in `quiz.spec.ts` |
+| Only session JWTs from the configured issuer (ES256, issuer, audience, role, `exp`, `sub`) | ADR-0003 | `AuthenticationTest` |
+| Issuer down → 503, not 401 | ADR-0003 | `IssuerOutageTest` |
+| Errors as Problem Details, also outside the contract's routes | Contract | `ProblemAssert` in every suite, `HttpBehaviourTest` |
+| CORS only for the web app's origin; correlation id | Contract | `HttpBehaviourTest` |
 
-En Allure: cada clase lleva `@Feature` y los ADRs que prueba como `@Link` (en Gherkin, la etiqueta `@ADR-0012` se
-convierte en el mismo enlace); el usuario del test va como parámetro para
-buscar sus peticiones en los logs de la API (JSON con `correlationId`).
+In Allure: each class carries `@Feature` and the ADRs it tests as `@Link` (in Gherkin, the `@ADR-0012` tag becomes the
+same link); the test's user is added as a parameter so that its requests can be found in the API logs (JSON with
+`correlationId`).
 
-Lo que se prueba en la API y no aquí, porque exige controlar la aplicación por dentro: cortes de día por zona horaria y
-cambios de hora (`StatsIT`, reloj fijo), privilegios de los roles de BD e inmutabilidad de los intentos a nivel de
-permisos (`DatabaseRolesIT`).
+What is tested in the API and not here, because it requires controlling the application from the inside: day boundaries
+per time zone and DST changes (`StatsIT`, fixed clock), DB role privileges and attempt immutability at the permission
+level (`DatabaseRolesIT`).
 
-## Cucumber y Newman: qué aporta cada uno
+## Cucumber and Newman: what each one adds
 
-- **Cucumber** expresa las reglas de negocio con el vocabulario del jugador (mano, rango, respuesta, versión), en
-  español: es la parte de la suite que puede revisar alguien que conoce el poker y no el código. Los detalles técnicos
-  (cabeceras, formatos, JWT) se quedan en JUnit. Corre en la misma tarea de Gradle, contra el mismo entorno y con la
-  misma validación contra la spec en cada petición.
-- **Newman** recorre el flujo completo de un jugador nuevo, petición a petición y encadenando estado (ETag, versiones,
-  cursor), como lo haría un cliente. Sirve de humo de despliegue desde Node, sin la JVM, y se abre en Postman para
-  explorar la API a mano. Es una dependencia solo de desarrollo: `npm audit` avisa de dependencias de Newman que no se
-  usan con entradas externas (solo ejecuta la colección del repo).
+- **Cucumber** expresses the business rules in the player's vocabulary (hand, range, answer, version), in Spanish: it
+  is the part of the suite that someone who knows poker but not the code can review. Technical details (headers,
+  formats, JWT) stay in JUnit. It runs in the same Gradle task, against the same environment and with the same
+  validation against the spec on every request.
+- **Newman** walks through a new player's full flow, request by request and chaining state (ETag, versions, cursor), as
+  a client would. It serves as a deployment smoke test from Node, without the JVM, and can be opened in Postman to
+  explore the API by hand. It is a development-only dependency: `npm audit` flags Newman dependencies that are never
+  used with external input (it only runs the repo's own collection).
 
-## E2E: dos backends, las mismas specs
+## E2E: two backends, the same specs
 
-El proyecto `mock` prueba la web sola (rápido, sin Docker); `fullstack`, la web compilada en modo http contra la API
-del entorno de QA, con la sesión de Supabase inyectada (el JWT de QA). Como los datos de referencia coinciden, las specs
-y los oráculos son los mismos: si algo pasa en `mock` y falla en `fullstack`, el fallo está en la integración (ver
-Hallazgos). Cada test falla también ante errores de consola o respuestas HTTP ≥ 400 no previstas, y cada página se
-analiza con axe (WCAG 2.2 AA).
+The `mock` project tests the web app on its own (fast, no Docker); `fullstack` tests the web app built in http mode
+against the QA environment's API, with the Supabase session injected (the QA JWT). Since the reference data matches,
+the specs and oracles are the same: if something passes in `mock` and fails in `fullstack`, the defect is in the
+integration (see Findings). Each test also fails on console errors or unexpected HTTP responses ≥ 400, and every page
+is scanned with axe (WCAG 2.2 AA).
 
-## Datos y aislamiento
+## Data and isolation
 
-- Un usuario (UUID) nuevo por test, por escenario de Cucumber y por ejecución de Newman: todo corre en paralelo
-  (4 hilos en JUnit y 4 en Cucumber) sin limpiar nada.
-- Datos de referencia: los reales, del seed de la API. Lo que la suite necesita y la API no permite escribir va en
-  `env/flyway/R__qa_fixtures.sql`, que Flyway aplica después de las migraciones: hoy, btn_open@8 sin rango de
-  referencia, para probar el 422 en caja negra (en producción todas las combinaciones tienen rango). Nunca SQL desde
-  los tests.
-- `@Isolated` solo para lo que cambia algo compartido: `IssuerOutageTest` deja sin JWKS a toda la suite.
-- E2E: un jugador nuevo por test (con el mock, un contexto de navegador nuevo, con su propio almacenamiento).
+- A new user (UUID) per test, per Cucumber scenario and per Newman run: everything runs in parallel (4 threads in JUnit
+  and 4 in Cucumber) without cleaning anything up.
+- Reference data: the real data, from the API seed. Whatever the suite needs and the API does not allow writing goes
+  in `env/flyway/R__qa_fixtures.sql`, which Flyway applies after the migrations: currently, btn_open@8 without a
+  reference range, to test the 422 black-box (in production every combination has a range). Never SQL from the tests.
+- `@Isolated` only for whatever changes something shared: `IssuerOutageTest` takes the JWKS away from the whole suite.
+- E2E: a new player per test (with the mock, a new browser context with its own storage).
 
-## Entorno
+## Environment
 
-`env/docker-compose.yml`: Postgres con el `bootstrap.sql` de la API, WireMock sirviendo el JWKS de una clave ES256 de QA
-(el papel de Supabase) y la API construida desde su repo. `QaEnvironmentListener` lo levanta con Testcontainers al
-empezar la sesión de JUnit y lo borra al terminar; si ya hay uno en marcha, lo reutiliza y no lo toca.
+`env/docker-compose.yml`: Postgres with the API's `bootstrap.sql`, WireMock serving the JWKS of a QA ES256 key
+(standing in for Supabase) and the API built from its repo. `QaEnvironmentListener` starts it with Testcontainers when
+the JUnit session begins and tears it down when it ends; if one is already running, it reuses it and leaves it alone.
 
-## Patrones del framework profesional
+## Professional framework patterns
 
-| Patrón | Aquí | Mejora |
+| Pattern | Here | Improvement |
 |---|---|---|
-| ServiceBase | `ServiceBase` + un servicio por tag de la spec, fachada `Api` | Sin god-object: cada servicio conoce solo sus rutas |
-| TestBase + TestWatcherBase | `ApiTest` + `QaTestWatcher` | Usuario y cliente nuevos por test; el watcher adjunta el entorno al fallar |
-| DTOs con builder | Modelos generados desde la spec (setters fluidos) | Sin Lombok: si la spec cambia, no compila |
-| ErrorType con plantillas | `ErrorType` + `ProblemAssert` | Aserción fluida sobre el Problem completo |
-| Validación JSON Schema | Validación contra la spec en cada respuesta | Sin esquemas copiados a mano (ADR-0008) |
-| Token chain | `LocalJwtTokenProvider` (caché por usuario) | Registro de proveedores (`TokenProviders`) en lugar de un login fijo |
-| Data factories con Faker | `RangeFactory`, `Hands` | Semilla reproducible; `ThreadLocalRandom` en paralelo |
-| Configuración | `QaConfig` (propiedad `-Pqa.*` → variable `QA_*` → defecto) | Un único registro inmutable |
-| Qase por anotaciones | `@Feature`/`@Link` de Allure | Qase aplazado: sin gestor de casos por ahora |
-| Page Objects con regiones | `e2e/pages` (`#region` localizadores, acciones, consultas) | Componentes compartidos (`HandGrid`) como objetos propios |
+| ServiceBase | `ServiceBase` + one service per spec tag, `Api` facade | No god object: each service only knows its own routes |
+| TestBase + TestWatcherBase | `ApiTest` + `QaTestWatcher` | New user and client per test; the watcher attaches the environment on failure |
+| DTOs with builder | Models generated from the spec (fluent setters) | No Lombok: if the spec changes, the code does not compile |
+| ErrorType with templates | `ErrorType` + `ProblemAssert` | Fluent assertion on the whole Problem |
+| JSON Schema validation | Validation against the spec on every response | No hand-copied schemas (ADR-0008) |
+| Token chain | `LocalJwtTokenProvider` (per-user cache) | Provider registry (`TokenProviders`) instead of a hard-coded login |
+| Data factories with Faker | `RangeFactory`, `Hands` | Reproducible seed; `ThreadLocalRandom` in parallel |
+| Configuration | `QaConfig` (`-Pqa.*` property → `QA_*` variable → default) | A single immutable record |
+| Qase via annotations | Allure `@Feature`/`@Link` | Qase deferred: no test case management tool for now |
+| Page Objects with regions | `e2e/pages` (`#region` locators, actions, queries) | Shared components (`HandGrid`) as their own objects |
 
-## Hallazgos
+## Findings
 
-- **503 no declarado en la spec** (`IssuerOutageTest`): con el emisor caído la API respondía un 503 correcto que el
-  contrato no recogía. Se documentó en la descripción de la spec que cualquier operación puede devolver 500 y 503 (sin
-  declararlo por operación, para que el validador siga rechazando otros estados no previstos).
-- **406 en el DELETE de un rango desde la web** (`explorer.spec.ts`, proyecto `fullstack`): el Reset del Explorer
-  fallaba contra la API real y pasaba contra el mock. La web mandaba `Accept: application/json` y el DELETE (204 sin
-  cuerpo; sus errores en `application/problem+json`) no tenía ninguna representación aceptable, así que Spring
-  respondía 406 sin ejecutarlo. Ni los IT de la API ni Newman lo veían: mandan `Accept: */*`. Arreglado en los dos
-  lados: la API trata `application/json` como aceptación de Problem Details y la web acepta los dos tipos. Queda
-  cubierto por `RangesIT.JsonOnlyClients`, `HttpBehaviourTest#a_client_that_only_accepts_json_can_use_every_operation`
-  y el propio E2E.
+- **503 not declared in the spec** (`IssuerOutageTest`): with the issuer down, the API returned a correct 503 that the
+  contract did not cover. The spec description now documents that any operation may return 500 and 503 (without
+  declaring them per operation, so that the validator keeps rejecting any other unexpected status).
+- **406 on a range DELETE from the web app** (`explorer.spec.ts`, `fullstack` project): the Explorer's Reset failed
+  against the real API and passed against the mock. The web app sent `Accept: application/json`, and the DELETE (204
+  with no body; its errors in `application/problem+json`) had no acceptable representation, so Spring responded 406
+  without executing it. Neither the API's ITs nor Newman caught it: they send `Accept: */*`. Fixed on both sides: the
+  API treats `application/json` as accepting Problem Details, and the web app accepts both types. It is now covered by
+  `RangesIT.JsonOnlyClients`, `HttpBehaviourTest#a_client_that_only_accepts_json_can_use_every_operation` and the E2E
+  test itself.

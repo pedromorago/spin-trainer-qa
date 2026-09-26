@@ -1,55 +1,55 @@
 # spin-trainer-qa
 
-Suite de pruebas de caja negra de Spin Trainer. Reglas comunes a los tres repos, resumidas aquí para que
-este repo sea autosuficiente. Fuente de verdad del proyecto: `spin-trainer-web/docs/` (contexto, arquitectura, ADRs).
+Black-box test suite for Spin Trainer. Rules shared by the three repos, summarized here so that this repo is
+self-contained. Project source of truth: `spin-trainer-web/docs/` (context, architecture, ADRs).
 
-## Reglas globales (resumen)
-- Calidad de portfolio > velocidad. ADRs cerrados; solo se reabren con fallo concreto y justificado (ADR nuevo).
-- Validación contra la spec en lugar de Pact (ADR-0008). El contrato es `spin-trainer-api/openapi.yaml`; aquí hay una
-  copia fijada (`contract/openapi.yaml`, `gradlew specCheck` / `specSync`) que no se edita a mano. Igual con los rangos de
-  referencia del seed (`contract/reference-ranges.json`, `rangesCheck` / `rangesSync`), que son el oráculo.
-- Gradle (Kotlin DSL), nunca Maven. TypeScript solo en Playwright. Descartados: OWASP ZAP, carga, Pact, pgTAP.
-- Comentarios de código en inglés (Java, JS/TS, SQL, YAML, Gradle, scripts). En español: documentación (README, ADRs, CONTRIBUTING.md), textos de la app, mensajes de error de la API, títulos de tests y features de Gherkin.
-- Commits **siempre a nombre de Pedro** (autor y committer: `Pedro Morago López-Vázquez <pedromoragolv@gmail.com>`;
-  verificar `git config user.name/user.email` antes de commitear). Conventional Commits, sin trailer de coautoría ni de atribución.
-- Entorno de Pedro: Windows 10/11 (comandos con `gradlew.bat`; nada que dependa de bash).
+## Global rules (summary)
+- Portfolio quality > speed. ADRs are closed; they are only reopened for a concrete, justified flaw (new ADR).
+- Validation against the spec instead of Pact (ADR-0008). The contract is `spin-trainer-api/openapi.yaml`; this repo
+  holds a pinned copy (`contract/openapi.yaml`, `gradlew specCheck` / `specSync`) that is never edited by hand. The same
+  goes for the seed's reference ranges (`contract/reference-ranges.json`, `rangesCheck` / `rangesSync`), which are the
+  oracle.
+- Gradle (Kotlin DSL), never Maven. TypeScript only in Playwright. Discarded: OWASP ZAP, load testing, Pact, pgTAP.
+- Code comments and documentation in English (README, ADRs, CONTRIBUTING.md, docs/, OpenAPI descriptions). In Spanish: app UI text, API error messages, test titles and Gherkin features.
+- Commits **always in Pedro's name** (author and committer: `Pedro Morago López-Vázquez <pedromoragolv@gmail.com>`; check `git config user.name/user.email` before committing). Conventional Commits, no co-author or attribution trailer.
+- Pedro's environment: Windows 10/11 (commands with `gradlew.bat`; nothing that depends on bash).
 
-## Stack y comandos
+## Stack and commands
 JUnit 5 · REST Assured · AssertJ · Cucumber 7 · Allure · Testcontainers (docker compose) · WireMock (JWKS) ·
-Datafaker · Nimbus JOSE · networknt JSON Schema · openapi-generator (modelos) · Newman (Node).
+Datafaker · Nimbus JOSE · networknt JSON Schema · openapi-generator (models) · Newman (Node).
 
 ```
-./gradlew :api-tests:test      # levanta env/docker-compose.yml, ejecuta y lo para (Docker necesario)
+./gradlew :api-tests:test      # starts env/docker-compose.yml, runs the tests and stops it (requires Docker)
 ./gradlew specCheck            # contract/openapi.yaml == ../spin-trainer-api/openapi.yaml
 ./gradlew rangesCheck          # contract/reference-ranges.json == ../spin-trainer-api/reference-ranges.json
 ./gradlew spotlessApply
-npm run env:up && npm run newman   # colección de Newman contra el entorno en marcha
-npm run e2e                        # Playwright: mock + fullstack (este con el entorno en marcha)
-npm run report                     # Allure combinado (API, Newman, E2E)
+npm run env:up && npm run newman   # Newman collection against the running environment
+npm run e2e                        # Playwright: mock + fullstack (the latter with the environment running)
+npm run report                     # combined Allure report (API, Newman, E2E)
 ```
-Antes de commitear: `specCheck`, `rangesCheck`, `:api-tests:test`, `npm run e2e:typecheck` y `npm run e2e` en verde.
+Before committing: `specCheck`, `rangesCheck`, `:api-tests:test`, `npm run e2e:typecheck` and `npm run e2e` green.
 
-## Convenciones
-- Caja negra: los tests solo hablan HTTP con la API. El entorno tiene los datos reales (seed de la API); los ajustes de
-  QA que la API no permite hacer van en `env/flyway/R__qa_fixtures.sql` (hoy: btn_open@8 sin rango), nunca SQL desde
-  los tests. Oráculos de rangos: `ReferenceRanges` (Java) y `e2e/data/reference.ts`, ambos sobre la copia fijada.
-- Cliente: `Api.as(usuario).ranges().putUser(...)`; `ServiceBase` añade correlation id, Allure y la validación contra el
-  contrato en todas las peticiones. `withoutContract()` solo para lo que la spec no declara (rutas inexistentes, 503).
-- Un usuario nuevo por test (`ApiTest`): los tests van en paralelo sin limpiar datos. `@Isolated` solo si un test toca
-  algo compartido (p. ej. el JWKS de WireMock).
-- Errores con `ProblemAssert` + `ErrorType` (tipo, estado, título y plantilla del detail), no con textos sueltos.
-- Técnica de diseño explícita en el Javadoc del test (particiones, valores límite, tabla de decisión, transiciones) y
-  enlace al ADR con `@Link`; la trazabilidad está en `docs/TEST_STRATEGY.md`.
-- Modelos generados desde el contrato fijado (`com.pedromorago.spintrainer.qa.model`); las peticiones inválidas en JSON crudo.
-- Cucumber: features en español (`# language: es`) con vocabulario de negocio (jugador, mano, rango, respuesta), no de
-  HTTP. Steps en `qa.bdd`, estado del escenario en `ScenarioContext` (picocontainer), etiquetas `@ADR-00xx` (enlaces en
-  Allure) y `@smoke`. Las reglas que solo se pueden expresar con detalle técnico van en JUnit.
-- Newman: la colección se edita en Postman y se exporta a `newman/` (v2.1). Un jugador nuevo por ejecución
-  (`scripts/newman.mjs`); comprueba comportamiento, la validación contra la spec la hace la suite de Java.
-- Tokens fuera de la JVM (Newman, Playwright): `scripts/lib/qa-jwt.mjs`, mismos claims que `JwtForge`.
-- E2E: las mismas specs para `mock` y `fullstack`; lo que solo tiene sentido con el mock lleva `@solo-mock`. Page
-  Objects en `e2e/pages` con `#region` (localizadores, acciones, consultas); los tests no usan selectores sueltos.
-  Localizadores por rol y nombre accesible primero; `data-testid` y `data-hand/data-action/data-verdict` después.
-- Fixtures (`e2e/fixtures/test.ts`): jugador nuevo por test, sesión inyectada con backend `api` y guardia de errores de
-  consola/HTTP. Oráculos en `e2e/data/reference.ts` (espejo de `env/flyway` y `QaReferenceData`).
-- Accesibilidad: `expectAccessible` (axe, WCAG 2.2 AA) en cada página nueva.
+## Conventions
+- Black-box: tests only talk HTTP to the API. The environment has the real data (the API seed); QA adjustments that the
+  API does not allow go in `env/flyway/R__qa_fixtures.sql` (currently: btn_open@8 without a range), never SQL from the
+  tests. Range oracles: `ReferenceRanges` (Java) and `e2e/data/reference.ts`, both built on the pinned copy.
+- Client: `Api.as(usuario).ranges().putUser(...)`; `ServiceBase` adds the correlation id, Allure and validation against
+  the contract to every request. `withoutContract()` only for what the spec does not declare (non-existent routes, 503).
+- One new user per test (`ApiTest`): tests run in parallel without cleaning up data. `@Isolated` only if a test touches
+  something shared (e.g. the WireMock JWKS).
+- Errors with `ProblemAssert` + `ErrorType` (type, status, title and detail template), not with loose strings.
+- Explicit design technique in the test's Javadoc (partitions, boundary values, decision table, transitions) and a
+  link to the ADR with `@Link`; traceability lives in `docs/TEST_STRATEGY.md`.
+- Models generated from the pinned contract (`com.pedromorago.spintrainer.qa.model`); invalid requests as raw JSON.
+- Cucumber: features in Spanish (`# language: es`) with business vocabulary (jugador, mano, rango, respuesta), not
+  HTTP. Steps in `qa.bdd`, scenario state in `ScenarioContext` (picocontainer), `@ADR-00xx` tags (links in Allure)
+  and `@smoke`. Rules that can only be expressed with technical detail go in JUnit.
+- Newman: the collection is edited in Postman and exported to `newman/` (v2.1). One new player per run
+  (`scripts/newman.mjs`); it checks behavior, while validation against the spec is done by the Java suite.
+- Tokens outside the JVM (Newman, Playwright): `scripts/lib/qa-jwt.mjs`, same claims as `JwtForge`.
+- E2E: the same specs for `mock` and `fullstack`; anything that only makes sense with the mock is tagged `@solo-mock`.
+  Page Objects in `e2e/pages` with `#region` (locators, actions, queries); tests do not use ad-hoc selectors.
+  Locators by role and accessible name first; `data-testid` and `data-hand/data-action/data-verdict` after that.
+- Fixtures (`e2e/fixtures/test.ts`): a new player per test, session injected with the `api` backend and a guard for
+  console/HTTP errors. Oracles in `e2e/data/reference.ts` (mirror of `env/flyway` and `QaReferenceData`).
+- Accessibility: `expectAccessible` (axe, WCAG 2.2 AA) on every new page.

@@ -1,97 +1,98 @@
 # spin-trainer-qa
 
-Pruebas de caja negra de Spin Trainer (entrenador de rangos preflop para Spin & Go): API funcional y de contrato,
-flujos de negocio en Gherkin, regresión con Newman y E2E con Playwright. Portfolio QA: la suite es independiente del
-código que prueba ([spin-trainer-api](https://github.com/pedromorago/spin-trainer-api),
-[spin-trainer-web](https://github.com/pedromorago/spin-trainer-web)); decisiones y arquitectura en `spin-trainer-web/docs/`.
+Black-box tests for Spin Trainer (a preflop range trainer for Spin & Go): functional and contract API testing,
+business flows in Gherkin, regression with Newman and E2E with Playwright. A QA portfolio project: the suite is
+independent of the code it tests ([spin-trainer-api](https://github.com/pedromorago/spin-trainer-api),
+[spin-trainer-web](https://github.com/pedromorago/spin-trainer-web)); decisions and architecture live in
+`spin-trainer-web/docs/`.
 
-Estrategia de pruebas (bases, técnicas, trazabilidad): [`docs/TEST_STRATEGY.md`](docs/TEST_STRATEGY.md).
+Test strategy (test basis, techniques, traceability): [`docs/TEST_STRATEGY.md`](docs/TEST_STRATEGY.md).
 
-## Requisitos
+## Requirements
 
-- Docker (Docker Desktop con WSL 2 en Windows) y JDK 21 (Gradle lo descarga si falta).
-- Node LTS (22.13+) para Newman y Playwright: `npm install` una vez, aquí y en `spin-trainer-web`, y
+- Docker (Docker Desktop with WSL 2 on Windows) and JDK 21 (Gradle downloads it if missing).
+- Node LTS (22.13+) for Newman and Playwright: `npm install` once, here and in `spin-trainer-web`, and
   `npx playwright install chromium`.
-- Los tres repos como hermanos en la misma carpeta (`spin-trainer-api`, `spin-trainer-qa`, `spin-trainer-web`):
-  el entorno construye la API desde su repo y los E2E compilan la web desde el suyo.
+- The three repos as siblings in the same folder (`spin-trainer-api`, `spin-trainer-qa`, `spin-trainer-web`):
+  the environment builds the API from its repo and the E2E tests build the web app from its own.
 
-## Ejecutar
+## Running
 
-| Windows | Linux/macOS | Qué hace |
+| Windows | Linux/macOS | What it does |
 |---|---|---|
-| `.\gradlew.bat :api-tests:test` | `./gradlew :api-tests:test` | Levanta el entorno (Testcontainers + docker compose), ejecuta los tests de API (JUnit y Cucumber) y lo para |
-| `.\gradlew.bat :api-tests:test -Ptags=smoke` | `./gradlew :api-tests:test -Ptags=smoke` | Solo los casos de humo |
-| `npm run env:up` / `env:down` | igual | Levanta / borra el entorno a mano |
-| `npm run newman` | igual | Colección de Newman contra el entorno en marcha (`QA_API_URL` para otro) |
-| `npm run e2e` | igual | Playwright: proyecto `mock` (sin backend) y `fullstack` (necesita `npm run env:up`) |
-| `npm run e2e:mock` / `e2e:fullstack` | igual | Uno de los dos proyectos |
-| `npm run report` / `report:open` | igual | Informe de Allure combinado (API, Newman y E2E) en `build/allure-report` / abrirlo |
-| `.\gradlew.bat specCheck` / `specSync` | `./gradlew specCheck` / `specSync` | Comprueba / trae el contrato de `../spin-trainer-api/openapi.yaml` |
-| `.\gradlew.bat rangesCheck` / `rangesSync` | `./gradlew rangesCheck` / `rangesSync` | Comprueba / trae los rangos de referencia de `../spin-trainer-api/reference-ranges.json` |
+| `.\gradlew.bat :api-tests:test` | `./gradlew :api-tests:test` | Starts the environment (Testcontainers + docker compose), runs the API tests (JUnit and Cucumber) and stops it |
+| `.\gradlew.bat :api-tests:test -Ptags=smoke` | `./gradlew :api-tests:test -Ptags=smoke` | Smoke tests only |
+| `npm run env:up` / `env:down` | same | Starts / tears down the environment manually |
+| `npm run newman` | same | Newman collection against the running environment (`QA_API_URL` for a different one) |
+| `npm run e2e` | same | Playwright: `mock` project (no backend) and `fullstack` (requires `npm run env:up`) |
+| `npm run e2e:mock` / `e2e:fullstack` | same | One of the two projects |
+| `npm run report` / `report:open` | same | Combined Allure report (API, Newman and E2E) in `build/allure-report` / open it |
+| `.\gradlew.bat specCheck` / `specSync` | `./gradlew specCheck` / `specSync` | Checks / pulls the contract from `../spin-trainer-api/openapi.yaml` |
+| `.\gradlew.bat rangesCheck` / `rangesSync` | `./gradlew rangesCheck` / `rangesSync` | Checks / pulls the reference ranges from `../spin-trainer-api/reference-ranges.json` |
 
-Entorno a mano (para depurar o para Newman/Playwright): `npm run env:up`. Si ya está en marcha, los tests de Gradle lo
-reutilizan y no lo paran.
+Manual environment (for debugging or for Newman/Playwright): `npm run env:up`. If it is already running, the Gradle
+tests reuse it and leave it running.
 
-Los nombres de los escenarios de Cucumber llevan tildes: con un locale POSIX (Linux sin `LANG`), el informe HTML de
-Gradle falla al escribirlos; basta con `LANG=C.UTF-8`. En Windows y en GitHub Actions no hace falta nada.
+Cucumber scenario names contain accented characters: with a POSIX locale (Linux without `LANG`), Gradle's HTML report
+fails to write them; setting `LANG=C.UTF-8` is enough. Nothing is needed on Windows or GitHub Actions.
 
-## Entorno de QA (`env/`)
+## QA environment (`env/`)
 
-| Servicio | Puerto | Qué es |
+| Service | Port | What it is |
 |---|---|---|
-| `api` | 8081 | La API construida desde `../spin-trainer-api` (perfil `prod`, logs JSON) |
-| `postgres` | 55432 | Postgres 17 preparado con el `bootstrap.sql` de la API (roles `spin_migrator` y `spin_app`) |
-| `jwks` | 8089 | WireMock en el papel de Supabase Auth: sirve el JWKS de la clave de QA (`env/jwt`) y acepta el logout |
+| `api` | 8081 | The API built from `../spin-trainer-api` (`prod` profile, JSON logs) |
+| `postgres` | 55432 | Postgres 17 prepared with the API's `bootstrap.sql` (roles `spin_migrator` and `spin_app`) |
+| `jwks` | 8089 | WireMock standing in for Supabase Auth: serves the JWKS of the QA key (`env/jwt`) and accepts logout |
 
-Datos de referencia: los reales, del seed de la API (V5, las 73 tablas del PDF), con un único ajuste de QA en
-`env/flyway/R__qa_fixtures.sql`: btn_open@8 se queda sin rango para poder probar en caja negra que sin rango no hay
-corrección (422). Los oráculos leen la copia fijada `contract/reference-ranges.json`. Cada test usa usuarios nuevos: no
-hay que limpiar datos.
+Reference data: the real data, from the API seed (V5, the 73 tables from the PDF), with a single QA adjustment in
+`env/flyway/R__qa_fixtures.sql`: btn_open@8 is left without a range so that the suite can verify, black-box, that
+without a range there is no grading (422). The oracles read the pinned copy `contract/reference-ranges.json`. Each test
+uses new users: no data cleanup is needed.
 
-## Configuración
+## Configuration
 
-| Variable / `-Pqa.*` | Por defecto | Para qué |
+| Variable / `-Pqa.*` | Default | Purpose |
 |---|---|---|
-| `QA_API_URL` / `qa.apiUrl` | `http://localhost:8081/api/v1` (entorno gestionado) | API ya desplegada: la suite no levanta nada |
-| `QA_BUILD_API` / `qa.buildApi` | `true` | `false` reutiliza la última imagen de la API en vez de reconstruirla |
-| `QA_AUTH` / `qa.auth` | `local` | Proveedor de tokens (`TokenProviders`); `local` firma con la clave de QA |
-| `QA_JWT_ISSUER` / `qa.jwtIssuer` | `http://jwks:8080/auth/v1` | Emisor que espera la API |
+| `QA_API_URL` / `qa.apiUrl` | `http://localhost:8081/api/v1` (managed environment) | An already deployed API: the suite starts nothing |
+| `QA_BUILD_API` / `qa.buildApi` | `true` | `false` reuses the latest API image instead of rebuilding it |
+| `QA_AUTH` / `qa.auth` | `local` | Token provider (`TokenProviders`); `local` signs with the QA key |
+| `QA_JWT_ISSUER` / `qa.jwtIssuer` | `http://jwks:8080/auth/v1` | Issuer the API expects |
 
-## Estructura
+## Structure
 
 ```
-contract/                 copias fijadas del contrato y de los rangos de referencia (specCheck/specSync, rangesCheck/rangesSync)
-env/                      sistema bajo prueba: docker-compose, bootstrap de Postgres, WireMock, clave de QA, datos
-api-tests/src/main        framework: config, entorno, tokens, cliente (ServiceBase + un servicio por tag),
-                          validación contra el contrato, ErrorType + ProblemAssert, datos de prueba
-api-tests/src/test        suites por módulo (situaciones, rangos, quiz, stats, seguridad, HTTP) y steps de Cucumber (bdd)
-api-tests/src/test/resources/features   reglas de negocio en Gherkin, en español
-newman/                   colección de Postman (flujo completo de un jugador) y entorno de QA
-e2e/                      Playwright (TypeScript): fixtures, Page Objects, datos de referencia y specs
-.github/workflows/qa.yml  CI: entorno, API, Newman, E2E e informe de Allure combinado
-scripts/                  ejecución de Newman, token de QA (lib/qa-jwt.mjs) y generación de la clave
-docs/TEST_STRATEGY.md     estrategia, técnicas y trazabilidad
+contract/                 pinned copies of the contract and the reference ranges (specCheck/specSync, rangesCheck/rangesSync)
+env/                      system under test: docker-compose, Postgres bootstrap, WireMock, QA key, data
+api-tests/src/main        framework: config, environment, tokens, client (ServiceBase + one service per tag),
+                          validation against the contract, ErrorType + ProblemAssert, test data
+api-tests/src/test        suites per module (situations, ranges, quiz, stats, security, HTTP) and Cucumber steps (bdd)
+api-tests/src/test/resources/features   business rules in Gherkin, in Spanish
+newman/                   Postman collection (a player's full flow) and QA environment
+e2e/                      Playwright (TypeScript): fixtures, Page Objects, reference data and specs
+.github/workflows/qa.yml  CI: environment, API, Newman, E2E and combined Allure report
+scripts/                  Newman runner, QA token (lib/qa-jwt.mjs) and key generation
+docs/TEST_STRATEGY.md     strategy, techniques and traceability
 ```
 
 ## E2E (`e2e/`)
 
-Las mismas specs corren contra dos backends:
+The same specs run against two backends:
 
-| Proyecto | Web | Backend | Sesión |
+| Project | Web | Backend | Session |
 |---|---|---|---|
-| `mock` | `build:mock` servida en 4173 | el adaptador en memoria de la web | la del mock (siempre iniciada) |
-| `fullstack` | build en modo http servida en 4174 | la API del entorno de QA | JWT de QA inyectado como sesión de Supabase |
+| `mock` | `build:mock` served on 4173 | the web app's in-memory adapter | the mock's own (always signed in) |
+| `fullstack` | http-mode build served on 4174 | the QA environment's API | QA JWT injected as the Supabase session |
 
-Los datos de referencia son los mismos en los dos (el seed de la API; el mock de la web guarda la misma copia), así que
-los oráculos también. Cada test usa un
-jugador nuevo y falla si hay errores de consola, excepciones o respuestas HTTP ≥ 400 no previstas. La accesibilidad se
-comprueba con axe (WCAG 2.2 AA) en cada página. Informe HTML de Playwright en `build/e2e/report`.
+The reference data is the same in both (the API seed; the web mock keeps the same copy), and so are the oracles. Each
+test uses a new player and fails on console errors, exceptions or unexpected HTTP responses ≥ 400. Accessibility is
+checked with axe (WCAG 2.2 AA) on every page. Playwright HTML report in `build/e2e/report`.
 
 ## CI (`.github/workflows/qa.yml`)
 
-En cada push a `main`, en cada PR, a mano y los lunes: clona API y web junto a este repo (la misma rama si existe, si
-no `main`), levanta el entorno, ejecuta API, Newman y E2E aunque falle alguna, y publica el informe de Allure
-combinado, el de Playwright, los de Newman y los logs del entorno como artefacto `qa-reports`.
+On every push to `main`, on every PR, on demand and every Monday: clones the API and web repos next to this one (the
+same branch if it exists, otherwise `main`), starts the environment, runs the API, Newman and E2E suites even if one of
+them fails, and publishes the combined Allure report, the Playwright report, the Newman reports and the environment logs
+as the `qa-reports` artifact.
 
-Los repos son privados: el workflow necesita el secreto `SPIN_TRAINER_REPOS_TOKEN`, un token *fine-grained* de solo
-lectura (Contents: read) sobre `spin-trainer-api` y `spin-trainer-web`. Si los repos pasan a ser públicos, sobra.
+The repos are private: the workflow needs the `SPIN_TRAINER_REPOS_TOKEN` secret, a read-only *fine-grained* token
+(Contents: read) on `spin-trainer-api` and `spin-trainer-web`. If the repos become public, it is no longer needed.
