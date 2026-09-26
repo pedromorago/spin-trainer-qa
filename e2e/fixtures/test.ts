@@ -5,6 +5,7 @@ import { BuilderPage } from '../pages/BuilderPage';
 import { ExplorerPage } from '../pages/ExplorerPage';
 import { LoginPage } from '../pages/LoginPage';
 import { QuizPage } from '../pages/QuizPage';
+import { RouteErrorScreen } from '../pages/RouteErrorScreen';
 import { StatsPage } from '../pages/StatsPage';
 import { supabaseSession } from './session';
 
@@ -26,6 +27,7 @@ interface Fixtures {
   quiz: QuizPage;
   builder: BuilderPage;
   stats: StatsPage;
+  routeError: RouteErrorScreen;
 }
 
 export const test = base.extend<Fixtures, { backend: Backend }>({
@@ -72,6 +74,18 @@ export const test = base.extend<Fixtures, { backend: Backend }>({
   quiz: async ({ page }, use) => use(new QuizPage(page)),
   builder: async ({ page }, use) => use(new BuilderPage(page)),
   stats: async ({ page }, use) => use(new StatsPage(page)),
+  routeError: async ({ page }, use) => use(new RouteErrorScreen(page)),
 });
+
+/**
+ * Removes from the console guard the errors a test provokes on purpose and returns how many there were, so the test
+ * can require them. Any other error still fails the test.
+ */
+export function allowErrors(errors: string[], expected: RegExp): number {
+  const unexpected = errors.filter((error) => !expected.test(error));
+  const allowed = errors.length - unexpected.length;
+  errors.splice(0, errors.length, ...unexpected);
+  return allowed;
+}
 
 export { expect };

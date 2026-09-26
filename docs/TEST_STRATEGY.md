@@ -62,6 +62,7 @@ configuration defects only show up here.
 | Seeded generated data | `UserRangeLifecycleTest#any_valid_range_round_trips`: random ranges with Datafaker; the seed goes in the test case name so it can be reproduced |
 | Concurrency (lost update) | `UserRangeLifecycleTest#two_tabs_editing_the_same_version_cannot_lose_an_update` |
 | Isolation between users | `each_user_only_sees_their_own_*` (ranges and attempts) |
+| Fault injection | `resilience.spec.ts`: Playwright aborts the download of the Quiz chunk (as after a deploy) |
 
 ## Traceability
 
@@ -83,6 +84,7 @@ configuration defects only show up here.
 | The Quiz grades against the effective range; historical stats are aggregated by the server | ADR-0012, ADR-0013 | `quiz.spec.ts`, `stats.spec.ts` |
 | The selection lives in the URL and is normalized | Web architecture | `navigation.spec.ts` |
 | Controls accessible by keyboard and screen reader (WCAG 2.2 AA) | Context (quality) | `accessibility.spec.ts`, shortcuts in `quiz.spec.ts` |
+| A page that cannot be downloaded or rendered shows a recoverable error and keeps the header | Web architecture | `resilience.spec.ts` |
 | Only session JWTs from the configured issuer (ES256, issuer, audience, role, `exp`, `sub`) | ADR-0003 | `AuthenticationTest` |
 | Issuer down → 503, not 401 | ADR-0003 | `IssuerOutageTest` |
 | Errors as Problem Details, also outside the contract's routes | Contract | `ProblemAssert` in every suite, `HttpBehaviourTest` |
@@ -158,3 +160,7 @@ the JUnit session begins and tears it down when it ends; if one is already runni
   API treats `application/json` as accepting Problem Details, and the web app accepts both types. It is now covered by
   `RangesIT.JsonOnlyClients`, `HttpBehaviourTest#a_client_that_only_accepts_json_can_use_every_operation` and the E2E
   test itself.
+- **No route error screen in the web app** (`resilience.spec.ts`): when a tab's chunk could not be downloaded (a deploy
+  replaces the files, or the connection drops), React Router's default screen took over the whole page: in English,
+  with the stack trace, no header and no way out. The web app now has `RouteErrorPage` as `errorElement`: it replaces
+  only the page, offers *Recargar* and *Ir al inicio*, and passes axe. The test fails against the previous version.

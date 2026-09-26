@@ -51,5 +51,6 @@ Before committing: `specCheck`, `rangesCheck`, `:api-tests:test`, `npm run e2e:t
   Page Objects in `e2e/pages` with `#region` (locators, actions, queries); tests do not use ad-hoc selectors.
   Locators by role and accessible name first; `data-testid` and `data-hand/data-action/data-verdict` after that.
 - Fixtures (`e2e/fixtures/test.ts`): a new player per test, session injected with the `api` backend and a guard for
-  console/HTTP errors. Oracles in `e2e/data/reference.ts` (mirror of `env/flyway` and `QaReferenceData`).
-- Accessibility: `expectAccessible` (axe, WCAG 2.2 AA) on every new page.
+  console/HTTP errors (errors a test provokes on purpose are removed with `allowErrors`, which returns how many).
+  Oracles in `e2e/data/reference.ts` (mirror of `env/flyway` and `QaReferenceData`).
+- Accessibility: `expectAccessible` (`e2e/fixtures/a11y.ts`; axe, WCAG 2.2 AA) on every new page.

@@ -1,17 +1,6 @@
-import AxeBuilder from '@axe-core/playwright';
-import type { Page, TestInfo } from '@playwright/test';
 import { BTN_OPEN_25_HANDS, btnOpen25 } from '../data/reference';
+import { expectAccessible } from '../fixtures/a11y';
 import { expect, test } from '../fixtures/test';
-
-const WCAG = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
-
-/** Scans the page with axe (WCAG 2.2 AA), attaches the result to the report and requires zero violations. */
-async function expectAccessible(page: Page, testInfo: TestInfo, name: string): Promise<void> {
-  const results = await new AxeBuilder({ page }).withTags(WCAG).analyze();
-  await testInfo.attach(`axe-${name}`, { body: JSON.stringify(results.violations, null, 2), contentType: 'application/json' });
-  const summary = results.violations.map((v) => `${v.id} (${v.impact}): ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`);
-  expect(summary, `incumplimientos de accesibilidad en ${name}`).toEqual([]);
-}
 
 test.describe('Accesibilidad (WCAG 2.2 AA con axe)', () => {
   test('Explorer', async ({ page, explorer }, testInfo) => {
