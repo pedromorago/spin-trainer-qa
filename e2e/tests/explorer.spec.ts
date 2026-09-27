@@ -111,7 +111,7 @@ test.describe('Explorer: rango efectivo (ADR-0012)', () => {
     await other.paint('ALLIN', '32o');
     await other.save.click();
 
-    await expect(other.error).toHaveText('Conflict: El rango está en la versión 1; recarga');
+    await expect(other.error).toHaveText('Conflict: The range is at version 1; reload');
     await other.reloadAfterConflict.click();
     await expect(other.grid.cell('72o')).toHaveAttribute('data-action', 'ALLIN');
     await expect(other.grid.cell('32o')).toHaveAttribute('data-action', 'FOLD');

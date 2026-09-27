@@ -77,7 +77,7 @@ class ReferenceRangesTest extends ApiTest {
     void a_known_spot_without_seed_is_not_found() {
         assertThatProblem(api.ranges().getDefault(BTN_OPEN, "8"))
                 .is(ErrorType.NOT_FOUND)
-                .hasDetail("Sin rango de referencia para btn_open@8");
+                .hasDetail("No reference range for btn_open@8");
     }
 
     /** Boundary values and partitions of the combination (situation, stack). */

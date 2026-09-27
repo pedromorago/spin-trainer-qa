@@ -39,7 +39,7 @@ Característica: Rango personalizado
     Y guardo mi rango de "btn_open" a 25 BB partiendo de la versión 1:
       | mano | acción |
       | QQ   | ALLIN  |
-    Entonces la API lo rechaza como "conflicto" con el detalle "El rango está en la versión 2; recarga"
+    Entonces la API lo rechaza como "conflicto" con el detalle "The range is at version 2; reload"
     Y mi rango de "btn_open" a 25 BB está en la versión 2 con:
       | mano | acción |
       | KK   | ALLIN  |

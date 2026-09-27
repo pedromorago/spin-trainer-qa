@@ -74,5 +74,5 @@ Característica: Corrección del Quiz con el rango efectivo
 
     Escenario: una combinación sin rango de referencia ni personalizado
       Cuando respondo "FOLD" con AA en "btn_open" a 8 BB
-      Entonces la API lo rechaza como "sin rango" con el detalle "Sin rango para btn_open@8: no se puede corregir"
+      Entonces la API lo rechaza como "sin rango" con el detalle "No range for btn_open@8: the answer cannot be graded"
       Y mi historial está vacío

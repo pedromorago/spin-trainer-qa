@@ -264,7 +264,7 @@
                 "exec": [
                   "pm.test('409 con la versión actual', () => {",
                   "  pm.response.to.have.status(409);",
-                  "  pm.expect(pm.response.json().detail).to.eql('El rango está en la versión 1; recarga');",
+                  "  pm.expect(pm.response.json().detail).to.eql('The range is at version 1; reload');",
                   "});"
                 ]
               }

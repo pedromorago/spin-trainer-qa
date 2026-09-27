@@ -108,10 +108,10 @@ class AttemptHistoryTest extends ApiTest {
         }
     }
 
-    /** The messages of the spec's constraints are Spanish, like every API error, whatever language the client asks. */
+    /** The messages of the spec's constraints are the API's own, in English like every API error (ADR-0021). */
     @ParameterizedTest(name = "limit={0} → {1}")
-    @CsvSource({"0, debe ser ≥ 1", "201, debe ser ≤ 200"})
-    void constraint_messages_are_spanish(String limit, String message) {
+    @CsvSource({"0, must be ≥ 1", "201, must be ≤ 200"})
+    void constraint_messages_are_english(String limit, String message) {
         var response = api.quiz().list(Map.of("limit", limit));
 
         assertThatProblem(response).is(ErrorType.VALIDATION).hasFieldError("limit", message);

@@ -20,4 +20,4 @@ Característica: Cada jugador solo ve sus datos
   Escenario: sin sesión no se accede a nada
     Dado que no tengo sesión
     Cuando consulto el catálogo de situaciones
-    Entonces la API lo rechaza como "no autenticado" con el detalle "Falta el token de acceso (Authorization: Bearer)"
+    Entonces la API lo rechaza como "no autenticado" con el detalle "Missing access token (Authorization: Bearer)"

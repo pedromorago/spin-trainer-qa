@@ -7,10 +7,10 @@ package com.pedromorago.spintrainer.qa.assertion;
 public enum ErrorType {
     VALIDATION("validation", 400, "Validation failed", null),
     UNAUTHORIZED("unauthorized", 401, "Unauthorized", null),
-    NOT_FOUND("not-found", 404, "Not found", "Situación/stack desconocido: %s@%s"),
-    CONFLICT("conflict", 409, "Conflict", "El rango está en la versión %d; recarga"),
-    CONFLICT_DELETED("conflict", 409, "Conflict", "El rango personalizado ya no existe; recarga"),
-    NO_RANGE("no-range", 422, "No range", "Sin rango para %s@%s: no se puede corregir"),
+    NOT_FOUND("not-found", 404, "Not found", "Unknown situation/stack: %s@%s"),
+    CONFLICT("conflict", 409, "Conflict", "The range is at version %d; reload"),
+    CONFLICT_DELETED("conflict", 409, "Conflict", "The custom range no longer exists; reload"),
+    NO_RANGE("no-range", 422, "No range", "No range for %s@%s: the answer cannot be graded"),
     UNAVAILABLE("unavailable", 503, "Service unavailable", null);
 
     private final String type;

@@ -124,7 +124,7 @@ class HttpBehaviourTest extends ApiTest {
 
         Response response = raw().urlEncodingEnabled(false).auth().oauth2(token).get(path);
 
-        assertThatProblem(response).is(ErrorType.VALIDATION).hasDetail("Ruta no válida");
+        assertThatProblem(response).is(ErrorType.VALIDATION).hasDetail("Invalid path");
     }
 
     /** The deployed commit is public (the deploy waits for it); nothing else of Actuator is. */

@@ -72,7 +72,7 @@ class AuthenticationTest extends ApiTest {
 
         assertThatProblem(response)
                 .is(ErrorType.UNAUTHORIZED)
-                .hasDetail("Falta el token de acceso (Authorization: Bearer)");
+                .hasDetail("Missing access token (Authorization: Bearer)");
         assertThat(response.header("WWW-Authenticate")).isEqualTo("Bearer");
     }
 

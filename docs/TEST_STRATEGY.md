@@ -95,7 +95,7 @@ configuration defects only show up here.
 | The web app works under its production CSP and security headers | ADR-0016 | `content-security-policy.spec.ts` (and the whole E2E suite) |
 | While the free API wakes up, the app says so and retries by itself; the deployed native image behaves like the JVM one | ADR-0018 | `server-wake.spec.ts`; every suite runs against the native image |
 | Errors as Problem Details, also outside the contract's routes and for URLs the server rejects before any controller | Contract | `ProblemAssert` in every suite, `HttpBehaviourTest` |
-| API error messages in Spanish, whatever the client's language | Workspace rules | `AttemptHistoryTest#constraint_messages_are_spanish`, `ErrorType` templates |
+| API error messages in English, the constraints' too, whatever the client's or the JVM's language | ADR-0021 | `AttemptHistoryTest#constraint_messages_are_english`, `ErrorType` templates |
 | Only health and the deployed revision are public in Actuator | ADR-0018 | `HttpBehaviourTest#only_health_and_the_revision_are_public` |
 | CORS only for the web app's origin; correlation id | Contract | `HttpBehaviourTest` |
 

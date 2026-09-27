@@ -48,8 +48,8 @@ class UserRangeValidationTest extends ApiTest {
         assertThatProblem(put("{\"hands\":{\"AAs\":\"ALLIN\",\"QQ\":\"CHECK\",\"JJ\":\"MR_C_C\"},\"version\":0}"))
                 .is(ErrorType.VALIDATION)
                 .hasFieldErrors("hands.AAs", "hands.QQ") // JJ is valid: it must not be reported
-                .hasFieldError("hands.AAs", "mano no válida")
-                .hasFieldError("hands.QQ", "acción CHECK no permitida en btn_open");
+                .hasFieldError("hands.AAs", "invalid hand")
+                .hasFieldError("hands.QQ", "action CHECK not allowed in btn_open");
     }
 
     @Test
