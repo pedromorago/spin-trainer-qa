@@ -33,8 +33,8 @@ configuration defects only show up here.
 
 1. Contract: `contract/openapi.yaml` (pinned copy of `spin-trainer-api/openapi.yaml`, v0.2; `specCheck` fails if it
    diverges).
-2. Reference ranges: `contract/reference-ranges.json` (pinned copy of the API seed, the 73 tables from
-   Tablasmentov3.pdf; `rangesCheck` fails if it diverges).
+2. Reference ranges: `contract/reference-ranges.json` (pinned copy of the API seed: the 73 coloured tables of
+   Tablasmentov3.pdf and the 7 ranges derived from its "3H OS call" thresholds; `rangesCheck` fails if it diverges).
 3. ADRs: 0003 (Supabase only issues the JWT), 0007 (immutable attempts), 0012 (effective range), 0013 (contract v0.2:
    server-side grading, versions, aggregated stats).
 4. Domain rules from `SPIN_TRAINER_PROJECT_CONTEXT.md`: implicit action (FOLD, or CHECK if FOLD is not possible), 169
@@ -69,7 +69,8 @@ configuration defects only show up here.
 
 | Requirement | Basis | Tests |
 |---|---|---|
-| Catalog of 16 situations with implicit action and valid stacks | Context, contract | `SituationCatalogTest` |
+| Catalog of 17 situations with implicit action and valid stacks | Context, contract | `SituationCatalogTest` |
+| Facing the SB's open-shove, the BB calls when the stack is at most the hand's threshold ("3H OS call") | PDF, API V7 | `correccion_del_quiz.feature` (boundary values: threshold equal to the stack and just below), `ReferenceRangesTest` |
 | Reference ranges served from the seed, revalidatable with ETag | ADR-0006, contract | `ReferenceRangesTest` |
 | The ranges served are, hand by hand, the seeded ones (the pinned copy of the API's `reference-ranges.json`, extracted from the PDF) | ADR-0006 | `ReferenceRangesTest#every_range_served_is_the_seeded_one` |
 | Versioned custom range; a PUT with a stale version gets a 409 and overwrites nothing, also after a delete | ADR-0013 | `UserRangeLifecycleTest`, `rango_personalizado.feature`, Newman |

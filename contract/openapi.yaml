@@ -22,7 +22,7 @@ security:
   - bearerAuth: []
 tags:
   - name: situation
-    description: Catalog of the 16 situations (situation module).
+    description: Catalog of the 17 situations (situation module).
   - name: range
     description: Reference ranges (PDF, Flyway seed) and the user's custom ranges (range module).
   - name: quiz

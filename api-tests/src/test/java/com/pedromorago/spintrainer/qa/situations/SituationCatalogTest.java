@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 @Feature("Catálogo de situaciones")
 class SituationCatalogTest extends ApiTest {
 
-    /** The order of the study PDF: 12 3-max situations, then the 4 HU ones. */
+    /** The order of the study PDF: 13 3-max situations (bb_vs_sb_os with the other BB vs SB spots), then the 4 HU ones. */
     static final List<String> PRESENTATION_ORDER = List.of(
             "btn_open",
             "sb_open",
@@ -25,6 +25,7 @@ class SituationCatalogTest extends ApiTest {
             "sb_vs_btn_limp",
             "bb_vs_sb_mr",
             "bb_vs_sb_limp",
+            "bb_vs_sb_os",
             "bb_vs_btn_mr_sb_fold",
             "bb_vs_btn_limp_sb_fold",
             "bb_vs_btn_mr_sb_3bet",
@@ -47,7 +48,7 @@ class SituationCatalogTest extends ApiTest {
         assertThat(situations)
                 .filteredOn(s -> s.getFormat() == Situation.FormatEnum.HU)
                 .extracting(Situation::getKey)
-                .containsExactlyElementsOf(PRESENTATION_ORDER.subList(12, 16));
+                .containsExactlyElementsOf(PRESENTATION_ORDER.subList(13, 17));
     }
 
     @Test

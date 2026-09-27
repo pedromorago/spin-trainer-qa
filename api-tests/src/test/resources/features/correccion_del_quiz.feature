@@ -43,6 +43,23 @@ Característica: Corrección del Quiz con el rango efectivo
       Entonces la respuesta es correcta
       Y se corrigió con mi rango en la versión 1
 
+  Regla: ante el open-shove de la ciega pequeña, se paga si el stack efectivo no supera el umbral de la mano
+
+    Esquema del escenario: <mano> (umbral <umbral>) a <stack> BB respondiendo <respuesta>
+      Cuando respondo "<respuesta>" con <mano> en "bb_vs_sb_os" a <stack> BB
+      Entonces la acción esperada es "<esperada>"
+      Y la respuesta es <resultado>
+      Y se corrigió con el rango de referencia
+
+      Ejemplos:
+        | mano | umbral | stack | respuesta | esperada | resultado  |
+        | QTs  | 20     | 20    | CALL      | CALL     | correcta   |
+        | QJo  | 19,9   | 20    | CALL      | FOLD     | incorrecta |
+        | Q6s  | 10     | 10    | CALL      | CALL     | correcta   |
+        | Q5s  | 8,9    | 10    | FOLD      | FOLD     | correcta   |
+        | T5o  | 4      | 4     | CALL      | CALL     | correcta   |
+        | 95o  | 3,7    | 4     | CALL      | FOLD     | incorrecta |
+
   Regla: donde no se puede foldear, la acción implícita es pasar
 
     Escenario: la ciega grande ante el limp de la ciega pequeña pasa con una mano fuera del rango

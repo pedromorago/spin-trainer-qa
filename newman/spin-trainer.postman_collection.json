@@ -55,19 +55,19 @@
   "item": [
     {
       "name": "Catálogo",
-      "description": "Las 16 situaciones de Spin & Go; cambian solo con una migración, así que se revalidan con ETag.",
+      "description": "Las 17 situaciones de Spin & Go; cambian solo con una migración, así que se revalidan con ETag.",
       "item": [
         {
-          "name": "Lista las 16 situaciones",
+          "name": "Lista las 17 situaciones",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('200 con las 16 situaciones', () => {",
+                  "pm.test('200 con las 17 situaciones', () => {",
                   "  pm.response.to.have.status(200);",
-                  "  pm.expect(pm.response.json()).to.have.lengthOf(16);",
+                  "  pm.expect(pm.response.json()).to.have.lengthOf(17);",
                   "});",
                   "pm.test('Se revalida con ETag', () => {",
                   "  pm.expect(pm.response.headers.get('Cache-Control')).to.include('no-cache');",

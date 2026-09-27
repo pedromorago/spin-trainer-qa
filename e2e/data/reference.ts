@@ -42,6 +42,7 @@ export const ACTION_LABELS: Readonly<Record<string, string>> = {
   L_PUSH: 'Limp / Push',
   L_F: 'Limp / Fold',
   ALLIN: 'All-in',
+  CALL: 'Call',
   FOLD: 'Fold',
   CHECK: 'Check',
 };

@@ -39,7 +39,7 @@ Each of these was a real defect or gap, found by a test before it reached anyone
 - **Contract**: every response is validated against a pinned copy of `openapi.yaml` (status,
   Content-Type, schema and formats); errors are Problem Details checked by type, status, title and detail template.
 - **Real system**: the API's production image (a GraalVM native executable), Postgres with the production roles and a
-  WireMock issuer for the JWTs; the reference data is the real seed, the 73 ranges extracted from the study PDF.
+  WireMock issuer for the JWTs; the reference data is the real seed, the 80 ranges from the study PDF (73 coloured tables and 7 derived from its "3H OS call" thresholds).
 - **Non-functional, without extra tools**: accessibility with axe (WCAG 2.2 AA) on every page, security headers, the
   production Content-Security-Policy, and fault injection (a chunk that fails to download, a server waking up).
 - **Traceability** from each rule and decision (ADR) to the tests that check it, and a combined Allure report.
@@ -118,7 +118,7 @@ fails to write them; setting `LANG=C.UTF-8` is enough. Nothing is needed on Wind
 | `postgres` | 55432 | Postgres 17 prepared with the API's `bootstrap.sql` (roles `spin_migrator` and `spin_app`) |
 | `jwks` | 8089 | WireMock standing in for Supabase Auth: serves the JWKS of the QA key (`env/jwt`) and accepts logout |
 
-Reference data: the real data, from the API seed (V5, the 73 tables from the PDF), with a single QA adjustment in
+Reference data: the real data, from the API seed (V5 and V7, the 80 ranges from the PDF), with a single QA adjustment in
 `env/flyway/R__qa_fixtures.sql`: btn_open@8 is left without a range so that the suite can verify, black-box, that
 without a range there is no grading (422). The oracles read the pinned copy `contract/reference-ranges.json`. Each test
 uses new users: no data cleanup is needed.

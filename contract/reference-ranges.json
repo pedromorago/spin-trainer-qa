@@ -1,5 +1,5 @@
 {
-  "description": "Rangos de referencia de Tablasmentov3.pdf (Mento v3). Fuente de la migración V5 y de las copias de la web y QA.",
+  "description": "Reference ranges of Tablasmentov3.pdf (Mento v3). Source of migrations V5 and V7 and of the web and QA copies; the bb_vs_sb_os ranges are derived from reference-os-call-thresholds.json.",
   "ranges": [
     {
       "situation": "btn_open",
@@ -512,6 +512,138 @@
         "A4o": "ALLIN", "44": "ALLIN",
         "A3o": "ALLIN", "33": "ALLIN",
         "A2o": "ALLIN", "22": "ALLIN"
+      }
+    },
+    {
+      "situation": "bb_vs_sb_os",
+      "stack": 20,
+      "hands": {
+        "AA": "CALL", "AKs": "CALL", "AQs": "CALL", "AJs": "CALL", "ATs": "CALL", "A9s": "CALL", "A8s": "CALL", "A7s": "CALL", "A6s": "CALL", "A5s": "CALL", "A4s": "CALL", "A3s": "CALL", "A2s": "CALL",
+        "AKo": "CALL", "KK": "CALL", "KQs": "CALL", "KJs": "CALL", "KTs": "CALL", "K9s": "CALL",
+        "AQo": "CALL", "KQo": "CALL", "QQ": "CALL", "QJs": "CALL", "QTs": "CALL",
+        "AJo": "CALL", "KJo": "CALL", "JJ": "CALL",
+        "ATo": "CALL", "KTo": "CALL", "TT": "CALL",
+        "A9o": "CALL", "99": "CALL",
+        "A8o": "CALL", "88": "CALL",
+        "A7o": "CALL", "77": "CALL",
+        "A6o": "CALL", "66": "CALL",
+        "A5o": "CALL", "55": "CALL",
+        "44": "CALL",
+        "33": "CALL"
+      }
+    },
+    {
+      "situation": "bb_vs_sb_os",
+      "stack": 15,
+      "hands": {
+        "AA": "CALL", "AKs": "CALL", "AQs": "CALL", "AJs": "CALL", "ATs": "CALL", "A9s": "CALL", "A8s": "CALL", "A7s": "CALL", "A6s": "CALL", "A5s": "CALL", "A4s": "CALL", "A3s": "CALL", "A2s": "CALL",
+        "AKo": "CALL", "KK": "CALL", "KQs": "CALL", "KJs": "CALL", "KTs": "CALL", "K9s": "CALL", "K8s": "CALL", "K7s": "CALL",
+        "AQo": "CALL", "KQo": "CALL", "QQ": "CALL", "QJs": "CALL", "QTs": "CALL", "Q9s": "CALL",
+        "AJo": "CALL", "KJo": "CALL", "QJo": "CALL", "JJ": "CALL", "JTs": "CALL",
+        "ATo": "CALL", "KTo": "CALL", "QTo": "CALL", "TT": "CALL",
+        "A9o": "CALL", "K9o": "CALL", "99": "CALL",
+        "A8o": "CALL", "88": "CALL",
+        "A7o": "CALL", "77": "CALL",
+        "A6o": "CALL", "66": "CALL",
+        "A5o": "CALL", "55": "CALL",
+        "A4o": "CALL", "44": "CALL",
+        "A3o": "CALL", "33": "CALL",
+        "A2o": "CALL", "22": "CALL"
+      }
+    },
+    {
+      "situation": "bb_vs_sb_os",
+      "stack": 12,
+      "hands": {
+        "AA": "CALL", "AKs": "CALL", "AQs": "CALL", "AJs": "CALL", "ATs": "CALL", "A9s": "CALL", "A8s": "CALL", "A7s": "CALL", "A6s": "CALL", "A5s": "CALL", "A4s": "CALL", "A3s": "CALL", "A2s": "CALL",
+        "AKo": "CALL", "KK": "CALL", "KQs": "CALL", "KJs": "CALL", "KTs": "CALL", "K9s": "CALL", "K8s": "CALL", "K7s": "CALL", "K6s": "CALL", "K5s": "CALL", "K4s": "CALL",
+        "AQo": "CALL", "KQo": "CALL", "QQ": "CALL", "QJs": "CALL", "QTs": "CALL", "Q9s": "CALL", "Q8s": "CALL",
+        "AJo": "CALL", "KJo": "CALL", "QJo": "CALL", "JJ": "CALL", "JTs": "CALL", "J9s": "CALL",
+        "ATo": "CALL", "KTo": "CALL", "QTo": "CALL", "JTo": "CALL", "TT": "CALL",
+        "A9o": "CALL", "K9o": "CALL", "99": "CALL",
+        "A8o": "CALL", "K8o": "CALL", "88": "CALL",
+        "A7o": "CALL", "K7o": "CALL", "77": "CALL",
+        "A6o": "CALL", "66": "CALL",
+        "A5o": "CALL", "55": "CALL",
+        "A4o": "CALL", "44": "CALL",
+        "A3o": "CALL", "33": "CALL",
+        "A2o": "CALL", "22": "CALL"
+      }
+    },
+    {
+      "situation": "bb_vs_sb_os",
+      "stack": 10,
+      "hands": {
+        "AA": "CALL", "AKs": "CALL", "AQs": "CALL", "AJs": "CALL", "ATs": "CALL", "A9s": "CALL", "A8s": "CALL", "A7s": "CALL", "A6s": "CALL", "A5s": "CALL", "A4s": "CALL", "A3s": "CALL", "A2s": "CALL",
+        "AKo": "CALL", "KK": "CALL", "KQs": "CALL", "KJs": "CALL", "KTs": "CALL", "K9s": "CALL", "K8s": "CALL", "K7s": "CALL", "K6s": "CALL", "K5s": "CALL", "K4s": "CALL", "K3s": "CALL", "K2s": "CALL",
+        "AQo": "CALL", "KQo": "CALL", "QQ": "CALL", "QJs": "CALL", "QTs": "CALL", "Q9s": "CALL", "Q8s": "CALL", "Q7s": "CALL", "Q6s": "CALL",
+        "AJo": "CALL", "KJo": "CALL", "QJo": "CALL", "JJ": "CALL", "JTs": "CALL", "J9s": "CALL", "J8s": "CALL",
+        "ATo": "CALL", "KTo": "CALL", "QTo": "CALL", "JTo": "CALL", "TT": "CALL", "T9s": "CALL",
+        "A9o": "CALL", "K9o": "CALL", "Q9o": "CALL", "99": "CALL",
+        "A8o": "CALL", "K8o": "CALL", "88": "CALL",
+        "A7o": "CALL", "K7o": "CALL", "77": "CALL",
+        "A6o": "CALL", "K6o": "CALL", "66": "CALL",
+        "A5o": "CALL", "K5o": "CALL", "55": "CALL",
+        "A4o": "CALL", "44": "CALL",
+        "A3o": "CALL", "33": "CALL",
+        "A2o": "CALL", "22": "CALL"
+      }
+    },
+    {
+      "situation": "bb_vs_sb_os",
+      "stack": 8,
+      "hands": {
+        "AA": "CALL", "AKs": "CALL", "AQs": "CALL", "AJs": "CALL", "ATs": "CALL", "A9s": "CALL", "A8s": "CALL", "A7s": "CALL", "A6s": "CALL", "A5s": "CALL", "A4s": "CALL", "A3s": "CALL", "A2s": "CALL",
+        "AKo": "CALL", "KK": "CALL", "KQs": "CALL", "KJs": "CALL", "KTs": "CALL", "K9s": "CALL", "K8s": "CALL", "K7s": "CALL", "K6s": "CALL", "K5s": "CALL", "K4s": "CALL", "K3s": "CALL", "K2s": "CALL",
+        "AQo": "CALL", "KQo": "CALL", "QQ": "CALL", "QJs": "CALL", "QTs": "CALL", "Q9s": "CALL", "Q8s": "CALL", "Q7s": "CALL", "Q6s": "CALL", "Q5s": "CALL", "Q4s": "CALL",
+        "AJo": "CALL", "KJo": "CALL", "QJo": "CALL", "JJ": "CALL", "JTs": "CALL", "J9s": "CALL", "J8s": "CALL", "J7s": "CALL",
+        "ATo": "CALL", "KTo": "CALL", "QTo": "CALL", "JTo": "CALL", "TT": "CALL", "T9s": "CALL", "T8s": "CALL",
+        "A9o": "CALL", "K9o": "CALL", "Q9o": "CALL", "J9o": "CALL", "T9o": "CALL", "99": "CALL", "98s": "CALL",
+        "A8o": "CALL", "K8o": "CALL", "Q8o": "CALL", "88": "CALL",
+        "A7o": "CALL", "K7o": "CALL", "Q7o": "CALL", "77": "CALL",
+        "A6o": "CALL", "K6o": "CALL", "66": "CALL",
+        "A5o": "CALL", "K5o": "CALL", "55": "CALL",
+        "A4o": "CALL", "K4o": "CALL", "44": "CALL",
+        "A3o": "CALL", "K3o": "CALL", "33": "CALL",
+        "A2o": "CALL", "K2o": "CALL", "22": "CALL"
+      }
+    },
+    {
+      "situation": "bb_vs_sb_os",
+      "stack": 6,
+      "hands": {
+        "AA": "CALL", "AKs": "CALL", "AQs": "CALL", "AJs": "CALL", "ATs": "CALL", "A9s": "CALL", "A8s": "CALL", "A7s": "CALL", "A6s": "CALL", "A5s": "CALL", "A4s": "CALL", "A3s": "CALL", "A2s": "CALL",
+        "AKo": "CALL", "KK": "CALL", "KQs": "CALL", "KJs": "CALL", "KTs": "CALL", "K9s": "CALL", "K8s": "CALL", "K7s": "CALL", "K6s": "CALL", "K5s": "CALL", "K4s": "CALL", "K3s": "CALL", "K2s": "CALL",
+        "AQo": "CALL", "KQo": "CALL", "QQ": "CALL", "QJs": "CALL", "QTs": "CALL", "Q9s": "CALL", "Q8s": "CALL", "Q7s": "CALL", "Q6s": "CALL", "Q5s": "CALL", "Q4s": "CALL", "Q3s": "CALL", "Q2s": "CALL",
+        "AJo": "CALL", "KJo": "CALL", "QJo": "CALL", "JJ": "CALL", "JTs": "CALL", "J9s": "CALL", "J8s": "CALL", "J7s": "CALL", "J6s": "CALL", "J5s": "CALL", "J4s": "CALL",
+        "ATo": "CALL", "KTo": "CALL", "QTo": "CALL", "JTo": "CALL", "TT": "CALL", "T9s": "CALL", "T8s": "CALL", "T7s": "CALL", "T6s": "CALL",
+        "A9o": "CALL", "K9o": "CALL", "Q9o": "CALL", "J9o": "CALL", "T9o": "CALL", "99": "CALL", "98s": "CALL", "97s": "CALL",
+        "A8o": "CALL", "K8o": "CALL", "Q8o": "CALL", "J8o": "CALL", "T8o": "CALL", "98o": "CALL", "88": "CALL", "87s": "CALL",
+        "A7o": "CALL", "K7o": "CALL", "Q7o": "CALL", "J7o": "CALL", "77": "CALL",
+        "A6o": "CALL", "K6o": "CALL", "Q6o": "CALL", "66": "CALL",
+        "A5o": "CALL", "K5o": "CALL", "Q5o": "CALL", "55": "CALL",
+        "A4o": "CALL", "K4o": "CALL", "Q4o": "CALL", "44": "CALL",
+        "A3o": "CALL", "K3o": "CALL", "33": "CALL",
+        "A2o": "CALL", "K2o": "CALL", "22": "CALL"
+      }
+    },
+    {
+      "situation": "bb_vs_sb_os",
+      "stack": 4,
+      "hands": {
+        "AA": "CALL", "AKs": "CALL", "AQs": "CALL", "AJs": "CALL", "ATs": "CALL", "A9s": "CALL", "A8s": "CALL", "A7s": "CALL", "A6s": "CALL", "A5s": "CALL", "A4s": "CALL", "A3s": "CALL", "A2s": "CALL",
+        "AKo": "CALL", "KK": "CALL", "KQs": "CALL", "KJs": "CALL", "KTs": "CALL", "K9s": "CALL", "K8s": "CALL", "K7s": "CALL", "K6s": "CALL", "K5s": "CALL", "K4s": "CALL", "K3s": "CALL", "K2s": "CALL",
+        "AQo": "CALL", "KQo": "CALL", "QQ": "CALL", "QJs": "CALL", "QTs": "CALL", "Q9s": "CALL", "Q8s": "CALL", "Q7s": "CALL", "Q6s": "CALL", "Q5s": "CALL", "Q4s": "CALL", "Q3s": "CALL", "Q2s": "CALL",
+        "AJo": "CALL", "KJo": "CALL", "QJo": "CALL", "JJ": "CALL", "JTs": "CALL", "J9s": "CALL", "J8s": "CALL", "J7s": "CALL", "J6s": "CALL", "J5s": "CALL", "J4s": "CALL", "J3s": "CALL", "J2s": "CALL",
+        "ATo": "CALL", "KTo": "CALL", "QTo": "CALL", "JTo": "CALL", "TT": "CALL", "T9s": "CALL", "T8s": "CALL", "T7s": "CALL", "T6s": "CALL", "T5s": "CALL", "T4s": "CALL", "T3s": "CALL", "T2s": "CALL",
+        "A9o": "CALL", "K9o": "CALL", "Q9o": "CALL", "J9o": "CALL", "T9o": "CALL", "99": "CALL", "98s": "CALL", "97s": "CALL", "96s": "CALL", "95s": "CALL", "94s": "CALL", "93s": "CALL",
+        "A8o": "CALL", "K8o": "CALL", "Q8o": "CALL", "J8o": "CALL", "T8o": "CALL", "98o": "CALL", "88": "CALL", "87s": "CALL", "86s": "CALL", "85s": "CALL", "84s": "CALL",
+        "A7o": "CALL", "K7o": "CALL", "Q7o": "CALL", "J7o": "CALL", "T7o": "CALL", "97o": "CALL", "87o": "CALL", "77": "CALL", "76s": "CALL", "75s": "CALL", "74s": "CALL",
+        "A6o": "CALL", "K6o": "CALL", "Q6o": "CALL", "J6o": "CALL", "T6o": "CALL", "96o": "CALL", "86o": "CALL", "76o": "CALL", "66": "CALL", "65s": "CALL", "64s": "CALL",
+        "A5o": "CALL", "K5o": "CALL", "Q5o": "CALL", "J5o": "CALL", "T5o": "CALL", "55": "CALL", "54s": "CALL", "53s": "CALL",
+        "A4o": "CALL", "K4o": "CALL", "Q4o": "CALL", "J4o": "CALL", "44": "CALL",
+        "A3o": "CALL", "K3o": "CALL", "Q3o": "CALL", "J3o": "CALL", "33": "CALL",
+        "A2o": "CALL", "K2o": "CALL", "Q2o": "CALL", "J2o": "CALL", "22": "CALL"
       }
     },
     {

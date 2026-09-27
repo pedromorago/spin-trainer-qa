@@ -1,4 +1,4 @@
-import { ACTION_LABELS, BTN_OPEN_25, BTN_OPEN_ACTIONS, btnOpen25 } from '../data/reference';
+import { ACTION_LABELS, BTN_OPEN_25, BTN_OPEN_ACTIONS, btnOpen25, referenceRange } from '../data/reference';
 import { expect, test } from '../fixtures/test';
 
 // HU SB Open: the only situation with ten actions; the tenth (FOLD) answers with 0.
@@ -79,6 +79,19 @@ test.describe('Quiz: corrección contra el rango efectivo (ADR-0012, ADR-0013)',
     await page.keyboard.press('Enter');
 
     await expect(page).toHaveURL(/\/stats\?s=btn_open&stack=25$/);
+  });
+
+  // The PDF's "3H OS call" table (API V7): one threshold per hand, turned into one range per stack.
+  test('ante el open-shove de la SB corrige con la tabla de umbrales «3H OS call»', async ({ quiz }) => {
+    const range = referenceRange('bb_vs_sb_os', 10);
+    await quiz.open('bb_vs_sb_os', 10);
+    await expect(quiz.spot).toHaveText('BB vs SB Open-Shove · 10 BB');
+
+    for (let i = 0; i < 5; i++) {
+      const { hand } = await quiz.answerWith((h) => range[h] ?? 'FOLD');
+      await expect(quiz.feedback, hand).toContainText('Correcto');
+      await quiz.nextHand();
+    }
   });
 
   test('con rango personalizado se corrige con el del jugador', async ({ shell, explorer, quiz }) => {
