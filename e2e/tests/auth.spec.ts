@@ -1,5 +1,5 @@
 import { btnOpen25 } from '../data/reference';
-import { expect, test } from '../fixtures/test';
+import { allowErrors, expect, test } from '../fixtures/test';
 
 test.describe('Sesión (ADR-0003)', () => {
   test('tras cerrar sesión, volver atrás no enseña la app', async ({ page, shell, login, explorer }) => {
@@ -54,5 +54,47 @@ test.describe('Sesión (ADR-0003)', () => {
     await login.signIn('pedro@example.com', 'secreto123');
 
     await expect(page).toHaveURL(/\/quiz\?s=btn_open&stack=25$/);
+  });
+
+  // Mock only: there "Continuar con Google" signs in without leaving; the real round trip needs Google (tested by hand).
+  test('entrar con Google vuelve a la ruta y la selección', { tag: '@solo-mock' }, async ({ page, shell, login }) => {
+    await shell.open('/quiz', { situation: 'btn_open', stack: 25 });
+
+    await shell.signOut.click();
+    await login.google.click();
+
+    await expect(page).toHaveURL(/\/quiz\?s=btn_open&stack=25$/);
+  });
+
+  for (const [caso, query, mensaje] of [
+    ['cancelado por el jugador', '?error=access_denied&error_description=The+user+denied+access', 'Has cancelado el acceso con Google.'],
+    ['fallido en Google', '?error=server_error&error_description=Unable+to+exchange+external+code', 'Google no ha podido completar el acceso.'],
+    ['sin código', '', 'El enlace de acceso no es válido'],
+  ]) {
+    test(`la vuelta de Google (${caso}) se explica y ofrece volver a entrar`, async ({ page }) => {
+      await page.goto(`/auth/callback${query}`);
+
+      await expect(page.getByRole('alert')).toContainText(mensaje);
+      await expect(page.getByRole('link', { name: 'Volver a entrar' })).toHaveAttribute('href', '/login');
+    });
+  }
+
+  // A code without its PKCE verifier (another browser, or one already used) must not open a session.
+  test('un código de Google ajeno no abre sesión', async ({ page, backend, consoleErrors }) => {
+    test.skip(backend === 'mock', 'the mock has no Supabase: any code signs in');
+    await page.goto('/auth/callback?code=codigo-de-otro-navegador');
+
+    await expect(page.getByRole('alert')).toContainText('El enlace de acceso no es válido');
+    // If Supabase's client asks for the exchange anyway, the QA Supabase has no such endpoint: an expected 404.
+    allowErrors(consoleErrors, /auth\/v1\/token/);
+  });
+
+  test('la privacidad se lee sin cuenta', async ({ page, shell, login }) => {
+    await shell.open('/explorer');
+    await shell.signOut.click();
+
+    await login.privacy.click();
+    await expect(page.getByRole('heading', { name: 'Privacidad', level: 1 })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'pedromoragolv@gmail.com' }).first()).toBeVisible();
   });
 });

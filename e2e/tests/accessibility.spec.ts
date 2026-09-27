@@ -40,4 +40,10 @@ test.describe('Accesibilidad (WCAG 2.2 AA con axe)', () => {
     await expect(login.form).toBeVisible();
     await expectAccessible(page, testInfo, 'login');
   });
+
+  test('Privacidad', async ({ page }, testInfo) => {
+    await page.goto('/privacidad');
+    await expect(page.getByRole('heading', { name: 'Privacidad', level: 1 })).toBeVisible();
+    await expectAccessible(page, testInfo, 'privacidad');
+  });
 });
