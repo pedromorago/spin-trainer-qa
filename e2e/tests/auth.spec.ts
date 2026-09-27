@@ -7,11 +7,11 @@ test.describe('Sesión (ADR-0003)', () => {
     await shell.goTo('Quiz');
 
     await shell.signOut.click();
-    await expect(login.form).toBeVisible();
+    await expect(login.screen).toBeVisible();
 
     await page.goBack();
     await expect(page).toHaveURL(/\/login$/);
-    await expect(login.form).toBeVisible();
+    await expect(login.screen).toBeVisible();
     await expect(explorer.heading).toBeHidden();
   });
 
@@ -24,11 +24,11 @@ test.describe('Sesión (ADR-0003)', () => {
     await expect(explorer.unsavedChanges).toBeVisible();
     await explorer.unsavedChanges.getByRole('button', { name: 'Seguir editando' }).click();
     await expect(explorer.modifiedBadge).toBeVisible();
-    await expect(login.form).toBeHidden();
+    await expect(login.screen).toBeHidden();
 
     await shell.signOut.click();
     await explorer.unsavedChanges.getByRole('button', { name: 'Descartar cambios' }).click();
-    await expect(login.form).toBeVisible();
+    await expect(login.screen).toBeVisible();
   });
 
   // Mock only (each email is a player there): in fullstack the login is Supabase's.
@@ -38,11 +38,11 @@ test.describe('Sesión (ADR-0003)', () => {
     await expect(shell.sessionTotal).toHaveText('1');
 
     await shell.signOut.click();
-    await login.signIn('otra@example.com', 'secreto123');
+    await login.signInAs('otra@example.com');
     await expect(shell.sessionTotal).toHaveText('0');
 
     await shell.signOut.click();
-    await login.signIn('mock@local', 'secreto123');
+    await login.signInAs('mock@local');
     await expect(shell.sessionTotal).toHaveText('1');
   });
 
@@ -51,7 +51,7 @@ test.describe('Sesión (ADR-0003)', () => {
     await shell.open('/quiz', { situation: 'btn_open', stack: 25 });
 
     await shell.signOut.click();
-    await login.signIn('pedro@example.com', 'secreto123');
+    await login.signInAs('pedro@example.com');
 
     await expect(page).toHaveURL(/\/quiz\?s=btn_open&stack=25$/);
   });
@@ -87,6 +87,16 @@ test.describe('Sesión (ADR-0003)', () => {
     await expect(page.getByRole('alert')).toContainText('El enlace de acceso no es válido');
     // If Supabase's client asks for the exchange anyway, the QA Supabase has no such endpoint: an expected 404.
     allowErrors(consoleErrors, /auth\/v1\/token/);
+  });
+
+  // Google is the only way in: the web shows no password form (in the mock, only the test player's).
+  test('solo se entra con Google', async ({ backend, shell, login }) => {
+    await shell.open('/explorer');
+    await shell.signOut.click();
+
+    await expect(login.google).toBeVisible();
+    await expect(login.screen.getByLabel(/contraseña/i)).toHaveCount(0);
+    await expect(login.testPlayer).toHaveCount(backend === 'mock' ? 1 : 0);
   });
 
   test('la privacidad se lee sin cuenta', async ({ page, shell, login }) => {

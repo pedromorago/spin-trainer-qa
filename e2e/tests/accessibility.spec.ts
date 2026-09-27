@@ -37,7 +37,7 @@ test.describe('Accesibilidad (WCAG 2.2 AA con axe)', () => {
   test('Login', async ({ page, shell, login }, testInfo) => {
     await shell.open('/explorer');
     await shell.signOut.click();
-    await expect(login.form).toBeVisible();
+    await expect(login.screen).toBeVisible();
     await expectAccessible(page, testInfo, 'login');
   });
 
