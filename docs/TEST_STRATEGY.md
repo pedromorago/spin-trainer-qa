@@ -87,7 +87,7 @@ configuration defects only show up here.
 | The selection lives in the URL and is normalized | Web architecture | `navigation.spec.ts` |
 | Controls accessible by keyboard and screen reader (WCAG 2.2 AA) | Context (quality) | `accessibility.spec.ts`, shortcuts, focus and announcement in `quiz.spec.ts` |
 | Signing out asks about unsaved changes; another player on the same tab starts from their own caches | ADR-0003 | `auth.spec.ts` |
-| Google is the only way in (no password form); its return explains every error in Spanish; a code without its PKCE verifier opens no session; the privacy notice is public | ADR-0019, ADR-0020 | `auth.spec.ts` (the real round trip through Google is a manual check), `accessibility.spec.ts` |
+| Google is the only way in (no password form); its return explains every error; a code without its PKCE verifier opens no session; the privacy notice is public, also at its first address | ADR-0019, ADR-0020 | `auth.spec.ts` (the real round trip through Google is a manual check), `accessibility.spec.ts` |
 | A page that cannot be downloaded or rendered shows a recoverable error and keeps the header | Web architecture | `resilience.spec.ts` |
 | Only session JWTs from the configured issuer (ES256, issuer, audience, role, `exp`, `sub`) | ADR-0003 | `AuthenticationTest` |
 | Issuer down → 503, not 401 | ADR-0003 | `IssuerOutageTest` |
