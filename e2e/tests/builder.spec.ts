@@ -18,7 +18,7 @@ test.describe('Builder: autoevaluación sin persistir (ADR-0012)', () => {
     await expect(builder.grid.cell('KK')).toHaveAttribute('data-verdict', 'wrong');
     await expect(builder.grid.cell('72o')).toHaveAttribute('data-verdict', 'extra');
     await expect(builder.grid.cell('QQ')).toHaveAttribute('data-verdict', 'missing');
-    await expect(builder.grid.cell('KK')).toHaveAccessibleName(/^KK: MR \/ Call 3b \/ Call 4b, .*\(correcta: MR \/ 4bet vs 3b \/ Call AI\)$/);
+    await expect(builder.grid.cell('KK')).toHaveAccessibleName(/^KK: MR \/ Call 3b \/ Call 4b, .*\(correct: MR \/ 4bet vs 3b \/ Call AI\)$/);
     // Played hands: those of the correct range plus 72o; only AA is right.
     const played = BTN_OPEN_25_HANDS + 1;
     await expect(builder.score).toHaveText(`1 / ${played} · ${Math.round(100 / played)}%`);

@@ -40,7 +40,7 @@ test.describe('Navegación y selección', () => {
   test('"Any" activa el modo aleatorio', async ({ shell, explorer }) => {
     await shell.open('/explorer', { situation: 'any', stack: 'any' });
 
-    await expect(shell.randomMode).toContainText('Modo aleatorio');
+    await expect(shell.randomMode).toContainText('Random mode');
     await expect(explorer.page.getByTestId('explorer-random')).toBeVisible();
   });
 });

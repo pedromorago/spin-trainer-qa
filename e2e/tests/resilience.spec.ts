@@ -17,7 +17,7 @@ test.describe('Resiliencia: una pantalla que no se puede descargar', () => {
     await shell.goTo('Quiz');
 
     await expect(routeError.heading).toBeVisible();
-    await expect(routeError.message).toContainText('No se pudo descargar');
+    await expect(routeError.message).toContainText('It could not be downloaded');
     await expect(routeError.homeLink).toHaveAttribute('href', '/');
     await expect(shell.tab('Explorer')).toBeVisible();
     await expectAccessible(page, testInfo, 'error-de-ruta');

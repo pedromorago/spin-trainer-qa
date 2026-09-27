@@ -15,14 +15,14 @@ export class AppShell {
   // #endregion
 
   constructor(readonly page: Page) {
-    this.nav = page.getByRole('navigation', { name: 'Secciones' });
-    this.situation = page.getByRole('combobox', { name: 'Situación' });
+    this.nav = page.getByRole('navigation', { name: 'Sections' });
+    this.situation = page.getByRole('combobox', { name: 'Situation' });
     this.stacks = page.getByRole('group', { name: 'Stack' });
     this.randomMode = page.getByTestId('random-mode');
     this.sessionTotal = page.getByTestId('session-total');
     this.sessionAccuracy = page.getByTestId('session-accuracy');
     this.sessionStreak = page.getByTestId('session-streak');
-    this.signOut = page.getByRole('button', { name: 'Salir' });
+    this.signOut = page.getByRole('button', { name: 'Sign out' });
     this.serverWaking = page.getByTestId('server-waking');
   }
 

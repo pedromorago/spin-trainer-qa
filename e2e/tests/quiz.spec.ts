@@ -15,7 +15,7 @@ test.describe('Quiz: corrección contra el rango efectivo (ADR-0012, ADR-0013)',
         ? page.waitForResponse((r) => r.url().endsWith('/api/v1/quiz/attempts') && r.request().method() === 'POST')
         : null;
       const { hand, given } = await quiz.answerWith(btnOpen25);
-      await expect(quiz.feedback, hand).toContainText('Correcto');
+      await expect(quiz.feedback, hand).toContainText('Correct');
       await expect(quiz.expected).toHaveText(ACTION_LABELS[given]);
       if (recorded) {
         const attempt = await (await recorded).json();
@@ -24,7 +24,7 @@ test.describe('Quiz: corrección contra el rango efectivo (ADR-0012, ADR-0013)',
       await quiz.nextHand();
     }
 
-    await expect(quiz.round).toContainText('Ronda: 5 / 5 (100%)');
+    await expect(quiz.round).toContainText('Round: 5 / 5 (100%)');
     await expect(shell.sessionTotal).toHaveText('5');
     await expect(shell.sessionAccuracy).toHaveText('100%');
   });
@@ -37,9 +37,9 @@ test.describe('Quiz: corrección contra el rango efectivo (ADR-0012, ADR-0013)',
 
     await quiz.answer(wrong);
 
-    await expect(quiz.feedback).toContainText('Incorrecto');
+    await expect(quiz.feedback).toContainText('Wrong');
     await expect(quiz.expected).toHaveText(ACTION_LABELS[expected]);
-    await expect(quiz.feedback).toContainText(`(respondiste ${ACTION_LABELS[wrong]})`);
+    await expect(quiz.feedback).toContainText(`(you answered ${ACTION_LABELS[wrong]})`);
     await expect(shell.sessionStreak).toHaveText('0');
   });
 
@@ -50,12 +50,12 @@ test.describe('Quiz: corrección contra el rango efectivo (ADR-0012, ADR-0013)',
     await expect(quiz.answerButton(btnOpen25(hand))).toHaveAttribute('aria-keyshortcuts', String(key));
 
     await quiz.answerWithKey(key);
-    await expect(quiz.feedback).toContainText('Correcto');
-    await expect(quiz.announcement).toHaveText(`Correcto. ${hand}: ${ACTION_LABELS[btnOpen25(hand)]}.`);
+    await expect(quiz.feedback).toContainText('Correct');
+    await expect(quiz.announcement).toHaveText(`Correct. ${hand}: ${ACTION_LABELS[btnOpen25(hand)]}.`);
     await expect(quiz.next).toHaveAttribute('aria-keyshortcuts', 'Enter ArrowRight');
     await quiz.nextHand();
 
-    await expect(quiz.round).toContainText('Ronda: 1 / 1 (100%)');
+    await expect(quiz.round).toContainText('Round: 1 / 1 (100%)');
     // The focus goes back to the answers, not to the page body.
     await expect(quiz.answers.getByRole('button').first()).toBeFocused();
   });
@@ -89,7 +89,7 @@ test.describe('Quiz: corrección contra el rango efectivo (ADR-0012, ADR-0013)',
 
     for (let i = 0; i < 5; i++) {
       const { hand } = await quiz.answerWith((h) => range[h] ?? 'FOLD');
-      await expect(quiz.feedback, hand).toContainText('Correcto');
+      await expect(quiz.feedback, hand).toContainText('Correct');
       await quiz.nextHand();
     }
   });
@@ -105,7 +105,7 @@ test.describe('Quiz: corrección contra el rango efectivo (ADR-0012, ADR-0013)',
     await expect(quiz.customRangeNote).toBeVisible();
     for (let i = 0; i < 8; i++) {
       const { hand } = await quiz.answerWith((h) => (h in BTN_OPEN_25 ? 'ALLIN' : 'FOLD'));
-      await expect(quiz.feedback, hand).toContainText('Correcto');
+      await expect(quiz.feedback, hand).toContainText('Correct');
       await quiz.nextHand();
     }
   });

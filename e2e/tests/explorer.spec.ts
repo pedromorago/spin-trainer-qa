@@ -55,12 +55,12 @@ test.describe('Explorer: rango efectivo (ADR-0012)', () => {
 
     await shell.goTo('Quiz');
     await expect(explorer.unsavedChanges).toBeVisible();
-    await explorer.unsavedChanges.getByRole('button', { name: 'Seguir editando' }).click();
+    await explorer.unsavedChanges.getByRole('button', { name: 'Keep editing' }).click();
     await expect(page).toHaveURL(/\/explorer/);
     await expect(explorer.grid.cell('72o')).toHaveAttribute('data-action', 'ALLIN');
 
     await shell.goTo('Quiz');
-    await explorer.unsavedChanges.getByRole('button', { name: 'Descartar cambios' }).click();
+    await explorer.unsavedChanges.getByRole('button', { name: 'Discard changes' }).click();
     await expect(page).toHaveURL(/\/quiz/);
   });
 
@@ -92,7 +92,7 @@ test.describe('Explorer: rango efectivo (ADR-0012)', () => {
     await expect(explorer.error).toContainText('Fallo inyectado');
     await expect(explorer.referenceBadge).toBeHidden();
     await page.unroute(USER_RANGES);
-    await explorer.error.getByRole('button', { name: 'Reintentar' }).click();
+    await explorer.error.getByRole('button', { name: 'Retry' }).click();
     await expect(explorer.referenceBadge).toBeVisible();
     expect(allowErrors(consoleErrors, /^HTTP 500 GET \S+\/api\/v1\/ranges\/user$/)).toBe(1);
     expect(allowErrors(consoleErrors, /^console: Failed to load resource: the server responded with a status of 500\b/)).toBe(1);

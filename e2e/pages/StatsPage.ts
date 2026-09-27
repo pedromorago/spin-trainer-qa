@@ -20,9 +20,9 @@ export class StatsPage {
     this.globalTotal = page.getByTestId('stats-global-total');
     this.globalAccuracy = page.getByTestId('stats-global-accuracy');
     this.chart = page.getByTestId('progress-chart');
-    this.chartAsTable = page.getByRole('button', { name: 'Ver tabla' });
+    this.chartAsTable = page.getByRole('button', { name: 'Show table' });
     this.progressTable = page.getByTestId('progress-table');
     this.weakest = page.getByTestId('stats-weakest');
-    this.situationMeters = page.getByRole('list', { name: 'Precisión por situación' }).getByRole('meter');
+    this.situationMeters = page.getByRole('list', { name: 'Accuracy by situation' }).getByRole('meter');
   }
 }

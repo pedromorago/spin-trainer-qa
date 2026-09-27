@@ -20,14 +20,14 @@ export class QuizPage {
     this.spot = page.getByTestId('quiz-spot');
     this.hand = page.getByTestId('quiz-hand');
     this.table = page.getByTestId('poker-table');
-    this.answers = page.getByRole('group', { name: 'Acciones' });
+    this.answers = page.getByRole('group', { name: 'Actions' });
     this.feedback = page.getByTestId('quiz-feedback');
     this.expected = page.getByTestId('quiz-expected');
-    this.next = page.getByRole('button', { name: 'Siguiente mano' });
+    this.next = page.getByRole('button', { name: 'Next hand' });
     this.round = page.getByTestId('quiz-stats');
     this.customRangeNote = page.getByTestId('quiz-custom-range');
     // What a screen reader hears after answering (a status region, not the grading box with its grid).
-    this.announcement = page.getByRole('status').filter({ hasText: /^(Correcto|Incorrecto)\./ });
+    this.announcement = page.getByRole('status').filter({ hasText: /^(Correct|Wrong)\./ });
   }
 
   // #region Actions

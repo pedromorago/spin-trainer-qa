@@ -22,8 +22,8 @@ export class ExplorerPage {
 
   constructor(readonly page: Page) {
     this.heading = page.getByRole('heading', { name: 'Explorer' });
-    this.grid = new HandGrid(page.getByRole('table', { name: /^Rango / }));
-    this.brushes = page.getByRole('group', { name: 'Pincel' });
+    this.grid = new HandGrid(page.getByRole('table', { name: /^Range / }));
+    this.brushes = page.getByRole('group', { name: 'Brush' });
     this.save = page.getByTestId('explorer-save');
     this.reset = page.getByRole('button', { name: 'Reset' });
     this.confirmReset = page.getByTestId('explorer-reset-confirm');
@@ -41,7 +41,7 @@ export class ExplorerPage {
     await this.page.goto(`/explorer?s=${situation}&stack=${stack}`);
   }
 
-  /** Picks the brush (action or "Goma" eraser) and paints the hands. */
+  /** Picks the brush (an action or the eraser) and paints the hands. */
   async paint(action: string, ...hands: string[]): Promise<void> {
     await this.brush(action).click();
     await this.grid.paint(...hands);
@@ -49,13 +49,13 @@ export class ExplorerPage {
 
   async resetToReference(): Promise<void> {
     await this.reset.click();
-    await this.confirmReset.getByRole('button', { name: 'Borrar y volver al PDF' }).click();
+    await this.confirmReset.getByRole('button', { name: 'Delete and go back to the PDF' }).click();
   }
   // #endregion
 
   // #region Queries
   brush(action: string): Locator {
-    return this.brushes.getByRole('button', { name: action === 'ERASE' ? 'Goma' : ACTION_LABELS[action], exact: true });
+    return this.brushes.getByRole('button', { name: action === 'ERASE' ? 'Eraser' : ACTION_LABELS[action], exact: true });
   }
   // #endregion
 }

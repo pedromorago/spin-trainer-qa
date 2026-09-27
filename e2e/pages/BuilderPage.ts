@@ -18,12 +18,12 @@ export class BuilderPage {
 
   constructor(readonly page: Page) {
     this.question = page.getByTestId('builder-question');
-    this.grid = new HandGrid(page.getByRole('table', { name: 'Tu rango' }));
-    this.solution = new HandGrid(page.getByRole('table', { name: 'Solución' }));
-    this.brushes = page.getByRole('group', { name: 'Pincel' });
-    this.verify = page.getByRole('button', { name: 'Verificar' });
+    this.grid = new HandGrid(page.getByRole('table', { name: 'Your range' }));
+    this.solution = new HandGrid(page.getByRole('table', { name: 'Solution' }));
+    this.brushes = page.getByRole('group', { name: 'Brush' });
+    this.verify = page.getByRole('button', { name: 'Check' });
     this.score = page.getByTestId('builder-score');
-    this.evaluation = page.getByRole('complementary', { name: 'Resultado' });
+    this.evaluation = page.getByRole('complementary', { name: 'Result' });
     this.toggleSolution = page.getByTestId('builder-toggle-solution');
     this.customTargetNote = page.getByTestId('builder-custom-target');
   }

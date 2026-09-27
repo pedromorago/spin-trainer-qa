@@ -18,7 +18,7 @@ test.describe('Servidor gratuito despertando', () => {
 
     await explorer.open('btn_open', 25);
 
-    await expect(shell.serverWaking).toContainText('Despertando el servidor');
+    await expect(shell.serverWaking).toContainText('Waking up the server');
     await expect(explorer.heading).toBeVisible({ timeout: 15_000 });
     await expect(shell.serverWaking).toBeEmpty();
   });

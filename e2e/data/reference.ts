@@ -36,7 +36,7 @@ export const ACTION_LABELS: Readonly<Record<string, string>> = {
   MR_4B_C: 'MR / 4bet vs 3b / Call AI',
   MR_C_C: 'MR / Call 3b / Call 4b',
   MR_C_F: 'MR / Call 3b / Fold 4b',
-  MR_F_F: 'MR / Fold a 3b',
+  MR_F_F: 'MR / Fold to 3b',
   L_C_C: 'Limp / Call iso / Call AI',
   L_C_F: 'Limp / Call iso / Fold AI',
   L_PUSH: 'Limp / Push',

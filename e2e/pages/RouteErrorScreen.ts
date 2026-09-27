@@ -10,10 +10,10 @@ export class RouteErrorScreen {
   // #endregion
 
   constructor(readonly page: Page) {
-    this.heading = page.getByRole('heading', { name: 'No se ha podido mostrar esta pantalla' });
+    this.heading = page.getByRole('heading', { name: 'This screen could not be shown' });
     this.message = page.getByTestId('route-error').getByRole('alert');
-    this.reloadButton = page.getByRole('button', { name: 'Recargar' });
-    this.homeLink = page.getByRole('link', { name: 'Ir al inicio' });
+    this.reloadButton = page.getByRole('button', { name: 'Reload' });
+    this.homeLink = page.getByRole('link', { name: 'Go to start' });
   }
 
   // #region Actions
