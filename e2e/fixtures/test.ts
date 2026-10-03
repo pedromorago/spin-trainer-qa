@@ -24,6 +24,8 @@ interface Fixtures {
   /** Whether the first-visit tour counts as already seen on this device (option; true by default). */
   onboarded: boolean;
   onboarding: void;
+  /** Whether the player starts signed in (option; true by default). Off, the web (api backend) starts signed out. */
+  signedIn: boolean;
   player: Player;
   consoleErrors: string[];
   shell: AppShell;
@@ -56,13 +58,16 @@ export const test = base.extend<Fixtures, { backend: Backend }>({
     { auto: true },
   ],
 
-  // A new player per test. With the API, their session is injected before the page loads; with the mock, each test
-  // has its own context (and its own localStorage), so it already starts with no data.
+  signedIn: [true, { option: true }],
+
+  // A new player per test. With the API, their session is injected before the page loads (unless the test starts
+  // signed out); with the mock, each test has its own context (and its own localStorage), so it already starts with no
+  // data.
   player: [
-    async ({ backend, context }, use) => {
+    async ({ backend, signedIn, context }, use) => {
       const id = randomUUID();
       let accessToken: string | null = null;
-      if (backend === 'api') {
+      if (backend === 'api' && signedIn) {
         const session = supabaseSession(id, process.env.QA_SUPABASE_URL ?? 'http://localhost:8089');
         accessToken = session.accessToken;
         // Only in the web's documents: a blank page (a new tab, axe's) has no storage and would throw.

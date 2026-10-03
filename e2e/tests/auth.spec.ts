@@ -1,5 +1,5 @@
 import { btnOpen25 } from '../data/reference';
-import { allowErrors, expect, test } from '../fixtures/test';
+import { expect, test } from '../fixtures/test';
 
 test.describe('Sesión (ADR-0003)', () => {
   test('tras cerrar sesión, volver atrás no enseña la app', async ({ page, shell, login, explorer }) => {
@@ -64,29 +64,6 @@ test.describe('Sesión (ADR-0003)', () => {
     await login.google.click();
 
     await expect(page).toHaveURL(/\/quiz\?s=btn_open&stack=25$/);
-  });
-
-  for (const [caso, query, mensaje] of [
-    ['cancelado por el jugador', '?error=access_denied&error_description=The+user+denied+access', 'You cancelled the sign-in with Google.'],
-    ['fallido en Google', '?error=server_error&error_description=Unable+to+exchange+external+code', 'Google could not complete the sign-in.'],
-    ['sin código', '', 'This sign-in link is not valid'],
-  ]) {
-    test(`la vuelta de Google (${caso}) se explica y ofrece volver a entrar`, async ({ page }) => {
-      await page.goto(`/auth/callback${query}`);
-
-      await expect(page.getByRole('alert')).toContainText(mensaje);
-      await expect(page.getByRole('link', { name: 'Back to sign-in' })).toHaveAttribute('href', '/login');
-    });
-  }
-
-  // A code without its PKCE verifier (another browser, or one already used) must not open a session.
-  test('un código de Google ajeno no abre sesión', async ({ page, backend, consoleErrors }) => {
-    test.skip(backend === 'mock', 'the mock has no Supabase: any code signs in');
-    await page.goto('/auth/callback?code=codigo-de-otro-navegador');
-
-    await expect(page.getByRole('alert')).toContainText('This sign-in link is not valid');
-    // If Supabase's client asks for the exchange anyway, the QA Supabase has no such endpoint: an expected 404.
-    allowErrors(consoleErrors, /auth\/v1\/token/);
   });
 
   // Google is the only way in: the web shows no password form (in the mock, only the test player's).

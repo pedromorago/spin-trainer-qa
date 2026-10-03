@@ -67,6 +67,8 @@ export default defineConfig<{ backend: Backend }>({
         VITE_API_BASE_URL: apiUrl,
         VITE_SUPABASE_URL: supabaseUrl,
         VITE_SUPABASE_ANON_KEY: 'qa-anon-key',
+        // Google itself is played by the tests (google-sign-in.spec.ts): this client ID only has to be recognizable.
+        VITE_GOOGLE_CLIENT_ID: 'qa-client.apps.googleusercontent.com',
       },
     },
     {
