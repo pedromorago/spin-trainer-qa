@@ -13,9 +13,9 @@ and the web app as a user and a client see them, independently of their code
 | API acceptance (REST Assured + JUnit 5) | this repo | 145 tests, every response validated against the OpenAPI contract |
 | Executable specification (Cucumber, in Spanish) | this repo | 23 scenarios in 4 features |
 | Collection regression (Newman) | this repo | 20 requests, 47 assertions |
-| E2E (Playwright + TypeScript, axe) | this repo | 37 specs against the mock and against the real API, under the production CSP |
+| E2E (Playwright + TypeScript, axe) | this repo | 71 tests against the mock and 69 against the real API (the same specs), 6 against the public demo, under the production CSP |
 | API unit and integration | spin-trainer-api | 152 unit tests (PIT mutation score 100 %) and 106 integration tests (Testcontainers) |
-| Web unit | spin-trainer-web | 295 Vitest tests (Stryker mutation score 100 % in the domain) |
+| Web unit | spin-trainer-web | 338 Vitest tests (Stryker mutation score 100 % in the domain) |
 
 ## What the tests found
 
@@ -31,6 +31,8 @@ Each of these was a real defect or gap, found by a test before it reached anyone
 | A range deleted and created again restarted at version 1, so a stale tab could overwrite it silently | review, now `UserRangeLifecycleTest` | API (migration V6) |
 | The API suite could pass from Gradle's cache without talking to the current API | review | this suite's build |
 | HU SB Open's tenth action had no working keyboard shortcut; the next player on a tab inherited the previous one's data | review, now `quiz.spec.ts` and `auth.spec.ts` | web |
+| On the landing page, a signed-in visitor's "Try a hand" dealt a new hand under them once their session was read | E2E, `fullstack` project (`landing.spec.ts`) | web |
+| A tooltip opened by a click's focus covered the Builder's grid; the sticky header's labels lost contrast over the grid | axe, `accessibility.spec.ts` and `onboarding.spec.ts` | web |
 
 ## How it is tested
 
@@ -98,8 +100,8 @@ flowchart LR
 | `.\gradlew.bat :api-tests:test -Ptags=smoke` | `./gradlew :api-tests:test -Ptags=smoke` | Smoke tests only |
 | `npm run env:up` / `env:down` | same | Starts / tears down the environment manually |
 | `npm run newman` | same | Newman collection against the running environment (`QA_API_URL` for a different one) |
-| `npm run e2e` | same | Playwright: `mock` project (no backend) and `fullstack` (requires `npm run env:up`) |
-| `npm run e2e:mock` / `e2e:fullstack` | same | One of the two projects |
+| `npm run e2e` | same | Playwright: `mock` project (no backend), `fullstack` (requires `npm run env:up`) and `demo` |
+| `npm run e2e:mock` / `e2e:fullstack` / `e2e:demo` | same | One of the projects |
 | `npm run report` / `report:open` | same | Combined Allure report (API, Newman and E2E) in `build/allure-report` / open it |
 | `.\gradlew.bat specCheck` / `specSync` | `./gradlew specCheck` / `specSync` | Checks / pulls the contract from `../spin-trainer-api/openapi.yaml` |
 | `.\gradlew.bat rangesCheck` / `rangesSync` | `./gradlew rangesCheck` / `rangesSync` | Checks / pulls the reference ranges from `../spin-trainer-api/reference-ranges.json` |
@@ -150,12 +152,16 @@ docs/TEST_STRATEGY.md     strategy, techniques and traceability
 
 ## E2E (`e2e/`)
 
-The same specs run against two backends:
+The same specs run against two backends, and a third project tests the public demo (ADR-0022):
 
 | Project | Web | Backend | Session |
 |---|---|---|---|
 | `mock` | `build:mock` served on 4173 | the web app's in-memory adapter | the mock's own (always signed in) |
 | `fullstack` | http-mode build served on 4174 | the QA environment's API | QA JWT injected as the Supabase session |
+| `demo` | `build:demo` served on 4175, only `demo.spec.ts` | the in-memory adapter | none: the demo has no sign-in |
+
+Every test starts as a returning visitor (the `onboarded` fixture marks the first-visit tour as seen), so the tour does
+not cover the page; `onboarding.spec.ts` asks for a first visit with `test.use({ onboarded: false })`.
 
 The reference data is the same in both (the API seed; the web mock keeps the same copy), and so are the oracles. Each
 test uses a new player and fails on console errors, exceptions or unexpected HTTP responses ≥ 400. Accessibility is

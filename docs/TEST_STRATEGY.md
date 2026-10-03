@@ -23,7 +23,7 @@ Pact and database testing (pgTAP).
 | **API acceptance** | **qa · REST Assured** | The deployed artifact: contract, business rules, security, HTTP | Independent of the code; what a client sees |
 | Executable specification | qa · Cucumber | Business rules in Gherkin, in Spanish | Readable by whoever validates the ranges |
 | Collection regression | qa · Newman | A player's full flow as a Postman collection | Runs outside the JVM and can be opened in Postman |
-| E2E | qa · Playwright | The web app against the mock and against the real API, with the same specs; accessibility with axe | Real user flows, in a browser |
+| E2E | qa · Playwright | The web app against the mock and against the real API, with the same specs, and the public demo; accessibility with axe | Real user flows, in a browser |
 
 The overlap with the API's `*IT` tests is intentional: there, the code is tested with knowledge of its internals; here,
 the container as it will be deployed (production configuration, image, network, external issuer). Packaging and
@@ -89,6 +89,10 @@ configuration defects only show up here.
 | Signing out asks about unsaved changes; another player on the same tab starts from their own caches | ADR-0003 | `auth.spec.ts` |
 | Google is the only way in (no password form); its return explains every error; a code without its PKCE verifier opens no session; the privacy notice is public, also at its first address | ADR-0019, ADR-0020 | `auth.spec.ts` (the real round trip through Google is a manual check), `accessibility.spec.ts` |
 | A page that cannot be downloaded or rendered shows a recoverable error and keeps the header | Web architecture | `resilience.spec.ts` |
+| The landing page shows the product without an account and without calling the API: a live reference chart (every cell checked against the seed) and one question graded against the chart | ADR-0022 | `landing.spec.ts` |
+| The first-visit tour: once per device, skippable on every step and with Escape, replayable, focus kept inside it, a bottom sheet on phones, accessible | ADR-0022 | `onboarding.spec.ts` |
+| Every action and figure explains itself: tooltips on hover and keyboard focus (not on a click), dismissable, as the accessible description; "?" buttons on touch screens | ADR-0022 | `tooltips.spec.ts` |
+| The public demo: no sign-in or sign-out, progress kept in this browser only | ADR-0022 | `demo.spec.ts` (`demo` project) |
 | Only session JWTs from the configured issuer (ES256, issuer, audience, role, `exp`, `sub`) | ADR-0003 | `AuthenticationTest` |
 | Issuer down → 503, not 401 | ADR-0003 | `IssuerOutageTest` |
 | No response can be sniffed or framed; no cache stores a player's data | Context (security) | `SecurityHeadersTest` |
@@ -125,6 +129,10 @@ against the QA environment's API, with the Supabase session injected (the QA JWT
 the specs and oracles are the same: if something passes in `mock` and fails in `fullstack`, the defect is in the
 integration (see Findings). Each test also fails on console errors or unexpected HTTP responses ≥ 400, and every page
 is scanned with axe (WCAG 2.2 AA).
+
+A third project, `demo`, builds the public demo (ADR-0022: the mock's data with no sign-in) and runs only
+`demo.spec.ts`. The first-visit tour would cover the Explorer in every spec, so tests start as a returning visitor (the
+`onboarded` fixture); `onboarding.spec.ts` opts out to test the first visit.
 
 The build is not served by `vite preview` but by `scripts/serve-web.mjs`, which applies the rewrites and headers of the
 web's `vercel.json` the way Vercel does (ADR-0016). Every test therefore runs under the production
@@ -180,12 +188,22 @@ What the tests found:
 - **No route error screen in the web app** (`resilience.spec.ts`): when a tab's chunk could not be downloaded (a deploy
   replaces the files, or the connection drops), React Router's default screen took over the whole page: in English,
   with the stack trace, no header and no way out. The web app now has `RouteErrorPage` as `errorElement`: it replaces
-  only the page, offers *Recargar* and *Ir al inicio*, and passes axe. The test fails against the previous version.
+  only the page, offers *Reload* and *Go to start*, and passes axe. The test fails against the previous version.
 - **400s became 500s in the native image** (40 JUnit and Cucumber tests and 2 Newman assertions, only against the
   native image of ADR-0018): Jackson writes the Problem's `errors` by reflection, and Spring AOT cannot see those records
   inside the properties map, so every validation error ended as a 500 or as Spring's default body. The unit and
   integration tests run on the JVM and could not see it; running the black-box suite against the deployable image did.
   Fixed with a runtime hint (`ProblemDetailsHints`) that has its own unit test.
+- **The landing page started over under a signed-in visitor** (`landing.spec.ts`, `fullstack` project only): "Try a
+  hand" dealt a new hand between reading it and answering. The web app re-created every per-user cache, and with them
+  the whole page, when the user changed, and reading the stored Supabase session at start-up counted as a change (no
+  user, then the stored one). The mock is signed in from the first render, so it could not show it. Reading the stored
+  session no longer counts as a change of user (`userScope.js`, unit-tested); signing out or into another account still
+  starts new caches (`auth.spec.ts`).
+- **Help that got in the way** (axe): a tooltip opened by the focus a click gives covered the Builder's grid after
+  "Check" (`target-size`, `accessibility.spec.ts`), and with the page scrolled the sticky header's small labels sat
+  over the grid's bright cells (`color-contrast`, the tour's scan in `onboarding.spec.ts`). Tooltips now open on
+  keyboard focus only and close when their trigger is pressed; the header is nearly opaque.
 
 What a review of the three repos found (a bug sweep after the suites were green), and the test that covers each one
 now. Each of these tests fails against the previous version:
