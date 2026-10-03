@@ -94,6 +94,7 @@ configuration defects only show up here.
 | The first-visit tour: once per device, skippable on every step and with Escape, replayable, focus kept inside it, a bottom sheet on phones, accessible | ADR-0022 | `onboarding.spec.ts` |
 | Every action and figure explains itself: tooltips on hover and keyboard focus (not on a click), dismissable, as the accessible description; "?" buttons on touch screens | ADR-0022 | `tooltips.spec.ts` |
 | The public demo: no sign-in or sign-out, progress kept in this browser only | ADR-0022 | `demo.spec.ts` (`demo` project) |
+| Signed out, the landing's ways into the app sign in right there, in a dialog (focus on Google's button; Escape, the close button and a click outside close it and give the focus back; a bottom sheet on phones; axe), then go where they pointed; a click meant for a new tab is left to the browser; the sign-in page shows the live chart, fits a phone and leads home | Web architecture | `sign-in.spec.ts` |
 | Only session JWTs from the configured issuer (ES256, issuer, audience, role, `exp`, `sub`) | ADR-0003 | `AuthenticationTest` |
 | Issuer down → 503, not 401 | ADR-0003 | `IssuerOutageTest` |
 | No response can be sniffed or framed; no cache stores a player's data | Context (security) | `SecurityHeadersTest` |
@@ -201,6 +202,11 @@ What the tests found:
   user, then the stored one). The mock is signed in from the first render, so it could not show it. Reading the stored
   session no longer counts as a change of user (`userScope.js`, unit-tested); signing out or into another account still
   starts new caches (`auth.spec.ts`).
+- **Signing in in the landing's dialog lost where it was going** (`sign-in.spec.ts`, `mock` project): the per-user
+  caches, and the whole page with them, started again when the user changed, also from nobody to somebody; the dialog
+  and its destination went with them, and the player stayed on the landing. Signing in from signed out now keeps the
+  page (nothing of anyone's is cached while nobody is signed in), unit-tested in `userScope.test.js`; signing out or
+  switching accounts still starts new caches (`auth.spec.ts`).
 - **Help that got in the way** (axe): a tooltip opened by the focus a click gives covered the Builder's grid after
   "Check" (`target-size`, `accessibility.spec.ts`), and with the page scrolled the sticky header's small labels sat
   over the grid's bright cells (`color-contrast`, the tour's scan in `onboarding.spec.ts`). Tooltips now open on
