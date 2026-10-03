@@ -21,6 +21,9 @@ test.describe('Accesibilidad (WCAG 2.2 AA con axe)', () => {
     await builder.paint('ALLIN', '72o');
     await builder.verify.click();
     await expect(builder.score).toBeVisible();
+    // Clicking Check scrolls the page; at some positions the sticky header leaves a sliver of a grid row, which axe's
+    // target-size rule reports for that scroll position only. The scan is made from the top, the same every run.
+    await page.evaluate(() => window.scrollTo(0, 0));
     await expectAccessible(page, testInfo, 'builder');
   });
 

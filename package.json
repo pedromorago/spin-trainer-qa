@@ -13,6 +13,7 @@
     "e2e": "playwright test -c e2e",
     "e2e:mock": "playwright test -c e2e --project=mock",
     "e2e:fullstack": "playwright test -c e2e --project=fullstack",
+    "e2e:demo": "playwright test -c e2e --project=demo",
     "e2e:typecheck": "tsc -p e2e",
     "report": "allure generate api-tests/build/allure-results build/allure-results/newman build/allure-results/e2e",
     "report:open": "allure open build/allure-report"

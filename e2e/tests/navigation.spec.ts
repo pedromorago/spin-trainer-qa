@@ -1,15 +1,6 @@
 import { expect, test } from '../fixtures/test';
 
 test.describe('Navegación y selección', () => {
-  test('la raíz lleva al Explorer con la situación y el stack por defecto', async ({ page, shell, explorer }) => {
-    await page.goto('/');
-
-    await expect(page).toHaveURL(/\/explorer/);
-    await expect(explorer.heading).toBeVisible();
-    await expect(shell.situation).toHaveValue('btn_open');
-    await expect(shell.stack(25)).toHaveAttribute('aria-pressed', 'true');
-  });
-
   test('la raíz conserva la selección de la URL al redirigir', async ({ page, shell }) => {
     await page.goto('/?s=sb_open&stack=20');
 

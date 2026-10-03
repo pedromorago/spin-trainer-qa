@@ -3,10 +3,12 @@ import { test as base, expect, type Request } from '@playwright/test';
 import { AppShell } from '../pages/AppShell';
 import { BuilderPage } from '../pages/BuilderPage';
 import { ExplorerPage } from '../pages/ExplorerPage';
+import { LandingPage } from '../pages/LandingPage';
 import { LoginPage } from '../pages/LoginPage';
 import { QuizPage } from '../pages/QuizPage';
 import { RouteErrorScreen } from '../pages/RouteErrorScreen';
 import { StatsPage } from '../pages/StatsPage';
+import { Tour } from '../pages/Tour';
 import { supabaseSession } from './session';
 
 /** mock: the web with its in-memory adapter; api: the web in http mode against the QA API. */
@@ -19,6 +21,9 @@ export interface Player {
 }
 
 interface Fixtures {
+  /** Whether the first-visit tour counts as already seen on this device (option; true by default). */
+  onboarded: boolean;
+  onboarding: void;
   player: Player;
   consoleErrors: string[];
   shell: AppShell;
@@ -28,10 +33,28 @@ interface Fixtures {
   builder: BuilderPage;
   stats: StatsPage;
   routeError: RouteErrorScreen;
+  landing: LandingPage;
+  tour: Tour;
 }
 
 export const test = base.extend<Fixtures, { backend: Backend }>({
   backend: ['mock', { option: true, scope: 'worker' }],
+
+  // The first-visit tour (ADR-0022) would cover the Explorer in every spec: this device has already seen it, unless a
+  // test asks for a first visit with test.use({ onboarded: false }).
+  onboarded: [true, { option: true }],
+  onboarding: [
+    async ({ onboarded, context }, use) => {
+      if (onboarded) {
+        // Only in the web's documents: a blank page (a new tab, axe's) has no storage and would throw.
+        await context.addInitScript(() => {
+          if (location.protocol.startsWith('http')) localStorage.setItem('spin-trainer.tour', 'done');
+        });
+      }
+      await use();
+    },
+    { auto: true },
+  ],
 
   // A new player per test. With the API, their session is injected before the page loads; with the mock, each test
   // has its own context (and its own localStorage), so it already starts with no data.
@@ -91,6 +114,8 @@ export const test = base.extend<Fixtures, { backend: Backend }>({
   builder: async ({ page }, use) => use(new BuilderPage(page)),
   stats: async ({ page }, use) => use(new StatsPage(page)),
   routeError: async ({ page }, use) => use(new RouteErrorScreen(page)),
+  landing: async ({ page }, use) => use(new LandingPage(page)),
+  tour: async ({ page }, use) => use(new Tour(page)),
 });
 
 /**

@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 
-/** Common frame: navigation, single situation and stack selector, session scoreboard and sign-out. */
+/** Common frame: navigation, single situation and stack selector, session scoreboard, tour and sign-out (or demo badge). */
 export class AppShell {
   // #region Locators
   readonly nav: Locator;
@@ -11,6 +11,8 @@ export class AppShell {
   readonly sessionAccuracy: Locator;
   readonly sessionStreak: Locator;
   readonly signOut: Locator;
+  readonly replayTour: Locator;
+  readonly demoBadge: Locator;
   readonly serverWaking: Locator;
   // #endregion
 
@@ -23,6 +25,8 @@ export class AppShell {
     this.sessionAccuracy = page.getByTestId('session-accuracy');
     this.sessionStreak = page.getByTestId('session-streak');
     this.signOut = page.getByRole('button', { name: 'Sign out' });
+    this.replayTour = page.getByRole('banner').getByRole('button', { name: 'Tour', exact: true });
+    this.demoBadge = page.getByTestId('demo-badge');
     this.serverWaking = page.getByTestId('server-waking');
   }
 

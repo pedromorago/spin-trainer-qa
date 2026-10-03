@@ -25,6 +25,14 @@ export const BTN_OPEN_25 = referenceRange(BTN_OPEN.key, BTN_OPEN.stack);
 /** Played hands (explicit action) of btn_open at 25 BB. */
 export const BTN_OPEN_25_HANDS = Object.keys(BTN_OPEN_25).length;
 
+/** The landing's "Try a hand" spot: BB vs SB open-shove at 10 BB, where the answer is CALL or FOLD (implicit). */
+export const BB_VS_SB_OS_10 = referenceRange('bb_vs_sb_os', 10);
+export const bbVsSbOs10 = (hand: string): string => BB_VS_SB_OS_10[hand] ?? 'FOLD';
+
+/** Size of the seed: its reference ranges and the situations they cover. */
+export const REFERENCE_RANGES = reference.ranges.length;
+export const REFERENCE_SITUATIONS = new Set(reference.ranges.map((r) => r.situation)).size;
+
 /** btn_open actions in palette order (the keyboard shortcut is the position + 1). */
 export const BTN_OPEN_ACTIONS = ['MR_4B_C', 'MR_C_C', 'MR_C_F', 'MR_F_F', 'L_C_C', 'L_C_F', 'ALLIN', 'FOLD'] as const;
 

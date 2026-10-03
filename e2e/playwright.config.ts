@@ -6,7 +6,8 @@ import type { Backend } from './fixtures/test';
 // E2E of the web app (sibling repo ../spin-trainer-web) with two backends and the same specs:
 //   mock       build:mock, no backend: fast and deterministic (data from the web's mock)
 //   fullstack  build in http mode against the API of env/docker-compose.yml (npm run env:up), injected session
-// The reference data is the same in both (btn_open at 25 BB), so the oracles are too.
+// The reference data is the same in both (btn_open at 25 BB), so the oracles are too. A third build, the public demo
+// (build:demo, ADR-0022: the mock's data without sign-in), runs only its own spec (demo.spec.ts).
 const web = fileURLToPath(new URL('../../spin-trainer-web', import.meta.url));
 const out = (name: string) => fileURLToPath(new URL(`../build/web/${name}`, import.meta.url));
 const apiUrl = process.env.QA_API_URL ?? 'http://localhost:8081/api/v1';
@@ -43,14 +44,16 @@ export default defineConfig<{ backend: Backend }>({
     screenshot: 'only-on-failure',
   },
   projects: [
-    { name: 'mock', use: { baseURL: 'http://localhost:4173', backend: 'mock' } },
+    { name: 'mock', testIgnore: /demo\.spec\.ts/, use: { baseURL: 'http://localhost:4173', backend: 'mock' } },
     { name: 'api-ready', testDir: './fixtures', testMatch: /api\.setup\.ts/, use: { backend: 'api' } },
     {
       name: 'fullstack',
       dependencies: ['api-ready'],
+      testIgnore: /demo\.spec\.ts/,
       grepInvert: /@solo-mock/,
       use: { baseURL: 'http://localhost:4174', backend: 'api' },
     },
+    { name: 'demo', testMatch: /demo\.spec\.ts/, use: { baseURL: 'http://localhost:4175', backend: 'mock' } },
   ],
   webServer: [
     { command: serve('mock', 4173, 'build:mock'), cwd: web, url: 'http://localhost:4173', reuseExistingServer: !process.env.CI },
@@ -65,6 +68,13 @@ export default defineConfig<{ backend: Backend }>({
         VITE_SUPABASE_URL: supabaseUrl,
         VITE_SUPABASE_ANON_KEY: 'qa-anon-key',
       },
+    },
+    {
+      command: serve('demo', 4175, 'build:demo'),
+      cwd: web,
+      url: 'http://localhost:4175',
+      reuseExistingServer: !process.env.CI,
+      env: { VITE_API_MODE: 'demo' },
     },
   ],
 });

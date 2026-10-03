@@ -130,7 +130,7 @@ jobs:
         working-directory: spin-trainer-qa
         run: npm run newman
 
-      - name: E2E · Playwright (mock and fullstack)
+      - name: E2E · Playwright (mock, fullstack and demo)
         if: ${{ !cancelled() && steps.env.outcome == 'success' }}
         working-directory: spin-trainer-qa
         run: npm run e2e:typecheck && npm run e2e
