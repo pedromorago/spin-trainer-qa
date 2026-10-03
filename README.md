@@ -13,9 +13,9 @@ and the web app as a user and a client see them, independently of their code
 | API acceptance (REST Assured + JUnit 5) | this repo | 145 tests, every response validated against the OpenAPI contract |
 | Executable specification (Cucumber, in Spanish) | this repo | 23 scenarios in 4 features |
 | Collection regression (Newman) | this repo | 20 requests, 47 assertions |
-| E2E (Playwright + TypeScript, axe) | this repo | 71 tests against the mock and 69 against the real API (the same specs), 6 against the public demo, under the production CSP |
+| E2E (Playwright + TypeScript, axe) | this repo | 74 tests against the mock and 72 against the real API (the same specs), 6 against the public demo, under the production CSP |
 | API unit and integration | spin-trainer-api | 152 unit tests (PIT mutation score 100 %) and 106 integration tests (Testcontainers) |
-| Web unit | spin-trainer-web | 338 Vitest tests (Stryker mutation score 100 % in the domain) |
+| Web unit | spin-trainer-web | 346 Vitest tests (Stryker mutation score 100 % in the domain) |
 
 ## What the tests found
 
