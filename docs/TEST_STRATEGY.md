@@ -94,7 +94,7 @@ configuration defects only show up here.
 | The first-visit tour: once per device, skippable on every step and with Escape, replayable, focus kept inside it, a bottom sheet on phones, accessible | ADR-0022 | `onboarding.spec.ts` |
 | Every action and figure explains itself: tooltips on hover and keyboard focus (not on a click), dismissable, as the accessible description; "?" buttons on touch screens | ADR-0022 | `tooltips.spec.ts` |
 | The public demo: no sign-in or sign-out, progress kept in this browser only | ADR-0022 | `demo.spec.ts` (`demo` project) |
-| Signed out, the landing's ways into the app sign in right there, in a dialog (focus on Google's button; Escape, the close button and a click outside close it and give the focus back; a bottom sheet on phones; axe), then go where they pointed; a click meant for a new tab is left to the browser; the sign-in page shows the live chart, fits a phone and leads home | Web architecture | `sign-in.spec.ts` |
+| Signed out, the landing's ways into the app sign in right there, in a dialog (focus on Google's button; Escape, the close button and a click outside close it and give the focus back; a bottom sheet on phones; axe), then go where they pointed, also when clicked before a slow network has delivered the session; a click meant for a new tab is left to the browser; the sign-in page shows the live chart, fits a phone and leads home | Web architecture | `sign-in.spec.ts` |
 | Only session JWTs from the configured issuer (ES256, issuer, audience, role, `exp`, `sub`) | ADR-0003 | `AuthenticationTest` |
 | Issuer down → 503, not 401 | ADR-0003 | `IssuerOutageTest` |
 | No response can be sniffed or framed; no cache stores a player's data | Context (security) | `SecurityHeadersTest` |
@@ -207,6 +207,12 @@ What the tests found:
   and its destination went with them, and the player stayed on the landing. Signing in from signed out now keeps the
   page (nothing of anyone's is cached while nobody is signed in), unit-tested in `userScope.test.js`; signing out or
   switching accounts still starts new caches (`auth.spec.ts`).
+- **On a slow network, Start training skipped the dialog** (found by hand on the live site, now
+  `sign-in.spec.ts#a click before the session has been read still asks here`): the landing only asked to sign in once it
+  knew the visitor was signed out, and that waits for Supabase's client, a chunk of its own. A click in the meantime fell
+  through to the plain link and the sign-in page. Locally the chunk arrives at once, so every other test passed; the
+  test now holds the chunk back, as a slow network does. The dialog opens at once and, if the stored session turns out to
+  be signed in, goes straight on.
 - **Help that got in the way** (axe): a tooltip opened by the focus a click gives covered the Builder's grid after
   "Check" (`target-size`, `accessibility.spec.ts`), and with the page scrolled the sticky header's small labels sat
   over the grid's bright cells (`color-contrast`, the tour's scan in `onboarding.spec.ts`). Tooltips now open on

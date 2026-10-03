@@ -2,6 +2,7 @@ import { expectAccessible } from '../fixtures/a11y';
 import { playGoogle, playSupabase, signedInWithGoogle } from '../fixtures/google';
 import { supabaseSession } from '../fixtures/session';
 import { expect, test } from '../fixtures/test';
+import type { Page } from '@playwright/test';
 import type { AppShell } from '../pages/AppShell';
 import type { LandingPage } from '../pages/LandingPage';
 import type { LoginPage } from '../pages/LoginPage';
@@ -25,6 +26,22 @@ async function openSignedOut(backend: string, shell: AppShell, login: LoginPage,
   // then can land where a link used to be.
   await expect(landing.previewGrid.cell('AA')).toBeVisible();
   await expect(landing.hand).toBeVisible();
+}
+
+/**
+ * A slow network: Supabase's client, a chunk of its own that the page loads after rendering, is held back until
+ * `release` is called. Until then nobody knows yet whether the visitor is signed in.
+ */
+async function holdSupabaseClient(page: Page): Promise<() => void> {
+  let release = () => {};
+  const held = new Promise<void>((resolve) => { release = resolve; });
+  await page.route('**/assets/*.js', async (route) => {
+    const response = await route.fetch();
+    const body = await response.text();
+    if (body.includes('GoTrueClient')) await held;
+    await route.fulfill({ response, body });
+  });
+  return release;
 }
 
 test.describe('Signing in from the landing page', () => {
@@ -93,6 +110,19 @@ test.describe('Signing in from the landing page', () => {
     await expect(landing.signIn).toBeVisible();
   });
 
+  test('a click before the session has been read still asks here', async ({ page, backend, landing }) => {
+    test.skip(backend === 'mock', 'the mock has no stored session to read');
+    const release = await holdSupabaseClient(page);
+    await landing.open();
+
+    await landing.start.click();
+
+    await expect(landing.signIn).toBeVisible();
+    await expect(page).toHaveURL(/\/$/);
+    release();
+    await expect(landing.signIn, 'still asking once known to be signed out').toBeVisible();
+  });
+
   test('on a phone it docks at the bottom of the screen', async ({ page, backend, shell, login, landing }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await openSignedOut(backend, shell, login, landing);
@@ -141,5 +171,19 @@ test.describe('The sign-in page', () => {
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow, 'horizontal overflow in px').toBeLessThanOrEqual(0);
     await expect(login.google).toBeInViewport();
+  });
+});
+
+test.describe('Entering from the landing page, signed in', () => {
+  test('a click before the session has been read goes straight on once it is', async ({ page, backend, landing, explorer }) => {
+    test.skip(backend === 'mock', 'the mock has no stored session to read');
+    const release = await holdSupabaseClient(page);
+    await landing.open();
+
+    await landing.start.click();
+    release();
+
+    await expect(page).toHaveURL(/\/explorer$/);
+    await expect(explorer.heading).toBeVisible();
   });
 });
