@@ -1,41 +1,12 @@
 import { createHash, randomUUID } from 'node:crypto';
-import type { Page, Route } from '@playwright/test';
+import { ID_TOKEN, playGoogle, playSupabase, QA_GOOGLE_CLIENT_ID as CLIENT_ID, signedInWithGoogle } from '../fixtures/google';
 import { supabaseSession } from '../fixtures/session';
 import { allowErrors, expect, test } from '../fixtures/test';
 
 // Sign-in with Google by OpenID Connect, straight from the site (ADR-0023). Google and Supabase's token endpoint are
-// played by the tests: Google cannot be automated, and the QA "Supabase" only serves the JWKS. Everything between
-// them, the web's part, is real: the request to Google, the check of its answer and the exchange of the ID token.
+// played by the tests (fixtures/google.ts); the web's part is real: the request to Google, the check of its answer and
+// the exchange of the ID token.
 const SUPABASE = process.env.QA_SUPABASE_URL ?? 'http://localhost:8089';
-const CLIENT_ID = 'qa-client.apps.googleusercontent.com';
-const ID_TOKEN = 'qa.google-id-token.signature';
-
-/** Plays Google: sends the browser back to the redirect URI with `answer` in the fragment. Returns what it was asked. */
-async function playGoogle(page: Page, answer: (asked: URLSearchParams) => string): Promise<URLSearchParams[]> {
-  const asked: URLSearchParams[] = [];
-  await page.route(
-    (url) => url.origin === 'https://accounts.google.com' && url.pathname === '/o/oauth2/v2/auth',
-    async (route) => {
-      const params = new URL(route.request().url()).searchParams;
-      asked.push(params);
-      await route.fulfill({ status: 302, headers: { location: `${params.get('redirect_uri')}#${answer(params)}` } });
-    },
-  );
-  return asked;
-}
-
-/** Plays Supabase's ID-token exchange: answers with `reply`. Returns the exchanges it received. */
-async function playSupabase(page: Page, reply: (route: Route) => Promise<void>): Promise<Record<string, unknown>[]> {
-  const exchanges: Record<string, unknown>[] = [];
-  await page.route(
-    (url) => url.pathname.endsWith('/auth/v1/token') && url.searchParams.get('grant_type') === 'id_token',
-    async (route) => {
-      exchanges.push(route.request().postDataJSON());
-      await reply(route);
-    },
-  );
-  return exchanges;
-}
 
 test.describe('Sign-in with Google, straight from the site (ADR-0023)', () => {
   // As a visitor arrives: signed out (with the API; the mock is always signed in).
@@ -46,7 +17,7 @@ test.describe('Sign-in with Google, straight from the site (ADR-0023)', () => {
 
     test('comes back signed in with the session Supabase gives for Google\'s token, to the route and selection', async ({ page, shell, login }) => {
       const newcomer = randomUUID();
-      const asked = await playGoogle(page, (q) => `id_token=${ID_TOKEN}&state=${q.get('state')}&authuser=0`);
+      const asked = await playGoogle(page, signedInWithGoogle);
       const exchanges = await playSupabase(page, (route) => route.fulfill({ json: JSON.parse(supabaseSession(newcomer, SUPABASE).value) }));
       await shell.open('/quiz', { situation: 'btn_open', stack: 25 });
       await expect(login.screen).toBeVisible();

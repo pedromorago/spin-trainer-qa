@@ -19,6 +19,9 @@ export class LandingPage {
   readonly score: Locator;
   readonly keepGoing: Locator;
   readonly privacy: Locator;
+  readonly signIn: Locator;
+  readonly signInWithGoogle: Locator;
+  readonly closeSignIn: Locator;
   // #endregion
 
   constructor(readonly page: Page) {
@@ -37,6 +40,10 @@ export class LandingPage {
     this.score = page.getByTestId('landing-score');
     this.keepGoing = tryAHand.getByRole('link', { name: 'Keep going in the Quiz' });
     this.privacy = page.getByRole('contentinfo').getByRole('link', { name: 'Privacy' });
+    // Signed out, the ways into the app open the sign-in card in a dialog.
+    this.signIn = page.getByRole('dialog', { name: 'Sign in to keep training' });
+    this.signInWithGoogle = this.signIn.getByRole('button', { name: 'Continue with Google' });
+    this.closeSignIn = this.signIn.getByRole('button', { name: 'Close' });
   }
 
   // #region Actions
@@ -50,6 +57,10 @@ export class LandingPage {
   // #endregion
 
   // #region Queries
+  feature(name: string): Locator {
+    return this.page.getByRole('link', { name: `Open ${name}` });
+  }
+
   /** The figure shown for a fact ("situations", "reference ranges", "hands each"). */
   fact(label: string): Locator {
     return this.facts.locator('div').filter({ has: this.page.getByRole('term').filter({ hasText: label }) }).getByRole('definition');
