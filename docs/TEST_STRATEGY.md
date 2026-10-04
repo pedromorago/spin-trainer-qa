@@ -101,7 +101,7 @@ configuration defects only show up here.
 | Issuer down → 503, not 401 | ADR-0003 | `IssuerOutageTest` |
 | No response can be sniffed or framed; no cache stores a player's data | Context (security) | `SecurityHeadersTest` |
 | The web app works under its production CSP and security headers | ADR-0016 | `content-security-policy.spec.ts` (and the whole E2E suite) |
-| While the free API wakes up, the app says so and retries by itself; the deployed native image behaves like the JVM one | ADR-0018 | `server-wake.spec.ts`; every suite runs against the native image |
+| While the free API wakes up, the app says so and retries by itself, and the Explorer shows the selector and the PDF chart at once (read-only, Edit off) until the API answers, then the player's own range; the catalog bundled with the web is the one the API serves; the deployed native image behaves like the JVM one | ADR-0018 | `server-wake.spec.ts`; every suite runs against the native image |
 | Errors as Problem Details, also outside the contract's routes and for URLs the server rejects before any controller | Contract | `ProblemAssert` in every suite, `HttpBehaviourTest` |
 | API error messages in English, the constraints' too, whatever the client's or the JVM's language | ADR-0021 | `AttemptHistoryTest#constraint_messages_are_english`, `ErrorType` templates |
 | Only health and the deployed revision are public in Actuator | ADR-0018 | `HttpBehaviourTest#only_health_and_the_revision_are_public` |
