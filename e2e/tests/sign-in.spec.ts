@@ -152,7 +152,7 @@ test.describe('The sign-in page', () => {
     if (backend !== 'api') await shell.signOut.click();
   }
 
-  test('shows the sign-in beside a live reference chart, with a way back home', async ({ backend, shell, login, landing }) => {
+  test('shows the sign-in beside a live example range, with a way back home', async ({ backend, shell, login, landing }) => {
     await openSignInFrom('/stats', backend, shell);
 
     await expect(login.screen).toBeVisible();

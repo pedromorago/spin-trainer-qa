@@ -19,7 +19,7 @@ export class LoginPage {
     this.google = page.getByRole('button', { name: 'Continue with Google' });
     this.privacy = page.getByRole('link', { name: 'Privacy' });
     this.testPlayer = page.getByRole('form', { name: 'Test player' });
-    this.chart = page.getByRole('complementary', { name: 'A reference chart' }).getByRole('table', { name: /^Range / });
+    this.chart = page.getByRole('complementary', { name: 'An example range' }).getByRole('table', { name: /^Range / });
     this.home = page.getByRole('link', { name: 'Back to home' });
   }
 

@@ -3,7 +3,7 @@ import { expectAccessible } from '../fixtures/a11y';
 import { expect, test } from '../fixtures/test';
 
 test.describe('Landing page (ADR-0022)', () => {
-  test('shows the product, with the live reference chart, without asking anyone to sign in', async ({ landing, login }) => {
+  test('shows the product, with a live example range, without asking anyone to sign in', async ({ landing, login }) => {
     await landing.open();
 
     await expect(landing.heading).toBeVisible();
@@ -20,11 +20,11 @@ test.describe('Landing page (ADR-0022)', () => {
     await landing.open();
 
     await expect(landing.fact('situations')).toHaveText(String(REFERENCE_SITUATIONS));
-    await expect(landing.fact('reference ranges')).toHaveText(String(REFERENCE_RANGES));
+    await expect(landing.fact('example ranges')).toHaveText(String(REFERENCE_RANGES));
     await expect(landing.fact('hands each')).toHaveText('169');
   });
 
-  test('"Try a hand" grades the answer against the chart and keeps the score', async ({ landing }) => {
+  test('"Try a hand" grades the answer against the example range and keeps the score', async ({ landing }) => {
     await landing.open();
     const hand = (await landing.hand.textContent()) ?? '';
     const calls = bbVsSbOs10(hand) === 'CALL';
@@ -32,7 +32,7 @@ test.describe('Landing page (ADR-0022)', () => {
     await landing.answer('CALL');
 
     await expect(landing.feedback).toHaveText(
-      calls ? `Correct: the chart calls ${hand} here.` : `Wrong: the chart folds ${hand} here; you chose Call.`,
+      calls ? `Correct: the range calls ${hand} here.` : `Wrong: the range folds ${hand} here; you chose Call.`,
     );
     await expect(landing.score).toHaveText(calls ? '1 / 1' : '0 / 1');
 

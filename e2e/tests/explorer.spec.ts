@@ -77,7 +77,7 @@ test.describe('Explorer: rango efectivo (ADR-0012)', () => {
     await expect(page).toHaveURL(/\/explorer$/);
   });
 
-  test('si los rangos personalizados no cargan, lo dice en vez de enseñar el del PDF', async ({ page, backend, explorer, consoleErrors }) => {
+  test('if the custom ranges fail to load, it says so instead of showing the example one', async ({ page, backend, explorer, consoleErrors }) => {
     test.skip(backend !== 'api', 'fallo de red inyectado sobre la API real');
     const USER_RANGES = /\/api\/v1\/ranges\/user$/;
     await page.route(USER_RANGES, (route) => route.fulfill({

@@ -1,4 +1,4 @@
-import { BTN_OPEN_25, BTN_OPEN_25_HANDS } from '../data/reference';
+import { BTN_OPEN_25, BTN_OPEN_25_HANDS, btnOpen25 } from '../data/reference';
 import { expect, test } from '../fixtures/test';
 
 test.describe('Builder: autoevaluación sin persistir (ADR-0012)', () => {
@@ -31,7 +31,9 @@ test.describe('Builder: autoevaluación sin persistir (ADR-0012)', () => {
     await builder.toggleSolution.click();
 
     await expect(builder.solution.cell('AA')).toHaveAttribute('data-action', 'MR_4B_C');
-    await expect(builder.solution.cell('76s')).toHaveAttribute('data-action', BTN_OPEN_25['76s']);
+    // Precondition: A2s plays an action of its own, neither AA's nor the implicit fold.
+    expect(btnOpen25('A2s')).not.toMatch(/^(MR_4B_C|FOLD)$/);
+    await expect(builder.solution.cell('A2s')).toHaveAttribute('data-action', btnOpen25('A2s'));
     await expect(builder.toggleSolution).toHaveAttribute('aria-pressed', 'true');
   });
 

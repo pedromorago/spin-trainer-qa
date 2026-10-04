@@ -3,6 +3,7 @@ package com.pedromorago.spintrainer.qa.ranges;
 import static com.pedromorago.spintrainer.qa.assertion.ProblemAssert.assertThatProblem;
 import static com.pedromorago.spintrainer.qa.data.QaReferenceData.BTN_OPEN;
 import static com.pedromorago.spintrainer.qa.data.QaReferenceData.BTN_OPEN_25;
+import static com.pedromorago.spintrainer.qa.data.QaReferenceData.REFERENCE_VERSION;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.pedromorago.spintrainer.qa.assertion.ErrorType;
@@ -32,7 +33,7 @@ class ReferenceRangesTest extends ApiTest {
         assertThat(response.statusCode()).isEqualTo(200);
         Range range = response.as(Range.class);
         assertThat(range.getSource()).isEqualTo(Range.SourceEnum.DEFAULT);
-        assertThat(range.getVersion()).isEqualTo(1);
+        assertThat(range.getVersion()).isEqualTo(REFERENCE_VERSION);
         assertThat(range.getHands()).hasSize(BTN_OPEN_25.size());
         range.getHands()
                 .forEach(
@@ -59,7 +60,7 @@ class ReferenceRangesTest extends ApiTest {
             assertThat(served)
                     .as(ReferenceRanges.spot(range.getSituation(), range.getStack()))
                     .isEqualTo(ReferenceRanges.of(range.getSituation(), range.getStack()));
-            assertThat(range.getVersion()).isEqualTo(1);
+            assertThat(range.getVersion()).isEqualTo(REFERENCE_VERSION);
         });
     }
 

@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 @Feature("Catálogo de situaciones")
 class SituationCatalogTest extends ApiTest {
 
-    /** The order of the study PDF: 13 3-max situations (bb_vs_sb_os with the other BB vs SB spots), then the 4 HU ones. */
+    /** The catalog's order: 13 3-max situations (bb_vs_sb_os with the other BB vs SB spots), then the 4 HU ones. */
     static final List<String> PRESENTATION_ORDER = List.of(
             "btn_open",
             "sb_open",

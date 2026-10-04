@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Reference ranges from the API seed (V5, Tablasmentov3.pdf), read from the pinned copy
+ * Reference ranges from the API seed (V9: examples, ADR-0024), read from the pinned copy
  * {@code contract/reference-ranges.json} ({@code gradlew rangesCheck} detects that the API changed it). The tests'
  * oracle: what the API must serve and grade with.
  */

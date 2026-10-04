@@ -33,8 +33,8 @@ configuration defects only show up here.
 
 1. Contract: `contract/openapi.yaml` (pinned copy of `spin-trainer-api/openapi.yaml`, v0.2; `specCheck` fails if it
    diverges).
-2. Reference ranges: `contract/reference-ranges.json` (pinned copy of the API seed: the 73 coloured tables of
-   Tablasmentov3.pdf and the 7 ranges derived from its "3H OS call" thresholds; `rangesCheck` fails if it diverges).
+2. Reference ranges: `contract/reference-ranges.json` (pinned copy of the API seed: the 80 example ranges of ADR-0024,
+   generated from a recipe; `rangesCheck` fails if it diverges).
 3. ADRs: 0003 (Supabase only issues the JWT), 0007 (immutable attempts), 0012 (effective range), 0013 (contract v0.2:
    server-side grading, versions, aggregated stats).
 4. Domain rules from `SPIN_TRAINER_PROJECT_CONTEXT.md`: implicit action (FOLD, or CHECK if FOLD is not possible), 169
@@ -70,9 +70,9 @@ configuration defects only show up here.
 | Requirement | Basis | Tests |
 |---|---|---|
 | Catalog of 17 situations with implicit action and valid stacks | Context, contract | `SituationCatalogTest` |
-| Facing the SB's open-shove, the BB calls when the stack is at most the hand's threshold ("3H OS call") | PDF, API V7 | `correccion_del_quiz.feature` (boundary values: threshold equal to the stack and just below), `ReferenceRangesTest` |
+| Facing the SB's open-shove, the BB calls with the hands of that stack's reference range | API V7 and V9, ADR-0024 | `correccion_del_quiz.feature` (boundary values: the weakest hand that calls and the strongest that folds at 20, 10 and 4 BB), `ReferenceRangesTest` |
 | Reference ranges served from the seed, revalidatable with ETag | ADR-0006, contract | `ReferenceRangesTest` |
-| The ranges served are, hand by hand, the seeded ones (the pinned copy of the API's `reference-ranges.json`, extracted from the PDF) | ADR-0006 | `ReferenceRangesTest#every_range_served_is_the_seeded_one` |
+| The ranges served are, hand by hand, the seeded ones (the pinned copy of the API's `reference-ranges.json`) | ADR-0006 | `ReferenceRangesTest#every_range_served_is_the_seeded_one` |
 | Versioned custom range; a PUT with a stale version gets a 409 and overwrites nothing, also after a delete | ADR-0013 | `UserRangeLifecycleTest`, `rango_personalizado.feature`, Newman |
 | Nothing invalid is saved; per-field errors | Contract | `UserRangeValidationTest`, `rango_personalizado.feature` |
 | Effective range = custom range if it exists; otherwise, the reference range | ADR-0012 | `QuizGradingTest` (decision table), `correccion_del_quiz.feature`, Newman |
@@ -83,6 +83,7 @@ configuration defects only show up here.
 | Each player only sees their own data | ADR-0003 | `each_user_only_sees_their_own_*`, `privacidad.feature` |
 | The Explorer shows the effective range and is the only one that writes ranges; the Builder does not persist | ADR-0012 | `explorer.spec.ts`, `builder.spec.ts` |
 | The Explorer opens read-only (Edit, Copy, a legend; the grid cannot be painted); Edit brings Save (with nothing changed it just goes back to reading, saving nothing), Cancel (asks first with changes) and Reset (only with a custom range); saving or resetting confirms it and goes back to reading | Web architecture | `explorer-modes.spec.ts` |
+| The reference ranges are examples, nobody's charts: the Explorer marks one as such (Example badge) and explains it until the player saves their own | ADR-0024 | `explorer-modes.spec.ts`; the data itself: `ReferenceRangesTest`, `rangesCheck` |
 | Two tabs do not overwrite each other: the second one gets the 409 and can reload | ADR-0013 | `explorer.spec.ts` (mock and fullstack) |
 | The Quiz grades against the effective range; historical stats are aggregated by the server | ADR-0012, ADR-0013 | `quiz.spec.ts`, `stats.spec.ts` |
 | The selection lives in the URL and is normalized | Web architecture | `navigation.spec.ts` |
@@ -101,7 +102,7 @@ configuration defects only show up here.
 | Issuer down → 503, not 401 | ADR-0003 | `IssuerOutageTest` |
 | No response can be sniffed or framed; no cache stores a player's data | Context (security) | `SecurityHeadersTest` |
 | The web app works under its production CSP and security headers | ADR-0016 | `content-security-policy.spec.ts` (and the whole E2E suite) |
-| While the free API wakes up, the app says so and retries by itself, and the Explorer shows the selector and the PDF chart at once (read-only, Edit off) until the API answers, then the player's own range; the catalog bundled with the web is the one the API serves; the deployed native image behaves like the JVM one | ADR-0018 | `server-wake.spec.ts`; every suite runs against the native image |
+| While the free API wakes up, the app says so and retries by itself, and the Explorer shows the selector and the example range at once (read-only, Edit off) until the API answers, then the player's own range; the catalog bundled with the web is the one the API serves; the deployed native image behaves like the JVM one | ADR-0018 | `server-wake.spec.ts`; every suite runs against the native image |
 | Errors as Problem Details, also outside the contract's routes and for URLs the server rejects before any controller | Contract | `ProblemAssert` in every suite, `HttpBehaviourTest` |
 | API error messages in English, the constraints' too, whatever the client's or the JVM's language | ADR-0021 | `AttemptHistoryTest#constraint_messages_are_english`, `ErrorType` templates |
 | Only health and the deployed revision are public in Actuator | ADR-0018 | `HttpBehaviourTest#only_health_and_the_revision_are_public` |

@@ -20,6 +20,23 @@ test.describe('Explorer: reading and editing', () => {
     await expect(explorer.modifiedBadge).toBeHidden();
   });
 
+  test('an example range says what it is, until the player makes it their own (ADR-0024)', async ({ page, explorer }) => {
+    const explanation = page.getByRole('tooltip').filter({ hasText: 'not a strategy' });
+    await expect(explorer.referenceBadge).toHaveText('Example');
+
+    await explorer.exampleInfo.click();
+    await expect(explanation).toBeVisible();
+    await expect(explanation).toContainText('ranked by their all-in equity against a random hand');
+    await explorer.heading.click();
+    await expect(explanation).toBeHidden();
+
+    await explorer.paint('ALLIN', '72o');
+    await explorer.save.click();
+    await expect(explorer.customBadge).toBeVisible();
+    await expect(explorer.referenceBadge).toBeHidden();
+    await expect(explorer.exampleInfo).toBeHidden();
+  });
+
   test('Edit brings Save, Cancel and Reset', async ({ explorer }) => {
     await explorer.edit.click();
 
@@ -82,14 +99,14 @@ test.describe('Explorer: reading and editing', () => {
     await expect(explorer.referenceBadge).toBeVisible();
   });
 
-  test('Reset deletes the custom range, confirms it and goes back to reading the PDF one', async ({ explorer }) => {
+  test('Reset deletes the custom range, confirms it and goes back to reading the example one', async ({ explorer }) => {
     await explorer.paint('ALLIN', '72o');
     await explorer.save.click();
     await expect(explorer.customBadge).toBeVisible();
 
     await explorer.resetToReference();
 
-    await expect(explorer.notice).toHaveText('✓ Back to the PDF range');
+    await expect(explorer.notice).toHaveText('✓ Back to the example range');
     await expect(explorer.edit).toBeVisible();
     await expect(explorer.referenceBadge).toBeVisible();
     await expect(explorer.grid.cell('72o')).toHaveAttribute('data-action', 'FOLD');

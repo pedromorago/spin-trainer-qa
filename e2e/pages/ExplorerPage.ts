@@ -24,6 +24,7 @@ export class ExplorerPage {
   readonly customBadge: Locator;
   readonly modifiedBadge: Locator;
   readonly referenceBadge: Locator;
+  readonly exampleInfo: Locator;
   readonly handsCount: Locator;
   readonly unsavedChanges: Locator;
   readonly error: Locator;
@@ -47,6 +48,7 @@ export class ExplorerPage {
     this.customBadge = page.getByTestId('badge-custom');
     this.modifiedBadge = page.getByTestId('badge-modified');
     this.referenceBadge = page.getByTestId('badge-reference');
+    this.exampleInfo = page.getByRole('button', { name: 'About the example ranges' });
     this.handsCount = page.getByTestId('range-hands');
     this.unsavedChanges = page.getByTestId('explorer-unsaved');
     this.error = page.getByTestId('error');
@@ -75,7 +77,7 @@ export class ExplorerPage {
   async resetToReference(): Promise<void> {
     await this.startEditing();
     await this.reset.click();
-    await this.confirmReset.getByRole('button', { name: 'Delete and go back to the PDF' }).click();
+    await this.confirmReset.getByRole('button', { name: 'Delete and go back to the example' }).click();
   }
   // #endregion
 

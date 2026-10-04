@@ -14,6 +14,9 @@ public final class QaReferenceData {
     public static final String BB_VS_SB_LIMP = "bb_vs_sb_limp";
     public static final String BB_VS_BTN_MR_SB_3BET = "bb_vs_btn_mr_sb_3bet";
 
+    /** Version of every seeded reference range: V9 replaced the first contents with the examples (ADR-0024). */
+    public static final int REFERENCE_VERSION = 2;
+
     /** btn_open@25 from the seed. */
     public static final Map<String, String> BTN_OPEN_25 = ReferenceRanges.of(BTN_OPEN, 25);
 

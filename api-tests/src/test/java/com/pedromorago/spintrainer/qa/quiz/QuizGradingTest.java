@@ -4,6 +4,7 @@ import static com.pedromorago.spintrainer.qa.assertion.ProblemAssert.assertThatP
 import static com.pedromorago.spintrainer.qa.data.QaReferenceData.BB_VS_SB_LIMP;
 import static com.pedromorago.spintrainer.qa.data.QaReferenceData.BTN_OPEN;
 import static com.pedromorago.spintrainer.qa.data.QaReferenceData.BTN_OPEN_ACTIONS;
+import static com.pedromorago.spintrainer.qa.data.QaReferenceData.REFERENCE_VERSION;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.pedromorago.spintrainer.qa.assertion.ErrorType;
@@ -69,7 +70,7 @@ class QuizGradingTest extends ApiTest {
         assertThat(attempt.getExpected().getValue()).isEqualTo(expected);
         assertThat(attempt.getCorrect()).isEqualTo(expected.equals("FOLD"));
         assertThat(attempt.getRangeSource().getValue()).isEqualTo(source);
-        assertThat(attempt.getRangeVersion()).isEqualTo(1);
+        assertThat(attempt.getRangeVersion()).isEqualTo(source.equals("default") ? REFERENCE_VERSION : 1);
     }
 
     @Test

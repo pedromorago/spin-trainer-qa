@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 
 /**
- * E2E reference data: the ranges from the API seed (Tablasmentov3.pdf), read from the pinned copy
+ * E2E reference data: the API seed's example ranges (ADR-0024), read from the pinned copy
  * contract/reference-ranges.json (gradlew rangesCheck), the same one used by the web's mock and the Java tests
  * (ReferenceRanges). It is the oracle for the Explorer, the Quiz and the Builder; btn_open at 25 BB is used.
  */

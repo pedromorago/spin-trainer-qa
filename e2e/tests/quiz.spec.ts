@@ -81,8 +81,8 @@ test.describe('Quiz: corrección contra el rango efectivo (ADR-0012, ADR-0013)',
     await expect(page).toHaveURL(/\/stats\?s=btn_open&stack=25$/);
   });
 
-  // The PDF's "3H OS call" table (API V7): one threshold per hand, turned into one range per stack.
-  test('ante el open-shove de la SB corrige con la tabla de umbrales «3H OS call»', async ({ quiz }) => {
+  // bb_vs_sb_os (API V7): call or fold against the SB's open-shove, one reference range per stack.
+  test('facing the SB\'s open-shove, it grades with the reference range of that stack', async ({ quiz }) => {
     const range = referenceRange('bb_vs_sb_os', 10);
     await quiz.open('bb_vs_sb_os', 10);
     await expect(quiz.spot).toHaveText('BB vs SB Open-Shove · 10 BB');

@@ -60,7 +60,7 @@ async function holdApi(page: Page): Promise<() => void> {
 test.describe('While the free server wakes up (ADR-0018)', () => {
   test.skip(({ backend }) => backend !== 'api', 'only meaningful against the real API');
 
-  test('the Explorer shows the selector and the PDF chart at once, read-only, until the API answers', async ({ page, shell, explorer }) => {
+  test('the Explorer shows the selector and the example range at once, read-only, until the API answers', async ({ page, shell, explorer }) => {
     const release = await holdApi(page);
 
     await explorer.open('btn_open', 25);
@@ -68,7 +68,7 @@ test.describe('While the free server wakes up (ADR-0018)', () => {
     await expect(shell.situation).toHaveValue('btn_open');
     await expect(explorer.grid.cell('AA')).toHaveAttribute('data-action', 'MR_4B_C');
     await expect(explorer.grid.cell('72o')).toHaveAttribute('data-action', 'FOLD');
-    await expect(page.getByTestId('explorer-waiting')).toHaveText('Showing the PDF chart while your ranges load…');
+    await expect(page.getByTestId('explorer-waiting')).toHaveText('Showing the example range while your ranges load…');
     await expect(explorer.edit, 'nothing to edit until the API says what is saved').toBeDisabled();
 
     release();
@@ -78,7 +78,7 @@ test.describe('While the free server wakes up (ADR-0018)', () => {
     await expect(explorer.referenceBadge).toBeVisible();
   });
 
-  test('once the API answers, the player\'s custom range takes the PDF one\'s place', async ({ page, explorer }) => {
+  test('once the API answers, the player\'s custom range takes the example one\'s place', async ({ page, explorer }) => {
     await explorer.open('btn_open', 25);
     await explorer.paint('ALLIN', '72o');
     await explorer.save.click();
@@ -87,7 +87,7 @@ test.describe('While the free server wakes up (ADR-0018)', () => {
 
     await page.reload();
 
-    await expect(explorer.grid.cell('72o'), 'the PDF chart meanwhile').toHaveAttribute('data-action', 'FOLD');
+    await expect(explorer.grid.cell('72o'), 'the example range meanwhile').toHaveAttribute('data-action', 'FOLD');
     release();
     await expect(explorer.grid.cell('72o')).toHaveAttribute('data-action', 'ALLIN');
     await expect(explorer.customBadge).toBeVisible();
