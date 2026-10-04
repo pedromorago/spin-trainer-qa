@@ -20,19 +20,32 @@ test.describe('Explorer: reading and editing', () => {
     await expect(explorer.modifiedBadge).toBeHidden();
   });
 
-  test('Edit brings Save, Cancel and Reset; Save only works once something changes', async ({ explorer }) => {
+  test('Edit brings Save, Cancel and Reset', async ({ explorer }) => {
     await explorer.edit.click();
 
     await expect(explorer.editingBadge).toBeVisible();
     await expect(explorer.edit).toBeHidden();
-    await expect(explorer.save).toBeDisabled();
+    await expect(explorer.save).toBeEnabled();
     await expect(explorer.cancel).toBeEnabled();
     await expect(explorer.reset, 'nothing custom to delete yet').toBeDisabled();
+    await expect(explorer.legend).toBeHidden();
+    await expect(explorer.brushes).toBeVisible();
+  });
 
-    await explorer.paint('ALLIN', '72o');
+  test('Save with nothing changed just goes back to reading, saving nothing', async ({ page, explorer }) => {
+    const writes: string[] = [];
+    page.on('request', (request) => {
+      if (request.url().includes('/ranges/user/')) writes.push(`${request.method()} ${request.url()}`);
+    });
+    await explorer.edit.click();
 
-    await expect(explorer.save).toBeEnabled();
-    await expect(explorer.modifiedBadge).toBeVisible();
+    await explorer.save.click();
+
+    await expect(explorer.edit).toBeVisible();
+    await expect(explorer.save).toBeHidden();
+    await expect(explorer.notice, 'nothing was saved').toBeEmpty();
+    await expect(explorer.referenceBadge).toBeVisible();
+    expect(writes).toEqual([]);
   });
 
   test('saving confirms it and goes back to reading, with the range now custom', async ({ explorer }) => {
