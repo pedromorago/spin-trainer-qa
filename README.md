@@ -13,7 +13,7 @@ and the web app as a user and a client see them, independently of their code
 | API acceptance (REST Assured + JUnit 5) | this repo | 145 tests, every response validated against the OpenAPI contract |
 | Executable specification (Cucumber, in Spanish) | this repo | 23 scenarios in 4 features |
 | Collection regression (Newman) | this repo | 20 requests, 47 assertions |
-| E2E (Playwright + TypeScript, axe) | this repo | 84 tests against the mock and 82 against the real API (the same specs), 6 against the public demo, under the production CSP |
+| E2E (Playwright + TypeScript, axe) | this repo | 85 tests against the mock and 83 against the real API (the same specs), 6 against the public demo, under the production CSP |
 | API unit and integration | spin-trainer-api | 152 unit tests (PIT mutation score 100 %) and 106 integration tests (Testcontainers) |
 | Web unit | spin-trainer-web | 347 Vitest tests (Stryker mutation score 100 % in the domain) |
 
@@ -34,6 +34,7 @@ Each of these was a real defect or gap, found by a test before it reached anyone
 | On the landing page, a signed-in visitor's "Try a hand" dealt a new hand under them once their session was read | E2E, `fullstack` project (`landing.spec.ts`) | web |
 | A tooltip opened by a click's focus covered the Builder's grid; the sticky header's labels lost contrast over the grid | axe, `accessibility.spec.ts` and `onboarding.spec.ts` | web |
 | Signing in from the landing page's dialog left the player on the landing instead of where the link pointed | E2E, `mock` project (`sign-in.spec.ts`) | web |
+| On a phone, changing the chart showed the grid oversized for a frame | by hand on a phone, now `responsive.spec.ts` (frame by frame) | web |
 | On a slow network, a quick click on Start training skipped the sign-in dialog | by hand on the live site, now `sign-in.spec.ts` (a held-back chunk plays the slow network) | web |
 
 ## How it is tested

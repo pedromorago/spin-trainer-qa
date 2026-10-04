@@ -90,6 +90,7 @@ configuration defects only show up here.
 | Google is the only way in (no password form); the privacy notice is public, also at its first address | ADR-0019, ADR-0020 | `auth.spec.ts`, `accessibility.spec.ts` |
 | Sign-in with Google straight from the site: Google is asked for an ID token for this site with a new state and the hash of a new nonce; Supabase gets the token and the nonce; the player lands where they were going; an answer this tab did not start never reaches Supabase; every error is explained and no token stays in the URL | ADR-0023 | `google-sign-in.spec.ts` (Google and Supabase's token endpoint played by the test; the real round trip through Google is a manual check), `googleSignIn.test.js` in the web |
 | A page that cannot be downloaded or rendered shows a recoverable error and keeps the header | Web architecture | `resilience.spec.ts` |
+| On a phone, changing the chart never shows the grid at a size that does not fit, not even for one frame (sampled frame by frame) | Web architecture | `responsive.spec.ts` |
 | The landing page shows the product without an account and without calling the API: a live reference chart (every cell checked against the seed) and one question graded against the chart | ADR-0022 | `landing.spec.ts` |
 | The first-visit tour: once per device, skippable on every step and with Escape, replayable, focus kept inside it, a bottom sheet on phones, accessible | ADR-0022 | `onboarding.spec.ts` |
 | Every action and figure explains itself: tooltips on hover and keyboard focus (not on a click), dismissable, as the accessible description; "?" buttons on touch screens | ADR-0022 | `tooltips.spec.ts` |
@@ -207,6 +208,10 @@ What the tests found:
   and its destination went with them, and the player stayed on the landing. Signing in from signed out now keeps the
   page (nothing of anyone's is cached while nobody is signed in), unit-tested in `userScope.test.js`; signing out or
   switching accounts still starts new caches (`auth.spec.ts`).
+- **On a phone, a new chart flashed oversized** (seen by the owner on his phone, now `responsive.spec.ts`, which samples
+  the grid's width on every frame): the grid sizes its cells from its measured width, and a grid that mounted again
+  (after "Loading…" when the chart changes) drew one frame with 42 px cells, 588 px wide on a 390 px screen, before the
+  measurement arrived. The width is now read as the element is attached, before the first paint.
 - **On a slow network, Start training skipped the dialog** (found by hand on the live site, now
   `sign-in.spec.ts#a click before the session has been read still asks here`): the landing only asked to sign in once it
   knew the visitor was signed out, and that waits for Supabase's client, a chunk of its own. A click in the meantime fell
