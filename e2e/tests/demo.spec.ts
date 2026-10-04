@@ -42,10 +42,10 @@ test.describe('Public demo (ADR-0022)', () => {
     await explorer.open();
     await explorer.paint('ALLIN', '72o');
     await explorer.save.click();
-    await expect(explorer.savedBadge).toBeVisible();
+    await expect(explorer.customBadge).toBeVisible();
 
     await page.reload();
-    await expect(explorer.savedBadge).toBeVisible();
+    await expect(explorer.customBadge).toBeVisible();
     await expect(explorer.grid.cell('72o')).toHaveAttribute('data-action', 'ALLIN');
 
     const otherBrowser = await browser.newContext({ baseURL: testInfo.project.use.baseURL });

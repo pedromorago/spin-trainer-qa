@@ -82,6 +82,7 @@ configuration defects only show up here.
 | Stats aggregated by the API | ADR-0013 | `StatsTest`, `historial_y_estadisticas.feature`, Newman |
 | Each player only sees their own data | ADR-0003 | `each_user_only_sees_their_own_*`, `privacidad.feature` |
 | The Explorer shows the effective range and is the only one that writes ranges; the Builder does not persist | ADR-0012 | `explorer.spec.ts`, `builder.spec.ts` |
+| The Explorer opens read-only (Edit, Copy, a legend; the grid cannot be painted); Edit brings Save (only once something changed), Cancel (asks first with changes) and Reset (only with a custom range); saving or resetting confirms it and goes back to reading | Web architecture | `explorer-modes.spec.ts` |
 | Two tabs do not overwrite each other: the second one gets the 409 and can reload | ADR-0013 | `explorer.spec.ts` (mock and fullstack) |
 | The Quiz grades against the effective range; historical stats are aggregated by the server | ADR-0012, ADR-0013 | `quiz.spec.ts`, `stats.spec.ts` |
 | The selection lives in the URL and is normalized | Web architecture | `navigation.spec.ts` |

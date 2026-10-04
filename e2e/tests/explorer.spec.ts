@@ -22,10 +22,10 @@ test.describe('Explorer: rango efectivo (ADR-0012)', () => {
 
     await explorer.save.click();
 
-    await expect(explorer.savedBadge).toBeVisible();
+    await expect(explorer.customBadge).toBeVisible();
     await expect(explorer.modifiedBadge).toBeHidden();
     await page.reload();
-    await expect(explorer.savedBadge).toBeVisible();
+    await expect(explorer.customBadge).toBeVisible();
     await expect(explorer.grid.cell('72o')).toHaveAttribute('data-action', 'ALLIN');
     await expect(explorer.grid.cell('AA')).toHaveAttribute('data-action', 'MR_4B_C');
     await expect(explorer.handsCount).toHaveText(String(BTN_OPEN_25_HANDS + 1));
@@ -41,12 +41,12 @@ test.describe('Explorer: rango efectivo (ADR-0012)', () => {
   test('Reset borra el rango personalizado y vuelve al de referencia', async ({ explorer }) => {
     await explorer.paint('ALLIN', '72o');
     await explorer.save.click();
-    await expect(explorer.savedBadge).toBeVisible();
+    await expect(explorer.customBadge).toBeVisible();
 
     await explorer.resetToReference();
 
     await expect(explorer.referenceBadge).toBeVisible();
-    await expect(explorer.savedBadge).toBeHidden();
+    await expect(explorer.customBadge).toBeHidden();
     await expect(explorer.grid.cell('72o')).toHaveAttribute('data-action', 'FOLD');
   });
 
@@ -106,7 +106,7 @@ test.describe('Explorer: rango efectivo (ADR-0012)', () => {
 
     await explorer.paint('ALLIN', '72o');
     await explorer.save.click();
-    await expect(explorer.savedBadge).toBeVisible();
+    await expect(explorer.customBadge).toBeVisible();
 
     await other.paint('ALLIN', '32o');
     await other.save.click();

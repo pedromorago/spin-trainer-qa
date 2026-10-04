@@ -99,7 +99,7 @@ test.describe('Quiz: corrección contra el rango efectivo (ADR-0012, ADR-0013)',
     await explorer.open('btn_open', 25);
     await explorer.paint('ALLIN', ...Object.keys(BTN_OPEN_25));
     await explorer.save.click();
-    await expect(explorer.savedBadge).toBeVisible();
+    await expect(explorer.customBadge).toBeVisible();
 
     await shell.goTo('Quiz');
     await expect(quiz.customRangeNote).toBeVisible();

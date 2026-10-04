@@ -4,6 +4,7 @@ import { expect, test } from '../fixtures/test';
 test.describe('Tooltips and help (ADR-0022)', () => {
   test('hovering an action explains it, and Escape dismisses the explanation', async ({ page, explorer }) => {
     await explorer.open();
+    await explorer.startEditing();
     const allIn = explorer.brush('ALLIN');
     const tip = page.getByRole('tooltip').filter({ hasText: 'Go all-in.' });
 
@@ -16,6 +17,7 @@ test.describe('Tooltips and help (ADR-0022)', () => {
 
   test('keyboard focus shows the explanation too, and moving on shows the next one', async ({ page, explorer }) => {
     await explorer.open();
+    await explorer.startEditing();
     const allIn = page.getByRole('tooltip').filter({ hasText: 'Go all-in.' });
     const fold = page.getByRole('tooltip').filter({ hasText: /^Fold\.$/ });
 
@@ -32,6 +34,7 @@ test.describe('Tooltips and help (ADR-0022)', () => {
 
   test('screen readers get the explanation as the description of each action, without opening it', async ({ explorer }) => {
     await explorer.open();
+    await explorer.startEditing();
 
     await expect(explorer.brush('MR_F_F')).toHaveAccessibleDescription('Min-raise; fold if someone 3-bets.');
     await expect(explorer.brush('ERASE')).toHaveAccessibleDescription(/puts a hand back to the implicit action/);
@@ -39,6 +42,7 @@ test.describe('Tooltips and help (ADR-0022)', () => {
 
   test('pressing an action puts its explanation away, so it does not cover the grid', async ({ page, explorer }) => {
     await explorer.open();
+    await explorer.startEditing();
     const allIn = page.getByRole('tooltip').filter({ hasText: 'Go all-in.' });
 
     await explorer.brush('ALLIN').hover();
